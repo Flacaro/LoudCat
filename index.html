@@ -11,6 +11,22 @@
     <img src="assets/img/logo.png" alt="LoudCat Logo" class="logo" />
     <h1>LoudCat</h1>
   </header>
+  <section id="auth"> 
+    <h2>Accesso utente</h2>
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button id="registerBtn">Registrati</button>
+    <button id="loginBtn">Login</button>
+    <button id="logoutBtn" style="display:none">Logout</button>
+  </section>
+
+  <section id="data" style="display:none">
+    <h2>Dati dell’utente</h2>
+    <button id="loadBtn">Carica dati</button>
+    <ul id="output"></ul>
+  </section>
+  <script type="module" src="./app.js"></script>
+
 
   <main>
     <section id="search-section">
