@@ -1,3 +1,4 @@
+
 // authController.js
 import { register, login, logout, onUserChanged, saveUserData, loadUserData } from "../model/modelAuth.js";
 import { getEmail, getPassword, showUserUI, showLoginUI, renderData } from "../view/header.js";
