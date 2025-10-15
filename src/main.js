@@ -6,6 +6,7 @@ import MusicView from "./view/musicView.js";
 import MusicController from "./controller/musicController.js";
 import { initFirebaseAuth } from "./controller/authController.js";
 
+
 document.addEventListener("DOMContentLoaded", () => {
   // inizializza auth bindings (register/login/logout)
   initFirebaseAuth();
