@@ -30,7 +30,11 @@
   <main>
     <section id="search-section">
       <input type="text" id="search-input" placeholder="Cerca artista o brano..." />
-      <button id="search-btn">🔍 Cerca</button>
+        <select id="search-type">
+          <option value="song">Brani</option>
+          <option value="album">Album</option>
+        </select>
+        <button id="search-btn">🔍 Cerca</button>
     </section>
 
     <section id="results-section">
