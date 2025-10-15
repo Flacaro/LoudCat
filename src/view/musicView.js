@@ -31,7 +31,8 @@ export default class MusicView {
         <div class="card">
           <img src="${s.artwork}" alt="${s.title}" />
           <h4>${s.title}</h4>
-          <p>${s.artist}</p>
+          <p class="artist">${s.artist}</p>
+          ${s.album ? `<p class="album">${s.album}</p>` : ""}
           ${
             s.preview
               ? `<audio controls src="${s.preview}"></audio>`

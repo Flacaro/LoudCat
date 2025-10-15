@@ -16,16 +16,16 @@ export default class MusicController {
     this.loadLatestSearch();
   }
 
-  async handleSearch(query) {
+  async handleSearch(query, type = "artist") {
     try {
       this.view.renderLoading();
-      const songs = await this.model.getSongs(query);
+      const songs = await this.model.getSongs(query, type);
       this.view.renderResults(songs);
 
       // Salva l'ultima ricerca su Firestore
       try {
         const ref = doc(db, "searches", "latest");
-        await setDoc(ref, { query, songs, updatedAt: new Date().toISOString() });
+        await setDoc(ref, { query, type, songs, updatedAt: new Date().toISOString() });
         console.log("Ricerca salvata su Firestore");
       } catch (saveErr) {
         console.warn("Impossibile salvare la ricerca su Firestore:", saveErr);
