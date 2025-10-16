@@ -36,62 +36,72 @@ export function initFirebaseAuth() {
    }
  }
 
- // Gestione registrazione
- document.getElementById("registerBtn").addEventListener("click", async () => {
-  try {
-    const email = getEmail();
-    const pass = getPassword();
+  // UI elements for auth form toggling and confirm actions
+  const registerBtnEl = document.getElementById("registerBtn");
+  const loginBtnEl = document.getElementById("loginBtn");
+  const authSection = document.getElementById("auth");
+  const registerFields = document.getElementById("registerFields");
+  const confirmRegisterBtn = document.getElementById("confirmRegisterBtn");
+  const confirmLoginBtn = document.getElementById("confirmLoginBtn");
+  const cancelAuthBtn = document.getElementById("cancelAuthBtn");
 
-    if (!email || !pass) {
-      alert("Inserisci email e password.");
-      return;
+  // Show auth form when Register clicked (show username/photo)
+  registerBtnEl?.addEventListener("click", () => {
+    if (authSection) authSection.style.display = "block";
+    if (registerFields) registerFields.style.display = "block";
+    if (confirmRegisterBtn) confirmRegisterBtn.style.display = "inline-block";
+    if (confirmLoginBtn) confirmLoginBtn.style.display = "none";
+  });
+
+  // Show auth form when Login clicked (hide username/photo)
+  loginBtnEl?.addEventListener("click", () => {
+    if (authSection) authSection.style.display = "block";
+    if (registerFields) registerFields.style.display = "none";
+    if (confirmRegisterBtn) confirmRegisterBtn.style.display = "none";
+    if (confirmLoginBtn) confirmLoginBtn.style.display = "inline-block";
+  });
+
+  // Cancel/hide auth section
+  cancelAuthBtn?.addEventListener("click", () => { if (authSection) authSection.style.display = "none"; });
+
+  // Confirm registration (email/password + save)
+  confirmRegisterBtn?.addEventListener("click", async () => {
+    try {
+      const email = getEmail();
+      const pass = getPassword();
+      if (!email || !pass) { alert("Inserisci email e password."); return; }
+      if (!isValidEmail(email)) { alert("Formato email non valido."); return; }
+      if (pass.length < 6) { alert("La password deve avere almeno 6 caratteri."); return; }
+
+      const cred = await register(email, pass);
+      const user = cred.user;
+      await saveUserData(user.uid, { email: user.email, createdAt: new Date().toISOString() });
+      console.log("Registrazione avvenuta:", user.email);
+      alert("Registrazione effettuata con successo: " + user.email);
+      if (authSection) authSection.style.display = "none";
+    } catch (err) {
+      const msg = userMessageForFirebaseError(err);
+      console.error("Errore nella registrazione:", err);
+      alert("Registrazione fallita: " + msg);
     }
-    if (!isValidEmail(email)) {
-      alert("Formato email non valido.");
-      return;
+  });
+
+  // Confirm login (email/password)
+  confirmLoginBtn?.addEventListener("click", async () => {
+    try {
+      const email = getEmail();
+      const pass = getPassword();
+      if (!email || !pass) { alert("Inserisci email e password."); return; }
+      if (!isValidEmail(email)) { alert("Formato email non valido."); return; }
+      await login(email, pass);
+      console.log("Login eseguito per:", email);
+      if (authSection) authSection.style.display = "none";
+    } catch (err) {
+      const msg = userMessageForFirebaseError(err);
+      console.error("Errore login:", err);
+      alert("Login fallito: " + msg);
     }
-    if (pass.length < 6) {
-      alert("La password deve avere almeno 6 caratteri.");
-      return;
-    }
-
-    const cred = await register(email, pass);
-    const user = cred.user;
-
-    await saveUserData(user.uid, { email: user.email, createdAt: new Date().toISOString() });
-    console.log("Registrazione avvenuta:", user.email);
-    alert("Registrazione effettuata con successo: " + user.email);
-  } catch (err) {
-    const msg = userMessageForFirebaseError(err);
-    console.error("Errore nella registrazione:", err.code || err.message || err);
-    alert("Registrazione fallita: " + msg);
-  }
-
- });
-
- //evento login
- document.getElementById("loginBtn").addEventListener("click", async () => {
-   try {
-     const email = getEmail();
-     const pass = getPassword();
-
-     if (!email || !pass) {
-       alert("Inserisci email e password.");
-       return;
-     }
-     if (!isValidEmail(email)) {
-       alert("Formato email non valido.");
-       return;
-     }
-
-     await login(email, pass);
-     console.log("Login eseguito per:", email);
-   } catch (err) {
-     const msg = userMessageForFirebaseError(err);
-     console.error("Errore login:", err.code || err.message || err);
-     alert("Login fallito: " + msg);
-   }
- });
+  });
  document.getElementById("logoutBtn").addEventListener("click", async () => {
    await logout();
  });

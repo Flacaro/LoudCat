@@ -117,11 +117,6 @@
               <label for="confirmPassword" class="form-label">Conferma nuova password</label>
               <input id="confirmPassword" type="password" class="form-control mb-2" placeholder="Conferma nuova password" />
             </div>
-
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="darkModeToggle" />
-              <label class="form-check-label" for="darkModeToggle">Modalità scura</label>
-            </div>
             <div class="mt-2">
               <button id="saveSettingsBtn" class="btn btn-sm btn-success">Salva</button>
               <div id="settingsFeedback" class="form-text mt-2"></div>
@@ -134,18 +129,22 @@
     <section id="auth" class="container my-4" style="display:none">
       <h2 class="mb-3">Accesso utente</h2>
       <div class="mb-3">
-        <input
-          id="username"
-          type="text"
-          class="form-control mb-2"
-          placeholder="Username (visibile nel profilo)"
-        />
-        <input
-          id="photoFile"
-          type="file"
-          accept="image/*"
-          class="form-control mb-2"
-        />
+        <div id="registerFields">
+          <input
+            id="username"
+            type="text"
+            class="form-control mb-2"
+            placeholder="Username (visibile nel profilo)"
+          />
+          <input
+            id="photoFile"
+            type="file"
+            accept="image/*"
+            class="form-control mb-2"
+          />
+        </div>
+
+        <!-- Email & password are shared; registerFields will be hidden for login -->
         <input
           id="email"
           type="email"
@@ -160,7 +159,7 @@
         />
         <div class="d-flex gap-2 mt-2">
           <button id="confirmRegisterBtn" class="btn btn-success">Conferma registrazione</button>
-          <button id="confirmLoginBtn" class="btn btn-success" style="display:none">Conferma login</button>
+          <button id="confirmLoginBtn" class="btn btn-success" style="display:none">Login</button>
           <button id="cancelAuthBtn" class="btn btn-secondary">Annulla</button>
         </div>
       </div>
@@ -175,7 +174,7 @@
 
     <main class="container my-4">
       <section id="results-section">
-        <h2 class="mb-3">Risultati</h2>
+        <h2 class="mb-3"></h2>
         <div id="results-container" class="row gy-3"></div>
       </section>
     </main>
