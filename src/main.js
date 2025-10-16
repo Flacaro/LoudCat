@@ -1,7 +1,7 @@
 // main.js
 // Punto di ingresso dell'app LoudCat
 
-import MusicModel from "./model/musicModel.js";
+import MusicService from "./services/musicService.js";
 import MusicView from "./view/musicView.js";
 import MusicController from "./controller/musicController.js";
 import { initFirebaseAuth } from "./controller/authController.js";
@@ -14,8 +14,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // inizializza il modal del profilo (bottone in header)
   initProfileModal();
 
-  const model = new MusicModel();
+  const service = new MusicService();
   const view = new MusicView();
-  const controller = new MusicController(model, view);
+  const controller = new MusicController(service, view);
   controller.init();
 });
