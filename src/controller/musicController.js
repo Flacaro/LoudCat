@@ -12,20 +12,23 @@ export default class MusicController {
 
   init() {
     this.view.bindSearch(this.handleSearch.bind(this));
-    // Carica l'ultimo risultato salvato in Firestore (se presente)
+    this.view.bindAlbumClick(this.handleAlbumClick.bind(this)); // ADD THIS
     this.loadLatestSearch();
   }
 
-  async handleSearch(query, type = "artist") {
+
+
+  async handleSearch(query) {
     try {
       this.view.renderLoading();
-      const songs = await this.model.getSongs(query, type);
-      this.view.renderResults(songs);
+      const results = await this.model.search(query);
+
+      this.view.renderResults(results);
 
       // Salva l'ultima ricerca su Firestore
       try {
         const ref = doc(db, "searches", "latest");
-        await setDoc(ref, { query, type, songs, updatedAt: new Date().toISOString() });
+        await setDoc(ref, { query, results, updatedAt: new Date().toISOString() });
         console.log("Ricerca salvata su Firestore");
       } catch (saveErr) {
         console.warn("Impossibile salvare la ricerca su Firestore:", saveErr);
@@ -40,14 +43,20 @@ export default class MusicController {
     try {
       const ref = doc(db, "searches", "latest");
       const snap = await getDoc(ref);
-      if (snap.exists()) {
-        const data = snap.data();
-        if (data && data.songs) {
-          this.view.renderResults(data.songs);
-        }
-      }
-    } catch (err) {
+      if (!snap.exists()) return;
+      const data = snap.data();
+      if (!data || !data.results) return;
+      this.view.renderResults(data.results);
+      console.log("Ultima ricerca caricata da Firestore");
+    }
+    catch (err) {
       console.warn("Errore nel leggere l'ultima ricerca da Firestore:", err);
     }
   }
+
+  async handleAlbumClick(albumId) {
+  const tracks = await this.model.getAlbumTracks(albumId);
+  this.view.renderTracks(tracks, albumId); // render in the same page, below the album card
+}
+
 }
