@@ -52,11 +52,68 @@ renderSongs(songs) {
         <p>${s.artist}</p>
         ${s.album ? `<p>${s.album}</p>` : ""}
         ${s.preview ? `<audio controls src="${s.preview}"></audio>` : "<p>Preview non disponibile</p>"}
-      </div>
+        <button class="btn btn-outline-warning fav-btn" 
+                data-song='${encodeURIComponent(JSON.stringify({
+                  id: s.id || s.title.replace(/\s+/g,'-').toLowerCase(),
+                  title: s.title,
+                  artist: s.artist,
+                  album: s.album,
+                  artwork: s.artwork,
+                  preview: s.preview
+                }))}'>
+          ⭐ Aggiungi ai preferiti
+        </button>
+        <button class="btn btn-outline-primary playlist-btn" 
+                data-song='${encodeURIComponent(JSON.stringify({
+                  id: s.id || s.title.replace(/\s+/g,'-').toLowerCase(),
+                  title: s.title,
+                  artist: s.artist,
+                  album: s.album,
+                  artwork: s.artwork,
+                  preview: s.preview
+                }))}'>
+          + Playlist
+        </button>
+      
+        </div>
     `)
     .join("");
+
   this.results.insertAdjacentHTML("beforeend", html);
+
+  this.results.querySelectorAll(".fav-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const song = JSON.parse(decodeURIComponent(btn.dataset.song));
+      this.favHandler(song) && this.favHandler(song);
+    });
+
+  });
+
+  this.results.querySelectorAll(".playlist-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const song = JSON.parse(decodeURIComponent(btn.dataset.song));
+      this.playlistHandler(song) && this.playlistHandler(song);
+    });
+  });
 }
+
+  bindFavoriteToggle(handler) {
+    this.favHandler = handler;
+  }
+
+  updateFavoriteState(songId, isFav) {
+  const btn = this.results.querySelector(`.fav-btn[data-song*="${songId}"]`);
+  if (btn) {
+    btn.textContent = isFav ? "💛 Rimuovi dai preferiti" : "⭐ Aggiungi ai preferiti";
+    btn.classList.toggle("btn-warning", isFav);
+    btn.classList.toggle("btn-outline-warning", !isFav);
+  }
+}
+
+  bindAddToPlaylist(handler) {
+    this.playlistHandler = handler;
+  }
+
 
   bindSearch(handler) {
     this.button.addEventListener("click", () => {
@@ -73,7 +130,10 @@ renderSongs(songs) {
     if(artists.length){ this.renderArtists(artists);}
     if(songs.length){ this.renderSongs(songs);}
     if(albums.length){ this.renderAlbums(albums);}
+
   }
+
+  
 
   renderError() {
     this.results.innerHTML = "<p>❌ Errore durante la ricerca.</p>";
