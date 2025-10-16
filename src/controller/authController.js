@@ -1,7 +1,8 @@
 
 // authController.js
 import { register, login, logout, onUserChanged, saveUserData, loadUserData } from "../model/modelAuth.js";
-import { getEmail, getPassword, showUserUI, showLoginUI, renderData } from "../view/header.js";
+import { getEmail, getPassword, getUsername, getPhotoFile, showUserUI, showLoginUI, renderData } from "../view/header.js";
+import { storage } from "../firebase.js";
 export function initFirebaseAuth() {
  // Rileva se l’utente è loggato o meno
  onUserChanged(async (user) => {
@@ -72,10 +73,35 @@ export function initFirebaseAuth() {
       if (!email || !pass) { alert("Inserisci email e password."); return; }
       if (!isValidEmail(email)) { alert("Formato email non valido."); return; }
       if (pass.length < 6) { alert("La password deve avere almeno 6 caratteri."); return; }
+      const username = getUsername ? getUsername() : null;
+      const photoInput = getPhotoFile ? getPhotoFile() : null;
 
       const cred = await register(email, pass);
       const user = cred.user;
-      await saveUserData(user.uid, { email: user.email, createdAt: new Date().toISOString() });
+
+      // Upload avatar if present
+      let photoURL = null;
+      try {
+        const file = photoInput && photoInput.files && photoInput.files[0];
+        if (file) {
+          const { ref: storageRef, uploadBytes, getDownloadURL } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js");
+          const sRef = storageRef(storage, `avatars/${user.uid}/${file.name}`);
+          await uploadBytes(sRef, file);
+          photoURL = await getDownloadURL(sRef);
+        }
+      } catch (upErr) {
+        console.warn("Errore caricamento avatar:", upErr);
+      }
+
+      // update profile with username/photo
+      try {
+        const { updateProfile } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+        await updateProfile(user, { displayName: username || null, photoURL: photoURL || null });
+      } catch (profErr) {
+        console.warn("Impossibile aggiornare il profilo utente:", profErr);
+      }
+
+      await saveUserData(user.uid, { email: user.email, username: username || null, photoURL: photoURL || null, createdAt: new Date().toISOString() });
       console.log("Registrazione avvenuta:", user.email);
       alert("Registrazione effettuata con successo: " + user.email);
       if (authSection) authSection.style.display = "none";

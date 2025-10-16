@@ -103,3 +103,14 @@ footer {
   .modal-panel .modal-nav { gap: 0.5rem; }
   .modal-panel section { padding: 0.5rem 0; }
 }
+
+/* Friends empty message styling (themed) */
+.friends-empty {
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-style: italic;
+  color: #1e3a8a; /* primary theme color */
+  text-align: center;
+  padding: 1rem 0;
+  background: transparent;
+  border: none;
+}

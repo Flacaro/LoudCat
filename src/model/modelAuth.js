@@ -24,7 +24,8 @@ export function onUserChanged(callback) {
 
 export async function saveUserData(uid, data) {
   const ref = doc(db, "users", uid);
-  await setDoc(ref, data);
+  // use merge to avoid overwriting the whole document when updating a single field
+  await setDoc(ref, data, { merge: true });
 }
 
 export async function loadUserData(uid) {

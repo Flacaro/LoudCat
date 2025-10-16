@@ -99,17 +99,19 @@
                 <p id="profileName" class="mb-0">Username: -</p>
               </div>
             </div>
-            <button id="editProfileBtn" class="btn btn-sm btn-primary">Modifica profilo</button>
           </section>
 
           <section data-panel="friends" style="display:none">
             <h6>Amici</h6>
+            
             <ul id="friendsList" class="list-group"></ul>
           </section>
 
           <section data-panel="settings" style="display:none">
             <h6>Impostazioni</h6>
             <div class="mb-2">
+              <label for="newUsername" class="form-label">Nuovo username</label>
+              <input id="newUsername" type="text" class="form-control mb-2" placeholder="Nuovo username (opzionale)" />
               <label for="currentPassword" class="form-label">Password attuale</label>
               <input id="currentPassword" type="password" class="form-control mb-2" placeholder="Password attuale" />
               <label for="newPassword" class="form-label">Nuova password</label>
