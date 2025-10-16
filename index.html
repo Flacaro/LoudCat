@@ -60,6 +60,9 @@
           <button id="loginBtn" type="button" class="btn btn-primary me-2">
             Login
           </button>
+          <button id="profileBtn" type="button" class="btn btn-outline-secondary me-2">
+            Profilo
+          </button>
           <button
             id="logoutBtn"
             type="button"
@@ -72,9 +75,77 @@
       </div>
     </header>
 
-    <section id="auth" class="container my-4">
+    <!-- Profile / Settings Modal -->
+    <div id="profileModal" class="modal-overlay" style="display:none">
+      <div class="modal-panel">
+        <div class="modal-header d-flex align-items-center justify-content-between">
+          <h5 class="mb-0">Account</h5>
+          <button id="closeProfileBtn" class="btn-close" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-nav btn-group my-3" role="group">
+          <button class="btn btn-sm btn-outline-primary" data-tab="profile">Profilo</button>
+          <button class="btn btn-sm btn-outline-primary" data-tab="friends">Amici</button>
+          <button class="btn btn-sm btn-outline-primary" data-tab="settings">Impostazioni</button>
+        </div>
+
+        <div id="profileContent">
+          <section data-panel="profile">
+            <h6>Informazioni profilo</h6>
+            <div class="d-flex align-items-center mb-2">
+              <img id="profileAvatar" src="assets/img/avatar-placeholder.png" alt="Avatar" width="64" height="64" class="rounded-circle me-3" />
+              <div>
+                <p id="profileEmail" class="mb-0">Email: -</p>
+                <p id="profileName" class="mb-0">Username: -</p>
+              </div>
+            </div>
+            <button id="editProfileBtn" class="btn btn-sm btn-primary">Modifica profilo</button>
+          </section>
+
+          <section data-panel="friends" style="display:none">
+            <h6>Amici</h6>
+            <ul id="friendsList" class="list-group"></ul>
+          </section>
+
+          <section data-panel="settings" style="display:none">
+            <h6>Impostazioni</h6>
+            <div class="mb-2">
+              <label for="currentPassword" class="form-label">Password attuale</label>
+              <input id="currentPassword" type="password" class="form-control mb-2" placeholder="Password attuale" />
+              <label for="newPassword" class="form-label">Nuova password</label>
+              <input id="newPassword" type="password" class="form-control mb-2" placeholder="Nuova password (min 6 caratteri)" />
+              <label for="confirmPassword" class="form-label">Conferma nuova password</label>
+              <input id="confirmPassword" type="password" class="form-control mb-2" placeholder="Conferma nuova password" />
+            </div>
+
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="darkModeToggle" />
+              <label class="form-check-label" for="darkModeToggle">Modalità scura</label>
+            </div>
+            <div class="mt-2">
+              <button id="saveSettingsBtn" class="btn btn-sm btn-success">Salva</button>
+              <div id="settingsFeedback" class="form-text mt-2"></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <section id="auth" class="container my-4" style="display:none">
       <h2 class="mb-3">Accesso utente</h2>
       <div class="mb-3">
+        <input
+          id="username"
+          type="text"
+          class="form-control mb-2"
+          placeholder="Username (visibile nel profilo)"
+        />
+        <input
+          id="photoFile"
+          type="file"
+          accept="image/*"
+          class="form-control mb-2"
+        />
         <input
           id="email"
           type="email"
@@ -87,6 +158,11 @@
           class="form-control mb-2"
           placeholder="Password"
         />
+        <div class="d-flex gap-2 mt-2">
+          <button id="confirmRegisterBtn" class="btn btn-success">Conferma registrazione</button>
+          <button id="confirmLoginBtn" class="btn btn-success" style="display:none">Conferma login</button>
+          <button id="cancelAuthBtn" class="btn btn-secondary">Annulla</button>
+        </div>
       </div>
     </section>
 
