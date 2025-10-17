@@ -3,17 +3,31 @@
 import { register, login, logout, onUserChanged, saveUserData, loadUserData } from "../model/modelAuth.js";
 import { getEmail, getPassword, getUsername, getPhotoFile, showUserUI, showLoginUI, renderData } from "../view/header.js";
 import { storage } from "../firebase.js";
-export function initFirebaseAuth() {
+
+
+export function initFirebaseAuth(controller) {
+
+  if (!controller) {
+    console.error("AuthController: controller non fornito!");
+    return;
+  }
  // Rileva se l’utente è loggato o meno
  onUserChanged(async (user) => {
-   if (user) {
-     showUserUI(user.email);
-     console.log("Utente autenticato:", user.email);
-   } else {
-     showLoginUI();
-     console.log("Nessun utente autenticato");
-   }
- });
+    if (user) {
+      showUserUI(user.email);
+      console.log("Utente autenticato:", user.email);
+
+      // --- NUOVO: carica preferiti e playlist ---
+      if (controller) {
+        const { favorites, playlists } = await controller.loadUserCollections(user.uid);
+        controller.view.renderUserCollections(favorites, playlists);
+      }
+
+    } else {
+      showLoginUI();
+      console.log("Nessun utente autenticato");
+    }
+  });
  // helper di validazione
  function isValidEmail(email) {
    return typeof email === "string" && /\S+@\S+\.\S+/.test(email);

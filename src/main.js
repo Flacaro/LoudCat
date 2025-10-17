@@ -8,13 +8,15 @@ import { initFirebaseAuth } from "./controller/authController.js";
 import { initProfileModal } from "./view/header.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  // inizializza auth bindings (register/login/logout)
-  initFirebaseAuth();
-  // inizializza il modal del profilo (bottone in header)
-  initProfileModal();
+  
 
   const service = new MusicService();
   const view = new MusicView();
   const controller = new MusicController(service, view);
   controller.init();
+  
+  // inizializza auth bindings (register/login/logout)
+  initFirebaseAuth(controller);
+  // inizializza il modal del profilo (bottone in header)
+  initProfileModal();
 });

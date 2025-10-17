@@ -1,10 +1,12 @@
 // musicController.js
 // Collega la View e il Model e salva/legge ricerche su Firestore
 
-import { doc, setDoc, getDoc, deleteDoc, updateDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { doc, setDoc, getDoc, deleteDoc, getDocs, updateDoc, collection} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { db } from "../firebase.js";
 import {getAuth} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {arrayUnion, arrayRemove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
 export default class MusicController {
   constructor(model, view) {
     this.model = model;
@@ -17,6 +19,7 @@ export default class MusicController {
     this.view.bindFavoriteToggle(this.handleFavoriteToggle.bind(this));
     this.view.bindAddToPlaylist(this.handlePlaylist.bind(this));
     this.view.bindShare(this.handleShare.bind(this));
+    this.view.bindCreatePlaylist(this.createPlaylist.bind(this));
     this.loadLatestSearch();
   }
 
@@ -142,6 +145,37 @@ async handlePlaylist(song) {
     console.error("Errore nella gestione della playlist:", err);
   }
 }
+ async createPlaylist(playlistName) {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      this.view.showToast("Devi effettuare il login per creare una playlist.");
+      return;
+    }
+
+    try {
+      const userRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userRef);
+      const data = snap.exists() ? snap.data() : {};
+
+      const playlists = data.playlists || [];
+
+      if (playlists.some(pl => pl.name === playlistName)) {
+        this.view.showToast("Esiste già una playlist con questo nome!");
+        return;
+      }
+
+      playlists.push({ name: playlistName, songs: [] });
+
+      await setDoc(userRef, { playlists }, { merge: true });
+
+      this.view.showToast(`Playlist "${playlistName}" creata con successo!`);
+    } catch (err) {
+      console.error("Errore nella creazione della playlist:", err);
+      this.view.showToast("Errore durante la creazione della playlist.");
+    }
+  }
+
 
 
   showToast(message) {
@@ -196,5 +230,58 @@ async handlePlaylist(song) {
   const tracks = await this.model.getAlbumTracks(albumId);
   this.view.renderTracks(tracks, albumId); // render in the same page, below the album card
 }
+
+async loadUserCollections(userId) {
+  if (!userId) return { favorites: [], playlists: [] };
+
+  const userRef = doc(db, "users", userId);
+  const userSnap = await getDoc(userRef);
+  if (!userSnap.exists()) return { favorites: [], playlists: [] };
+
+  // Carica playlists
+  const data = userSnap.data();
+  const playlists = data.playlists || [];
+
+  // Carica favorites dalla sottocollezione
+  const favCol = collection(db, "users", userId, "favorites");
+  const favSnap = await getDocs(favCol);
+  const favorites = favSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  return { favorites, playlists };
+}
+
+renderUserCollections({ favorites, playlists }) {
+  const container = document.getElementById("results-container");
+  container.innerHTML = ""; // pulisci prima di renderizzare
+
+  // Render Favorites
+  if(favorites.length) {
+    const favHtml = favorites.map(song => `
+      <div class="card song-card hover-card">
+        <img src="${song.artwork || './assets/default-artwork.png'}" alt="${song.title}" />
+        <h4>${song.title}</h4>
+        <p>${song.artist}</p>
+      </div>
+    `).join("");
+    container.insertAdjacentHTML("beforeend", `<h3>I tuoi preferiti</h3>${favHtml}`);
+  } else {
+    container.insertAdjacentHTML("beforeend", "<h3>I tuoi preferiti</h3><p>Nessun preferito</p>");
+  }
+
+  // Render Playlists
+  if(playlists.length) {
+    const plHtml = playlists.map(pl => `
+      <div class="card playlist-card hover-card">
+        <h4>${pl.name}</h4>
+        <p>${pl.songs.length} brani</p>
+      </div>
+    `).join("");
+    container.insertAdjacentHTML("beforeend", `<h3>Le tue playlist</h3>${plHtml}`);
+  } else {
+    container.insertAdjacentHTML("beforeend", "<h3>Le tue playlist</h3><p>Nessuna playlist creata</p>");
+  }
+}
+
+
 
 }
