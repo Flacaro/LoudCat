@@ -86,7 +86,7 @@ export function initProfileModal() {
 
     if (emailEl) emailEl.textContent = `Email: ${emailText}`;
     if (nameEl) nameEl.textContent = `Username: ${usernameText ? usernameText : "-"}`;
-    if (avatarEl) avatarEl.src = photoURL ? photoURL : "assets/img/avatar-placeholder.png";
+    if (avatarEl) avatarEl.src = photoURL ? photoURL : "assets/img/avatar-placeholder.svg";
     if (modal) modal.style.display = "flex";
     // focus first nav button if available
     const firstNav = modal.querySelector("[data-tab]");

@@ -54,6 +54,17 @@ export function initFirebaseAuth() {
     if (confirmLoginBtn) confirmLoginBtn.style.display = "none";
   });
 
+  // preview selected photo immediately
+  const photoInputEl = document.getElementById("photoFile");
+  const photoPreview = document.getElementById("photoPreview");
+  photoInputEl?.addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) { if (photoPreview) photoPreview.src = "assets/img/avatar-placeholder.svg"; return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => { if (photoPreview) photoPreview.src = ev.target.result; };
+    reader.readAsDataURL(file);
+  });
+
   // Show auth form when Login clicked (hide username/photo)
   loginBtnEl?.addEventListener("click", () => {
     if (authSection) authSection.style.display = "block";
@@ -97,6 +108,10 @@ export function initFirebaseAuth() {
       try {
         const { updateProfile } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
         await updateProfile(user, { displayName: username || null, photoURL: photoURL || null });
+        // Ensure auth user is reloaded so UI reads the fresh photoURL/displayName
+        if (typeof user.reload === "function") {
+          await user.reload();
+        }
       } catch (profErr) {
         console.warn("Impossibile aggiornare il profilo utente:", profErr);
       }
