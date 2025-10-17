@@ -8,8 +8,6 @@ import {arrayUnion, arrayRemove} from "https://www.gstatic.com/firebasejs/10.12.
 import AlbumViewController from "./albumController.js";
 
 
-
-
 export default class MusicController {
   constructor(model, view) {
     this.model = model;
