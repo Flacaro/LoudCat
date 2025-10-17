@@ -143,7 +143,6 @@ async handlePlaylist(song) {
   }
 }
 
-<<<<<<< HEAD
 
   showToast(message) {
   const toast = document.createElement("div");
@@ -153,7 +152,6 @@ async handlePlaylist(song) {
   setTimeout(() => toast.remove(), 2000);
 }
 
-=======
   async handleShare(song) {
     const auth = getAuth();
     const user = auth.currentUser;
@@ -194,8 +192,6 @@ async handlePlaylist(song) {
       alert('Errore durante la condivisione.');
     }
   }
->>>>>>> 66aa8d8ad1038a0a1de4dd95332258e2ae32de8e
-
   async handleAlbumClick(albumId) {
   const tracks = await this.model.getAlbumTracks(albumId);
   this.view.renderTracks(tracks, albumId); // render in the same page, below the album card
