@@ -16,6 +16,7 @@ export default class MusicController {
     this.view.bindAlbumClick(this.handleAlbumClick.bind(this)); // ADD THIS
     this.view.bindFavoriteToggle(this.handleFavoriteToggle.bind(this));
     this.view.bindAddToPlaylist(this.handlePlaylist.bind(this));
+    this.view.bindShare(this.handleShare.bind(this));
     this.loadLatestSearch();
   }
 
@@ -138,6 +139,47 @@ export default class MusicController {
     alert("Errore nel salvare nella playlist.");
   }
 }
+
+  async handleShare(song) {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) { alert('Devi effettuare il login per condividere una canzone.'); return; }
+
+    const recipientEmail = prompt('Inserisci l\'email del destinatario con cui condividere:');
+    if (!recipientEmail) return;
+    const emailTrim = recipientEmail.trim().toLowerCase();
+    // basic email validation
+    if (!/\S+@\S+\.\S+/.test(emailTrim)) { alert('Email non valida.'); return; }
+
+    try {
+      // Save share entry in a top-level collection
+      const shareRef = doc(db, 'shares', `${Date.now()}_${Math.random().toString(36).slice(2,8)}`);
+      await setDoc(shareRef, {
+        fromUid: user.uid,
+        fromEmail: user.email,
+        toEmail: emailTrim,
+        song,
+        createdAt: new Date().toISOString()
+      });
+
+      // If recipient exists as a user document, add a reference in their subcollection
+      // Try to find recipient by scanning users collection for matching email (not ideal at scale)
+      // For demo purposes we'll do a simple approach
+      const usersRef = doc(db, 'users', emailTrim.replace(/[^a-zA-Z0-9]/g, '_'));
+      // NOTE: this assumes you store user docs keyed by a normalized email — adjust if you store by uid
+      const userSnap = await getDoc(usersRef);
+      if (userSnap.exists()) {
+        // save under users/{recipient}/shared
+        const recipientSharedRef = doc(db, 'users', usersRef.id, 'shared', `${Date.now()}_${Math.random().toString(36).slice(2,8)}`);
+        await setDoc(recipientSharedRef, { from: user.email, song, createdAt: new Date().toISOString() });
+      }
+
+      alert('Canzone condivisa con ' + emailTrim + '!');
+    } catch (err) {
+      console.error('Errore durante la condivisione:', err);
+      alert('Errore durante la condivisione.');
+    }
+  }
 
   async handleAlbumClick(albumId) {
   const tracks = await this.model.getAlbumTracks(albumId);

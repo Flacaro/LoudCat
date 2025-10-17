@@ -78,6 +78,7 @@ export function initFirebaseAuth() {
 
   // Confirm registration (email/password + save)
   confirmRegisterBtn?.addEventListener("click", async () => {
+    if (!confirmRegisterBtn) return;
     try {
       const email = getEmail();
       const pass = getPassword();
@@ -87,24 +88,40 @@ export function initFirebaseAuth() {
       const username = getUsername ? getUsername() : null;
       const photoInput = getPhotoFile ? getPhotoFile() : null;
 
+      // Disable button to prevent duplicate submissions while uploading
+      confirmRegisterBtn.disabled = true;
+
       const cred = await register(email, pass);
       const user = cred.user;
 
-      // Upload avatar if present
+      // Upload avatar if present — generate a unique filename and save the public download URL
       let photoURL = null;
       try {
         const file = photoInput && photoInput.files && photoInput.files[0];
         if (file) {
           const { ref: storageRef, uploadBytes, getDownloadURL } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js");
-          const sRef = storageRef(storage, `avatars/${user.uid}/${file.name}`);
-          await uploadBytes(sRef, file);
-          photoURL = await getDownloadURL(sRef);
+          // create a safe, unique filename to avoid collisions
+          const safeName = `${Date.now()}_${Math.random().toString(36).slice(2,8)}_${file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_")}`;
+          const sRef = storageRef(storage, `avatars/${user.uid}/${safeName}`);
+          try {
+            await uploadBytes(sRef, file);
+          } catch (uploadErr) {
+            // Enhanced logging: surface Firebase Storage error code/message
+            console.error("UploadBytes failed:", uploadErr && uploadErr.code, uploadErr && uploadErr.message, uploadErr);
+            alert("Caricamento avatar fallito: " + (uploadErr && uploadErr.message ? uploadErr.message : "errore di rete o permessi"));
+            // don't rethrow; allow registration to continue without avatar
+          }
+          try {
+            photoURL = await getDownloadURL(sRef);
+          } catch (dlErr) {
+            console.error("getDownloadURL failed:", dlErr && dlErr.code, dlErr && dlErr.message, dlErr);
+          }
         }
       } catch (upErr) {
-        console.warn("Errore caricamento avatar:", upErr);
+        console.warn("Errore caricamento avatar:", upErr && upErr.code, upErr && upErr.message, upErr);
       }
 
-      // update profile with username/photo
+      // update profile with username/photo (photoURL should be an https download URL)
       try {
         const { updateProfile } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
         await updateProfile(user, { displayName: username || null, photoURL: photoURL || null });
@@ -113,7 +130,7 @@ export function initFirebaseAuth() {
           await user.reload();
         }
       } catch (profErr) {
-        console.warn("Impossibile aggiornare il profilo utente:", profErr);
+        console.warn("Impossibile aggiornare il profilo utente:", profErr && profErr.message ? profErr.message : profErr);
       }
 
       await saveUserData(user.uid, { email: user.email, username: username || null, photoURL: photoURL || null, createdAt: new Date().toISOString() });
@@ -122,8 +139,11 @@ export function initFirebaseAuth() {
       if (authSection) authSection.style.display = "none";
     } catch (err) {
       const msg = userMessageForFirebaseError(err);
-      console.error("Errore nella registrazione:", err);
+      console.error("Errore nella registrazione:", err && err.code, err && err.message, err);
       alert("Registrazione fallita: " + msg);
+    } finally {
+      // Re-enable button after attempt
+      confirmRegisterBtn.disabled = false;
     }
   });
 

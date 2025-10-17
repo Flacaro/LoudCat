@@ -74,6 +74,17 @@ renderSongs(songs) {
                 }))}'>
           + Playlist
         </button>
+        <button class="btn btn-outline-success share-btn" 
+                data-song='${encodeURIComponent(JSON.stringify({
+                  id: s.id || s.title.replace(/\s+/g,'-').toLowerCase(),
+                  title: s.title,
+                  artist: s.artist,
+                  album: s.album,
+                  artwork: s.artwork,
+                  preview: s.preview
+                }))}'>
+          ↗ Condividi
+        </button>
       
         </div>
     `)
@@ -95,6 +106,13 @@ renderSongs(songs) {
       this.playlistHandler(song) && this.playlistHandler(song);
     });
   });
+
+  this.results.querySelectorAll(".share-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const song = JSON.parse(decodeURIComponent(btn.dataset.song));
+      this.shareHandler && this.shareHandler(song);
+    });
+  });
 }
 
   bindFavoriteToggle(handler) {
@@ -112,6 +130,10 @@ renderSongs(songs) {
 
   bindAddToPlaylist(handler) {
     this.playlistHandler = handler;
+  }
+
+  bindShare(handler) {
+    this.shareHandler = handler;
   }
 
 
