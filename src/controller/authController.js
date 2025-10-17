@@ -133,9 +133,17 @@ export function initFirebaseAuth() {
         console.warn("Impossibile aggiornare il profilo utente:", profErr && profErr.message ? profErr.message : profErr);
       }
 
-      await saveUserData(user.uid, { email: user.email, username: username || null, photoURL: photoURL || null, createdAt: new Date().toISOString() });
+      const userDoc = { email: user.email, username: username || null, photoURL: photoURL || null, createdAt: new Date().toISOString() };
+      await saveUserData(user.uid, userDoc);
       console.log("Registrazione avvenuta:", user.email);
       alert("Registrazione effettuata con successo: " + user.email);
+      // Immediately show user UI and display saved data so username appears in the Dati dell'utente section
+      try {
+        showUserUI(user.email);
+        renderData(userDoc);
+      } catch (uiErr) {
+        console.warn('Impossibile aggiornare immediatamente l\'UI dopo la registrazione:', uiErr);
+      }
       if (authSection) authSection.style.display = "none";
     } catch (err) {
       const msg = userMessageForFirebaseError(err);
