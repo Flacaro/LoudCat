@@ -5,12 +5,16 @@ import { doc, setDoc, getDoc, deleteDoc, getDocs, updateDoc, collection} from "h
 import { db } from "../firebase.js";
 import {getAuth} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {arrayUnion, arrayRemove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import AlbumViewController from "./albumController.js";
+
+
 
 
 export default class MusicController {
   constructor(model, view) {
     this.model = model;
     this.view = view;
+    this.albumController = new AlbumViewController();
   }
 
   init() {
@@ -284,4 +288,8 @@ renderUserCollections({ favorites, playlists }) {
 
 
 
+handleAlbumClick(albumId) {
+  const backHandler = () => this.view.renderResults(this.model.lastResults); 
+  this.albumController.showAlbum(albumId, backHandler);
+}
 }
