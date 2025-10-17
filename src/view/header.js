@@ -53,6 +53,8 @@ export function renderData(data) {
 // Modal / profile UI bindings
 import { auth } from "../firebase.js";
 import { saveUserData, loadUserData } from "../model/modelAuth.js";
+import { db } from "../firebase.js";
+import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 export function initProfileModal() {
   const profileBtn = document.getElementById("profileBtn");
@@ -84,6 +86,20 @@ export function initProfileModal() {
       console.warn("Impossibile leggere i dati utente da Firestore:", err);
     }
 
+    // If photoURL is present but doesn't look like an http(s) URL, try resolving via Storage
+    try {
+      if (photoURL && typeof photoURL === 'string' && !/^https?:\/\//i.test(photoURL)) {
+        const storageMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js");
+        const { ref: storageRef, getDownloadURL } = storageMod;
+        // assume stored path like 'avatars/{uid}/{filename}'
+        const sRef = storageRef(storage, photoURL);
+        const resolved = await getDownloadURL(sRef);
+        photoURL = resolved;
+      }
+    } catch (resolveErr) {
+      console.debug("Impossibile risolvere photoURL via Storage, user may have full URL already:", resolveErr);
+    }
+
     if (emailEl) emailEl.textContent = `Email: ${emailText}`;
     if (nameEl) nameEl.textContent = `Username: ${usernameText ? usernameText : "-"}`;
     if (avatarEl) avatarEl.src = photoURL ? photoURL : "assets/img/avatar-placeholder.svg";
@@ -91,6 +107,13 @@ export function initProfileModal() {
     // focus first nav button if available
     const firstNav = modal.querySelector("[data-tab]");
     firstNav?.focus();
+
+    // load shared songs lists
+    try {
+      await loadSharedLists(user);
+    } catch (sharesErr) {
+      console.warn("Errore caricamento condivisioni:", sharesErr);
+    }
   }
   function closeModal() {
     if (modal) modal.style.display = "none";
@@ -225,4 +248,153 @@ export function switchPanel(name) {
       }
     }
   }
+}
+
+// --- Shared songs helpers ---
+async function loadSharedLists(user) {
+  const byMeList = document.getElementById("sharedByMeList");
+  const withMeList = document.getElementById("sharedWithMeList");
+  const friendsList = document.getElementById("friendsList");
+  if (!user) {
+    if (byMeList) byMeList.innerHTML = "<li class='list-group-item text-muted'>Devi essere loggato</li>";
+    if (withMeList) withMeList.innerHTML = "<li class='list-group-item text-muted'>Devi essere loggato</li>";
+    if (friendsList) friendsList.innerHTML = "<li class='list-group-item text-muted'>Devi essere loggato</li>";
+    return;
+  }
+
+  // clear existing
+  if (byMeList) byMeList.innerHTML = "";
+  if (withMeList) withMeList.innerHTML = "";
+
+  try {
+    // shares from me
+    const sharesCol = collection(db, 'shares');
+    // Query shares from this user. We avoid server-side ordering that requires a composite index
+    // and instead sort client-side by createdAt (ISO string) to show newest first.
+    const qFrom = query(sharesCol, where('fromUid', '==', user.uid));
+    const snapFrom = await getDocs(qFrom);
+    let sharesFromArr = [];
+    if (!snapFrom.empty) {
+      sharesFromArr = snapFrom.docs.map(d => ({ id: d.id, ...d.data() }));
+      sharesFromArr.sort((a, b) => {
+        const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return tb - ta;
+      });
+      sharesFromArr.forEach(item => appendSharedListItem(byMeList, item, item.id, true));
+    } else {
+      if (byMeList) byMeList.innerHTML = "<li class='list-group-item text-muted'>Non hai condiviso canzoni.</li>";
+    }
+
+    // shares to me (by email)
+    const myEmail = (user.email || "").trim().toLowerCase();
+    const qTo = query(sharesCol, where('toEmail', '==', myEmail));
+    const snapTo = await getDocs(qTo);
+    let sharesToArr = [];
+    if (!snapTo.empty) {
+      sharesToArr = snapTo.docs.map(d => ({ id: d.id, ...d.data() }));
+      sharesToArr.sort((a, b) => {
+        const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return tb - ta;
+      });
+      sharesToArr.forEach(item => appendSharedListItem(withMeList, item, item.id, false));
+    } else {
+      if (withMeList) withMeList.innerHTML = "<li class='list-group-item text-muted'>Nessuna canzone condivisa con te.</li>";
+    }
+
+    // build friends list from shares (emails of recipients and senders)
+    try {
+      const map = new Map();
+      const myEmail = (user.email || "").trim().toLowerCase();
+
+      sharesFromArr.forEach(s => {
+        const to = (s.toEmail || "").trim().toLowerCase();
+        if (!to || to === myEmail) return;
+        const entry = map.get(to) || { email: to, sharedByMe: 0, sharedWithMe: 0, last: 0 };
+        entry.sharedByMe += 1;
+        entry.last = Math.max(entry.last, s.createdAt ? new Date(s.createdAt).getTime() : 0);
+        map.set(to, entry);
+      });
+
+      sharesToArr.forEach(s => {
+        const from = (s.fromEmail || "").trim().toLowerCase();
+        if (!from || from === myEmail) return;
+        const entry = map.get(from) || { email: from, sharedByMe: 0, sharedWithMe: 0, last: 0 };
+        entry.sharedWithMe += 1;
+        entry.last = Math.max(entry.last, s.createdAt ? new Date(s.createdAt).getTime() : 0);
+        map.set(from, entry);
+      });
+
+      // render
+      if (friendsList) friendsList.innerHTML = "";
+      if (map.size === 0) {
+        if (friendsList) friendsList.innerHTML = "<li class='list-group-item text-muted'>Non hai ancora amici.</li>";
+      } else {
+        // sort by last interaction
+        const arr = Array.from(map.values()).sort((a,b) => b.last - a.last);
+        arr.forEach(entry => {
+          const li = document.createElement('li');
+          li.className = 'list-group-item d-flex justify-content-between align-items-center';
+          const when = entry.last ? new Date(entry.last).toLocaleString() : '';
+          li.innerHTML = `<div><div class="fw-bold">${escapeHtml(entry.email)}</div><div class="small text-muted">Ultima attività: ${escapeHtml(when)}</div></div><span class='badge bg-primary rounded-pill'>${entry.sharedByMe + entry.sharedWithMe}</span>`;
+          friendsList.appendChild(li);
+        });
+      }
+    } catch (frErr) {
+      console.warn('Errore costruzione friends list:', frErr);
+    }
+  } catch (err) {
+    console.error('Errore caricamento condivisioni:', err);
+    if (byMeList) byMeList.innerHTML = "<li class='list-group-item text-danger'>Errore nel caricare le condivisioni.</li>";
+    if (withMeList) withMeList.innerHTML = "<li class='list-group-item text-danger'>Errore nel caricare le condivisioni.</li>";
+  }
+}
+
+function appendSharedListItem(container, shareData, id, isFromMe) {
+  if (!container) return;
+  const li = document.createElement('li');
+  li.className = 'list-group-item d-flex justify-content-between align-items-start';
+  const title = shareData?.song?.title || 'Titolo non disponibile';
+  const artist = shareData?.song?.artist ? ` — ${shareData.song.artist}` : '';
+  li.innerHTML = `
+    <div class="ms-2 me-auto">
+      <div class="fw-bold">${escapeHtml(title)}</div>
+      <div class="text-muted small">${escapeHtml(artist)}</div>
+    </div>
+    <div>
+      <button class="btn btn-sm btn-outline-primary play-shared" data-id="${id}">▶️</button>
+    </div>
+  `;
+  container.appendChild(li);
+  // attach click handler for play
+  const btn = li.querySelector('.play-shared');
+  btn.addEventListener('click', () => {
+    handlePlayShared(container, shareData);
+  });
+}
+
+function handlePlayShared(container, shareData) {
+  // remove any existing preview in container
+  const existing = container.querySelector('.shared-preview');
+  if (existing) existing.remove();
+  const previewUrl = shareData?.song?.preview;
+  if (!previewUrl) {
+    const p = document.createElement('div');
+    p.className = 'shared-preview text-muted small mt-2';
+    p.textContent = 'Anteprima non disponibile';
+    container.appendChild(p);
+    return;
+  }
+  const div = document.createElement('div');
+  div.className = 'shared-preview mt-2';
+  div.innerHTML = `<audio controls src="${escapeHtml(previewUrl)}"></audio>`;
+  container.appendChild(div);
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"']/g, function (s) {
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[s];
+  });
 }

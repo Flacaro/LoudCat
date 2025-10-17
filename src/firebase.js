@@ -9,7 +9,9 @@ const firebaseConfig = {
   apiKey: "AIzaSyBoUBOu8rm_yzS7MWIY7YtMlyTfHmNbPT8",
   authDomain: "loudcat.firebaseapp.com",
   projectId: "loudcat",
-  storageBucket: "loudcat.firebasestorage.app",
+  // Use the Storage bucket in the standard <projectId>.appspot.com format.
+  // If your Firebase console shows a different bucket name, replace this value accordingly.
+  storageBucket: "loudcat.appspot.com",
   messagingSenderId: "847871362501",
   appId: "1:847871362501:web:c0d5d5cb4faa6b0fe037ac"
 };
