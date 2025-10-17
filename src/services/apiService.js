@@ -79,3 +79,24 @@ export async function fetchArtists(query) {
   }));
 }
 
+export async function fetchAlbumById(albumId) {
+  const endpoint = `https://itunes.apple.com/lookup?id=${albumId}&entity=song`;
+  const res = await fetch(endpoint);
+  if (!res.ok) throw new Error("Errore nella richiesta API");
+  
+  const data = await res.json();
+  if (!data.results || !data.results.length) throw new Error("Album non trovato");
+
+  // The first item is the album info, rest are tracks
+  const albumInfo = data.results[0];
+
+  return {
+    collectionId: albumInfo.collectionId,
+    title: albumInfo.collectionName,
+    artistName: albumInfo.artistName,
+    artworkUrl100: albumInfo.artworkUrl100,
+    releaseDate: albumInfo.releaseDate,
+    primaryGenreName: albumInfo.primaryGenreName
+  };
+}
+

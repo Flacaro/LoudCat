@@ -5,10 +5,14 @@ import { doc, setDoc, getDoc, deleteDoc, updateDoc} from "https://www.gstatic.co
 import { db } from "../firebase.js";
 import {getAuth} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {arrayUnion, arrayRemove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import AlbumViewController from "./albumController.js";
+
+
 export default class MusicController {
   constructor(model, view) {
     this.model = model;
     this.view = view;
+    this.albumController = new AlbumViewController();
   }
 
   init() {
@@ -197,4 +201,8 @@ async handlePlaylist(song) {
   this.view.renderTracks(tracks, albumId); // render in the same page, below the album card
 }
 
+handleAlbumClick(albumId) {
+  const backHandler = () => this.view.renderResults(this.model.lastResults); 
+  this.albumController.showAlbum(albumId, backHandler);
+}
 }

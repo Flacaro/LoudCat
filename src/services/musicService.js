@@ -11,26 +11,59 @@ export default class MusicService {
       fetchArtists(query)
     ]);
 
-    return{
-      songs: songsData.map(songData => new Song(songData)),
-      albums: albumsData.map(albumData => new Album(albumData)),
-      artists: artistsData.map(artistData => new Artist(artistData)) // Using Song class for artist results as well
+    return {
+      songs: songsData.map(s => new Song({
+        id: s.trackId,          // if your Song class uses id
+        title: s.title,
+        artist: s.artist,
+        album: s.album,
+        artwork: s.artwork,
+        preview: s.preview
+      })),
+      albums: albumsData.map(a => new Album({
+        id: a.collectionId,
+        title: a.title,
+        artist: a.artist,
+        releaseDate: a.releaseDate,
+        coverImage: a.artwork,
+        tracks: []              // initially empty
+      })),
+      artists: artistsData.map(ar => new Artist({
+        id: ar.artistId,
+        name: ar.name,
+        genre: ar.genre,
+        artwork: ar.artwork,
+        albums: ar.albums || []
+      }))
     };
-}
+  }
 
   async getSongs(query, type = "artist") {
     const data = await fetchSongs(query, type);
-    return data.map(songData => new Song(songData));
+    return data.map(s => new Song({
+      id: s.trackId,
+      title: s.title,
+      artist: s.artist,
+      album: s.album,
+      artwork: s.artwork,
+      preview: s.preview
+    }));
   }
 
-  async getAlbums(query){
-    const data = await fetchAlbums(query, type);
-    return data.map(albumData => new Album(albumData));
+  async getAlbums(query) {
+    const data = await fetchAlbums(query);
+    return data.map(a => new Album({
+      id: a.collectionId,
+      title: a.title,
+      artist: a.artist,
+      releaseDate: a.releaseDate,
+      coverImage: a.artwork,
+      tracks: []
+    }));
   }
 
   async getAlbumTracks(albumId) {
-  return await fetchTracksByAlbum(albumId); // already returns tracklist
-}
-
+    return await fetchTracksByAlbum(albumId);
+  }
 }
 

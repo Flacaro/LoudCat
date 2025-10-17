@@ -20,8 +20,8 @@ export default class MusicView {
 renderAlbums(albums) {
   const html = albums
     .map(a => `
-      <div class="card album-card" data-album-id="${a.collectionId}">
-        <img src="${a.artwork || './assets/default-artwork.png'}" alt="${a.title}" />
+      <div class="card album-card" data-album-id="${a.id}">
+        <img src="${a.coverImage || './assets/default-artwork.png'}" alt="${a.title}" />
         <h3>${a.title}</h3>
         <p class="artist">${a.artist}</p>
         ${a.releaseDate ? `<p>📅 ${a.releaseDate}</p>` : ""}
@@ -37,7 +37,7 @@ renderArtists(artists) {
   const html = artists
     .map(artist => `
       <div class="card artist-card">
-        <img src="${artist.artwork || './assets/default-artwork.png'}" alt="${artist.name}" />
+        <img src="${artist.image || './assets/default-artwork.png'}" alt="${artist.name}" />
         <h3>${artist.name}</h3>
         ${artist.genre ? `<p>🎵 ${artist.genre}</p>` : ""}
         ${artist.albums?.length ? `
