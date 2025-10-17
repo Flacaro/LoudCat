@@ -11,23 +11,22 @@ export function initFirebaseAuth(controller) {
     console.error("AuthController: controller non fornito!");
     return;
   }
- // Rileva se l’utente è loggato o meno
- onUserChanged(async (user) => {
-    if (user) {
-      showUserUI(user.email);
-      console.log("Utente autenticato:", user.email);
+  
+onUserChanged(async (user) => {
+  if (user) {
+    showUserUI(user.email);
+    console.log("Utente autenticato:", user.email);
 
-      // --- NUOVO: carica preferiti e playlist ---
-      if (controller) {
-        const { favorites, playlists } = await controller.loadUserCollections(user.uid);
-        controller.view.renderUserCollections(favorites, playlists);
-      }
-
-    } else {
-      showLoginUI();
-      console.log("Nessun utente autenticato");
+    // --- NUOVO: carica preferiti e playlist dal UserController ---
+    if (controller && controller.userController) {
+      const { favorites, playlists } = await controller.userController.loadUserCollections(user.uid);
+      controller.userController.renderUserCollections({ favorites, playlists }, controller.view);
     }
-  });
+  } else {
+    showLoginUI();
+    console.log("Nessun utente autenticato");
+  }
+});
  // helper di validazione
  function isValidEmail(email) {
    return typeof email === "string" && /\S+@\S+\.\S+/.test(email);

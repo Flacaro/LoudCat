@@ -19,4 +19,9 @@ export default class AlbumViewController {
       this.view.container.innerHTML = "<p>❌ Errore nel caricamento dell'album</p>";
     }
   }
+
+   handleAlbumClick(albumId) {
+    const backHandler = () => this.view.renderResults(this.model.lastResults); 
+    this.showAlbum(albumId, backHandler);
+  }
 }
