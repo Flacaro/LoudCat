@@ -4,7 +4,7 @@
 import { doc, setDoc, getDoc, deleteDoc, updateDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { db } from "../firebase.js";
 import {getAuth} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {arrayUnion} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {arrayUnion, arrayRemove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 export default class MusicController {
   constructor(model, view) {
     this.model = model;
@@ -61,7 +61,7 @@ export default class MusicController {
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) {
-      alert("Devi effettuare il login per aggiungere ai preferiti.");
+      this.view.showToast("Devi effettuare il login per gestire i preferiti.");
       return;
     }
 
@@ -87,40 +87,44 @@ export default class MusicController {
       }
     } catch (err) {
       console.error("Errore nella gestione dei preferiti:", err);
-      alert("Errore nel salvare il preferito.");
+      this.view.showToast("Errore nella gestione dei preferiti.");
     }
   }
 
-  async handlePlaylist(song) {
+async handlePlaylist(song) {
   const auth = getAuth();
   const user = auth.currentUser;
   if (!user) {
-    alert("Devi fare il login per aggiungere alla playlist.");
+    this.view.showToast("Devi effettuare il login per gestire la playlist.");
     return;
   }
 
-  const playlistId = song.id || song.title.replace(/\s+/g,'-').toLowerCase();; // puoi poi cambiare con la scelta dell’utente
+  const playlistId = song.id || song.title.replace(/\s+/g,'-').toLowerCase();
   const plRef = doc(db, "users", user.uid, "playlists", playlistId);
 
   try {
     const snap = await getDoc(plRef);
     if (snap.exists()) {
-      // aggiungi la canzone all'array songs usando arrayUnion
-      await updateDoc(plRef, {
-        songs: arrayUnion({
-          id: song.id,
-          title: song.title,
-          artist: song.artist,
-          album: song.album,
-          artwork: song.artwork,
-          preview: song.preview,
-          addedAt: new Date().toISOString()
-        })
-      });
+      const data = snap.data();
+      const songExists = data.songs?.some(s => s.id === song.id);
+
+      if (songExists) {
+        // Rimuovi la canzone
+        await updateDoc(plRef, {
+          songs: arrayRemove(song.id)
+        });
+        this.view.showToast("Canzone rimossa dalla playlist!");
+      } else {
+        // Aggiungi la canzone
+        await updateDoc(plRef, {
+          songs: arrayUnion(song.id)
+        });
+        this.view.showToast("Canzone aggiunta alla playlist!");
+      }
     } else {
       // crea la playlist se non esiste
       await setDoc(plRef, {
-        name: "Default Playlist",
+        name: "My Playlist",
         songs: [{
           id: song.id,
           title: song.title,
@@ -131,13 +135,22 @@ export default class MusicController {
           addedAt: new Date().toISOString()
         }]
       });
+      this.view.showToast("Playlist creata e canzone aggiunta!");
     }
-    alert("Canzone aggiunta alla playlist!");
   } catch (err) {
     console.error("Errore nella gestione della playlist:", err);
-    alert("Errore nel salvare nella playlist.");
   }
 }
+
+
+  showToast(message) {
+  const toast = document.createElement("div");
+  toast.className = "toast-message";
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
+}
+
 
   async handleAlbumClick(albumId) {
   const tracks = await this.model.getAlbumTracks(albumId);
