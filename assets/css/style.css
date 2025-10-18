@@ -130,7 +130,7 @@ footer {
 }
 
 /* Toast notification styles */
-.toast {
+.toast-message {
   position: fixed;
   bottom: 20px;
   right: 20px;

@@ -7,6 +7,20 @@ export default class PlaylistController {
     this.view = view;
   }
 
+  async getPlaylists() {
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (!user) return [];
+
+  try {
+    const playlistsSnap = await getDocs(collection(db, "users", user.uid, "playlists"));
+    return playlistsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (err) {
+    console.error("Errore nel recupero delle playlist:", err);
+    return [];
+  }
+}
+
  async handlePlaylist(song) {
   const auth = getAuth();
   const user = auth.currentUser;

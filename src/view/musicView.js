@@ -10,7 +10,6 @@ export default class MusicView {
     this.results = document.getElementById("results-container");
     this.playlistView = new PlaylistView();
   }
-  // inside MusicView class
 
    showToast(message) {
   const toast = document.createElement("div");
@@ -139,10 +138,6 @@ renderSongs(songs) {
   }
 }
 
-  bindAddToPlaylist(handler) {
-    this.playlistHandler = handler;
-  }
-
   bindShare(handler) {
     this.shareHandler = handler;
   }
@@ -192,69 +187,6 @@ renderTracks(tracks, albumId) {
 }
 
 
-
-renderUserCollections(favorites = [], playlists = []) {
-  this.results.innerHTML = "";
-
-  const favHtml = favorites.length ? favorites.map(s => `
-    <div class="card song-card user-card">
-  <img src="${s.artwork || 'assets/img/avatar-placeholder.svg'}" alt="${s.title}" />
-        <h4>${s.title}</h4>
-        <p>${s.artist}</p>
-        <div class="hover-actions">
-          <button class="btn btn-sm btn-outline-primary playlist-btn" data-song='${encodeURIComponent(JSON.stringify(s))}'>+ Playlist</button>
-          <button class="btn btn-sm btn-outline-success share-btn" data-song='${encodeURIComponent(JSON.stringify(s))}'>↗ Condividi</button>
-        </div>
-      </div>
-    `).join("")
-    : `<p>⭐ Nessun preferito salvato.</p>`;
-
-    const playlistHtml = playlists.length ? playlists.map(pl => `
-      <div class="card playlist-card user-card">
-        <h4>${pl.name}</h4>
-        <p>${pl.songs.length} brani</p>
-        <div class="hover-actions">
-          <button class="btn btn-sm btn-outline-success play-btn">▶ Riproduci</button>
-        </div>
-      </div>
-    `).join("")
-    : `<p>🎵 Nessuna playlist creata.</p>`;
-
-    const container = document.createElement("div");
-    container.className = "user-collections";
-    container.innerHTML = `
-    <h3>I tuoi preferiti</h3>
-    <div class="favorites">${favHtml}</div>
-    <h3>Le tue playlist</h3>
-    <div class="playlists">${playlistHtml}</div>
-  `;
-
-  this.results.appendChild(container);
-
-  // bind dei pulsanti hover
-  container.querySelectorAll(".playlist-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const song = JSON.parse(decodeURIComponent(btn.dataset.song));
-      this.playlistHandler && this.playlistHandler(song);
-    });
-  });
-
-  container.querySelectorAll(".share-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const song = JSON.parse(decodeURIComponent(btn.dataset.song));
-      this.shareHandler && this.shareHandler(song);
-    });
-  });
-
-
-  container.querySelectorAll(".play-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      // implementa la logica di riproduzione della playlist
-      this.showToast("Funzionalità di riproduzione non ancora implementata.");
-    });
-  });
-}
-
 bindCreatePlaylist(handler) {
   const btn = document.getElementById("createPlaylistBtn");
   btn?.addEventListener("click", () => {
@@ -265,6 +197,10 @@ bindCreatePlaylist(handler) {
 
 bindAddToPlaylist(handler) {
     this.playlistHandler = handler;
+  }
+
+  bindRenderCollection(handler) {
+    this.renderCollectionHandler = handler;
   }
 
   showPlaylistModal(song, playlists, onSelect) {
