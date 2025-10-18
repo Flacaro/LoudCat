@@ -1,11 +1,14 @@
 // musicView.js
 // Gestisce la parte visiva e l'interazione utente
 
+import PlaylistView from "./paylistView.js";
+
 export default class MusicView {
   constructor() {
     this.input = document.getElementById("search-input");
     this.button = document.getElementById("search-btn");
     this.results = document.getElementById("results-container");
+    this.playlistView = new PlaylistView();
   }
   // inside MusicView class
 
@@ -80,7 +83,7 @@ renderSongs(songs) {
                   artwork: s.artwork,
                   preview: s.preview
                 }))}'>
-          + Playlist
+          + Aggiungi alla playlist
         </button>
         <button class="btn btn-outline-success share-btn" 
                 data-song='${encodeURIComponent(JSON.stringify({
@@ -259,5 +262,23 @@ bindCreatePlaylist(handler) {
     if (name) handler(name);
   });
 }
+
+bindAddToPlaylist(handler) {
+    this.playlistHandler = handler;
+  }
+
+  showPlaylistModal(song, playlists, onSelect) {
+    this.playlistView.showModal(song, playlists, onSelect);
+  }
+
+  updatePlaylistButton(songId, playlistId, isAdded) {
+  const btns = this.results.querySelectorAll(`.playlist-btn[data-song*="${songId}"]`);
+  btns.forEach(btn => {
+    btn.textContent = isAdded ? "- Rimuovi dalla playlist" : "+ Aggiungi alla playlist";
+    btn.classList.toggle("btn-outline-primary", !isAdded);
+    btn.classList.toggle("btn-danger", isAdded);
+  });
+}
+
 
 }
