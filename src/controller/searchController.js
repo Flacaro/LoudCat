@@ -14,7 +14,38 @@ export default class SearchController {
       this.view.renderResults(results);
 
       const ref = doc(db, "searches", "latest");
-      await setDoc(ref, { query, results, updatedAt: new Date().toISOString() });
+      // Serialize results to plain objects because Firestore rejects custom class instances
+      const safeResults = {};
+      if (results) {
+        if (Array.isArray(results.songs)) {
+          safeResults.songs = results.songs.map(s => ({
+            id: s.id || null,
+            title: s.title || null,
+            artist: s.artist || null,
+            album: s.album || null,
+            artwork: s.artwork || null,
+            preview: s.preview || null
+          }));
+        }
+        if (Array.isArray(results.albums)) {
+          safeResults.albums = results.albums.map(a => ({
+            collectionId: a.collectionId || null,
+            title: a.title || null,
+            artist: a.artist || null,
+            artwork: a.artwork || null,
+            trackCount: a.trackCount || null,
+            releaseDate: a.releaseDate || null
+          }));
+        }
+        if (Array.isArray(results.artists)) {
+          safeResults.artists = results.artists.map(ar => ({
+            name: ar.name || null,
+            artwork: ar.artwork || null,
+            genre: ar.genre || null
+          }));
+        }
+      }
+      await setDoc(ref, { query, results: safeResults, updatedAt: new Date().toISOString() });
       console.log("Ricerca salvata su Firestore");
     } catch (err) {
       console.error(err);

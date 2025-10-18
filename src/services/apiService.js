@@ -74,7 +74,7 @@ export async function fetchArtists(query) {
     name: item.artistName,
     artistId: item.artistId,
     genre: item.primaryGenreName,
-    artwork: item.artworkUrl100 || './assets/default-artwork.png',
+    artwork: item.artworkUrl100 || 'assets/img/avatar-placeholder.svg',
     albums: [] // optional: populate in MusicService if you want top albums
   }));
 }

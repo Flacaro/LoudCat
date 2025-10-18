@@ -14,7 +14,7 @@ export default class AlbumView {
     const html = `
       <button id="back-btn">← Torna ai risultati</button>
       <div class="album-detail">
-        <img src="${album.coverImage || './assets/default-artwork.png'}" alt="${album.title}" />
+  <img src="${album.coverImage || 'assets/img/avatar-placeholder.svg'}" alt="${album.title}" />
         <h2>${album.title}</h2>
         <p>Artista: ${album.artist}</p>
         <p>Uscita: ${album.releaseDate || "N/A"}</p>

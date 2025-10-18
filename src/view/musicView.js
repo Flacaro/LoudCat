@@ -21,7 +21,7 @@ renderAlbums(albums) {
   const html = albums
     .map(a => `
       <div class="card album-card" data-album-id="${a.id}">
-        <img src="${a.coverImage || './assets/default-artwork.png'}" alt="${a.title}" />
+  <img src="${a.coverImage || 'assets/img/avatar-placeholder.svg'}" alt="${a.title}" />
         <h3>${a.title}</h3>
         <p class="artist">${a.artist}</p>
         ${a.releaseDate ? `<p>📅 ${a.releaseDate}</p>` : ""}
@@ -37,7 +37,7 @@ renderArtists(artists) {
   const html = artists
     .map(artist => `
       <div class="card artist-card">
-        <img src="${artist.image || './assets/default-artwork.png'}" alt="${artist.name}" />
+  <img src="${artist.image || 'assets/img/avatar-placeholder.svg'}" alt="${artist.name}" />
         <h3>${artist.name}</h3>
         ${artist.genre ? `<p>🎵 ${artist.genre}</p>` : ""}
         ${artist.albums?.length ? `
@@ -55,7 +55,7 @@ renderSongs(songs) {
   const html = songs
     .map(s => `
       <div class="card song-card">
-        <img src="${s.artwork || './assets/default-artwork.png'}" alt="${s.title}" />
+  <img src="${s.artwork || 'assets/img/avatar-placeholder.svg'}" alt="${s.title}" />
         <h4>${s.title}</h4>
         <p>${s.artist}</p>
         ${s.album ? `<p>${s.album}</p>` : ""}
@@ -195,7 +195,7 @@ renderUserCollections(favorites = [], playlists = []) {
 
   const favHtml = favorites.length ? favorites.map(s => `
     <div class="card song-card user-card">
-        <img src="${s.artwork || './assets/default-artwork.png'}" alt="${s.title}" />
+  <img src="${s.artwork || 'assets/img/avatar-placeholder.svg'}" alt="${s.title}" />
         <h4>${s.title}</h4>
         <p>${s.artist}</p>
         <div class="hover-actions">

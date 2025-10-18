@@ -26,7 +26,7 @@ export default class UserController {
     if(favorites.length) {
       const favHtml = favorites.map(song => `
         <div class="card song-card hover-card">
-          <img src="${song.artwork || './assets/default-artwork.png'}" alt="${song.title}" />
+          <img src="${song.artwork || 'assets/img/avatar-placeholder.svg'}" alt="${song.title}" />
           <h4>${song.title}</h4>
           <p>${song.artist}</p>
         </div>
