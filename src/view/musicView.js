@@ -1,7 +1,9 @@
 // musicView.js
 // Gestisce la parte visiva e l'interazione utente
 
-import PlaylistView from "./paylistView.js";
+import PlaylistView from "./playlistView.js";
+import FavoriteView from "./favoriteView.js";
+import { showToast } from "./toastView.js";
 
 export default class MusicView {
   constructor() {
@@ -9,6 +11,32 @@ export default class MusicView {
     this.button = document.getElementById("search-btn");
     this.results = document.getElementById("results-container");
     this.playlistView = new PlaylistView();
+    this.favoriteView = new FavoriteView();
+    // wire playlist create button via playlistView
+    this.playlistView.bindCreatePlaylist((name) => {
+      if (this.createPlaylistHandler) this.createPlaylistHandler(name);
+    });
+    // delegated click handling for action buttons
+    this.results.addEventListener('click', (e) => {
+      const fav = e.target.closest('.fav-btn');
+      const pbtn = e.target.closest('.playlist-btn');
+      const sbtn = e.target.closest('.share-btn');
+      if (fav) {
+        const song = JSON.parse(decodeURIComponent(fav.dataset.song || '%7B%7D'));
+        if (this.favHandler) this.favHandler(song);
+        return;
+      }
+      if (pbtn) {
+        const song = JSON.parse(decodeURIComponent(pbtn.dataset.song || '%7B%7D'));
+        if (this.playlistHandler) this.playlistHandler(song);
+        return;
+      }
+      if (sbtn) {
+        const song = JSON.parse(decodeURIComponent(sbtn.dataset.song || '%7B%7D'));
+        if (this.shareHandler) this.shareHandler(song);
+        return;
+      }
+    });
   }
 
    showToast(message) {
@@ -19,10 +47,10 @@ export default class MusicView {
   setTimeout(() => toast.remove(), 2000);
 }
 
-renderAlbums(albums) {
+  renderAlbums(albums) {
   const html = albums
     .map(a => `
-      <div class="card album-card" data-album-id="${a.id}">
+    <div class="card album-card" data-album-id="${a.id}">
   <img src="${a.coverImage || 'assets/img/avatar-placeholder.svg'}" alt="${a.title}" />
         <h3>${a.title}</h3>
         <p class="artist">${a.artist}</p>
@@ -36,7 +64,7 @@ renderAlbums(albums) {
 }
 
 // src/view/musicView.js
-renderArtists(artists) {
+  renderArtists(artists) {
   const resultsContainer = document.getElementById("results-container");
   if (!resultsContainer) return;
 
@@ -69,10 +97,6 @@ renderArtists(artists) {
     });
   });
 }
-
-
-
-
 bindArtistClick(handler) {
   this.results.addEventListener("click", (e) => {
     const card = e.target.closest(".artist-card");
@@ -86,10 +110,7 @@ bindArtistClick(handler) {
     }
   });
 }
-
-
-
-renderSongs(songs) {
+  renderSongs(songs) {
   const html = songs
     .map(s => `
       <div class="card song-card">
@@ -106,7 +127,7 @@ renderSongs(songs) {
                   album: s.album,
                   artwork: s.artwork,
                   preview: s.preview
-                }))}'>
+                }))}' data-song-id='${s.id || s.title.replace(/\s+/g,'-').toLowerCase()}'>
           ⭐ Aggiungi ai preferiti
         </button>
         <button class="btn btn-outline-primary playlist-btn" 
@@ -117,7 +138,7 @@ renderSongs(songs) {
                   album: s.album,
                   artwork: s.artwork,
                   preview: s.preview
-                }))}'>
+                }))}' data-song-id='${s.id || s.title.replace(/\s+/g,'-').toLowerCase()}'>
           + Aggiungi alla playlist
         </button>
         <button class="btn btn-outline-success share-btn" 
@@ -128,7 +149,7 @@ renderSongs(songs) {
                   album: s.album,
                   artwork: s.artwork,
                   preview: s.preview
-                }))}'>
+                }))}' data-song-id='${s.id || s.title.replace(/\s+/g,'-').toLowerCase()}'>
           ↗ Condividi
         </button>
       
@@ -165,14 +186,10 @@ renderSongs(songs) {
     this.favHandler = handler;
   }
 
+  // delegate to FavoriteView
   updateFavoriteState(songId, isFav) {
-  const btn = this.results.querySelector(`.fav-btn[data-song*="${songId}"]`);
-  if (btn) {
-    btn.textContent = isFav ? "💛 Rimuovi dai preferiti" : "⭐ Aggiungi ai preferiti";
-    btn.classList.toggle("btn-warning", isFav);
-    btn.classList.toggle("btn-outline-warning", !isFav);
+    this.favoriteView.updateFavoriteState(songId, isFav);
   }
-}
 
   bindShare(handler) {
     this.shareHandler = handler;
@@ -197,8 +214,6 @@ renderSongs(songs) {
 
   }
 
-  
-
   renderError() {
     this.results.innerHTML = "<p>❌ Errore durante la ricerca.</p>";
   }
@@ -222,13 +237,9 @@ renderTracks(tracks, albumId) {
   albumCard.insertAdjacentHTML("beforeend", tracklistHtml);
 }
 
-
 bindCreatePlaylist(handler) {
-  const btn = document.getElementById("createPlaylistBtn");
-  btn?.addEventListener("click", () => {
-    const name = prompt("Inserisci il nome della nuova playlist:");
-    if (name) handler(name);
-  });
+    // use PlaylistView binder
+    this.createPlaylistHandler = handler;
 }
 
 bindAddToPlaylist(handler) {
