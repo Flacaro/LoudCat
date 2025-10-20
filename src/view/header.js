@@ -11,7 +11,8 @@ export function getUsername() {
 export function getPhotoFile() {
  return document.getElementById("photoFile");
 }
-export function showUserUI(email) {
+
+export function showUserUI(email) { 
   const authSection = document.getElementById("auth");
   const dataSection = document.getElementById("data");
   const logoutBtn = document.getElementById("logoutBtn");
