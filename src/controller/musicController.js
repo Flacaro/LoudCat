@@ -4,15 +4,17 @@ import PlaylistController from "./playlistController.js";
 import ShareController from "./shareController.js";
 import AlbumController from "./albumController.js";
 import UserController from "./userController.js";
+import ArtistProfileController from "./artistProfileController.js";
 import HomeView from "../view/homeView.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
 
 export default class MusicController {
   constructor(model, view) {
     this.model = model;
     this.view = view;
     this.homeView = new HomeView();
+     this.isHomeLoaded = false;
+    this.isUserLoggedIn = false;
 
     this.userController = new UserController();
     this.searchController = new SearchController(model, view);
@@ -22,9 +24,10 @@ export default class MusicController {
     this.shareController = new ShareController(view);
     this.albumController = new AlbumController(view, model);
 
-    this.isHomeLoaded = false;
-    this.isUserLoggedIn = false;
+    this.artistProfileController = new ArtistProfileController();
   }
+
+  
 
   async init() {
     this.view.bindSearch(query => this.searchController.handleSearch(query));
@@ -86,5 +89,7 @@ async loadHome() {
   // 🔹 Usa solo HomeView per il box
   this.homeView.renderUserCollections(collections.favorites, collections.playlists);
 }
-
 }
+
+
+
