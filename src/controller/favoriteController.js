@@ -1,4 +1,4 @@
-import { doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { doc, setDoc, collection, getDocs, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { db } from "../firebase.js";
 
@@ -6,6 +6,21 @@ export default class FavoriteController {
   constructor(view) {
     this.view = view;
   }
+
+  async getFavorites() {
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (!user) return [];
+
+  try {
+    const favsSnap = await getDocs(collection(db, "users", user.uid, "favorites"));
+    return favsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (err) {
+    console.error("Errore nel recupero dei preferiti:", err);
+    return [];
+  }
+}
+
 
   async handleFavoriteToggle(song) {
     const auth = getAuth();

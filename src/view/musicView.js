@@ -1,13 +1,15 @@
 // musicView.js
 // Gestisce la parte visiva e l'interazione utente
 
+import PlaylistView from "./paylistView.js";
+
 export default class MusicView {
   constructor() {
     this.input = document.getElementById("search-input");
     this.button = document.getElementById("search-btn");
     this.results = document.getElementById("results-container");
+    this.playlistView = new PlaylistView();
   }
-  // inside MusicView class
 
    showToast(message) {
   const toast = document.createElement("div");
@@ -116,7 +118,7 @@ renderSongs(songs) {
                   artwork: s.artwork,
                   preview: s.preview
                 }))}'>
-          + Playlist
+          + Aggiungi alla playlist
         </button>
         <button class="btn btn-outline-success share-btn" 
                 data-song='${encodeURIComponent(JSON.stringify({
@@ -172,10 +174,6 @@ renderSongs(songs) {
   }
 }
 
-  bindAddToPlaylist(handler) {
-    this.playlistHandler = handler;
-  }
-
   bindShare(handler) {
     this.shareHandler = handler;
   }
@@ -225,69 +223,6 @@ renderTracks(tracks, albumId) {
 }
 
 
-
-renderUserCollections(favorites = [], playlists = []) {
-  this.results.innerHTML = "";
-
-  const favHtml = favorites.length ? favorites.map(s => `
-    <div class="card song-card user-card">
-  <img src="${s.artwork || 'assets/img/avatar-placeholder.svg'}" alt="${s.title}" />
-        <h4>${s.title}</h4>
-        <p>${s.artist}</p>
-        <div class="hover-actions">
-          <button class="btn btn-sm btn-outline-primary playlist-btn" data-song='${encodeURIComponent(JSON.stringify(s))}'>+ Playlist</button>
-          <button class="btn btn-sm btn-outline-success share-btn" data-song='${encodeURIComponent(JSON.stringify(s))}'>↗ Condividi</button>
-        </div>
-      </div>
-    `).join("")
-    : `<p>⭐ Nessun preferito salvato.</p>`;
-
-    const playlistHtml = playlists.length ? playlists.map(pl => `
-      <div class="card playlist-card user-card">
-        <h4>${pl.name}</h4>
-        <p>${pl.songs.length} brani</p>
-        <div class="hover-actions">
-          <button class="btn btn-sm btn-outline-success play-btn">▶ Riproduci</button>
-        </div>
-      </div>
-    `).join("")
-    : `<p>🎵 Nessuna playlist creata.</p>`;
-
-    const container = document.createElement("div");
-    container.className = "user-collections";
-    container.innerHTML = `
-    <h3>I tuoi preferiti</h3>
-    <div class="favorites">${favHtml}</div>
-    <h3>Le tue playlist</h3>
-    <div class="playlists">${playlistHtml}</div>
-  `;
-
-  this.results.appendChild(container);
-
-  // bind dei pulsanti hover
-  container.querySelectorAll(".playlist-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const song = JSON.parse(decodeURIComponent(btn.dataset.song));
-      this.playlistHandler && this.playlistHandler(song);
-    });
-  });
-
-  container.querySelectorAll(".share-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const song = JSON.parse(decodeURIComponent(btn.dataset.song));
-      this.shareHandler && this.shareHandler(song);
-    });
-  });
-
-
-  container.querySelectorAll(".play-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      // implementa la logica di riproduzione della playlist
-      this.showToast("Funzionalità di riproduzione non ancora implementata.");
-    });
-  });
-}
-
 bindCreatePlaylist(handler) {
   const btn = document.getElementById("createPlaylistBtn");
   btn?.addEventListener("click", () => {
@@ -295,5 +230,27 @@ bindCreatePlaylist(handler) {
     if (name) handler(name);
   });
 }
+
+bindAddToPlaylist(handler) {
+    this.playlistHandler = handler;
+  }
+
+  bindRenderCollection(handler) {
+    this.renderCollectionHandler = handler;
+  }
+
+  showPlaylistModal(song, playlists, onSelect) {
+    this.playlistView.showModal(song, playlists, onSelect);
+  }
+
+  updatePlaylistButton(songId, playlistId, isAdded) {
+  const btns = this.results.querySelectorAll(`.playlist-btn[data-song*="${songId}"]`);
+  btns.forEach(btn => {
+    btn.textContent = isAdded ? "- Rimuovi dalla playlist" : "+ Aggiungi alla playlist";
+    btn.classList.toggle("btn-outline-primary", !isAdded);
+    btn.classList.toggle("btn-danger", isAdded);
+  });
+}
+
 
 }

@@ -54,15 +54,17 @@ export default class SearchController {
   }
 
   async loadLatestSearch() {
-    try {
-      const ref = doc(db, "searches", "latest");
-      const snap = await getDoc(ref);
-      if (!snap.exists()) return;
-      const data = snap.data();
-      if (!data || !data.results) return;
-      this.view.renderResults(data.results);
-    } catch (err) {
-      console.warn("Errore nel leggere l'ultima ricerca da Firestore:", err);
-    }
-  }
+  // 🔹 Se l’utente è loggato, non renderizzare le card
+  if (this.controller?.isUserLoggedIn) return;
+
+  const ref = doc(db, "searches", "latest");
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+  const data = snap.data();
+  if (!data?.results) return;
+  this.view.renderResults(data.results);
+}
+
+
+
 }
