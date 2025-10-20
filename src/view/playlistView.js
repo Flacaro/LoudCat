@@ -4,35 +4,73 @@ export default class PlaylistView {
   bindCreatePlaylist(handler) {
     const btn = document.getElementById('createPlaylistBtn');
     btn?.addEventListener('click', async () => {
-      // Prefer a small custom modal in future; keep prompt for now
+      // Keep prompt for now (lightweight). Handler receives the new playlist name.
       const name = prompt('Inserisci il nome della nuova playlist:');
-      if (name && handler) handler(name);
+      if (name && handler) handler(name.trim());
     });
   }
 
-  showModal(song, playlists, onSelect) {
-    // simple modal: list playlists and allow selection
-    const modal = document.createElement('div');
-    modal.className = 'playlist-modal-overlay';
-    modal.innerHTML = `
-      <div class="playlist-modal">
-        <h5>Seleziona playlist</h5>
-        <ul class="list-group">
-          ${playlists.map(p => `<li class="list-group-item playlist-item" data-id="${p.id}">${p.name}</li>`).join('')}
-        </ul>
-        <button class="btn btn-secondary close-playlist-modal">Chiudi</button>
+  // showModal supports selecting an existing playlist or creating a new one.
+  // onSelect is called with (playlistId, playlistName). If a new playlist is created,
+  // playlistId will be '__new__' and playlistName the provided name.
+  showModal(song, playlists = [], onSelect) {
+    if (this.modal) this.modal.remove();
+
+    this.modal = document.createElement('div');
+    this.modal.id = 'playlist-modal';
+    this.modal.className = 'playlist-modal-overlay';
+
+    this.modal.innerHTML = `
+      <div class="playlist-modal-content">
+        <h4>Aggiungi "${song.title}" a playlist</h4>
+        <select id="playlist-select" class="form-control">
+          ${playlists.map(pl => `<option value="${pl.id}">${pl.name}</option>`).join('')}
+          <option value="__new__">➕ Crea nuova playlist</option>
+        </select>
+        <input id="new-playlist-name" class="form-control mt-2" placeholder="Nome nuova playlist" style="display:none;">
+        <div class="modal-buttons mt-3">
+          <button id="playlist-cancel" class="btn btn-outline-secondary">Annulla</button>
+          <button id="playlist-ok" class="btn btn-primary">Conferma</button>
+        </div>
       </div>
     `;
-    document.body.appendChild(modal);
-    modal.querySelectorAll('.playlist-item').forEach(li => {
-      li.addEventListener('click', () => {
-        const id = li.getAttribute('data-id');
-        if (onSelect) onSelect(id);
-        modal.remove();
-      });
+
+    document.body.appendChild(this.modal);
+
+    const select = this.modal.querySelector('#playlist-select');
+    const newInput = this.modal.querySelector('#new-playlist-name');
+    const cancelBtn = this.modal.querySelector('#playlist-cancel');
+    const okBtn = this.modal.querySelector('#playlist-ok');
+
+    const toggleNewInput = () => {
+      if (select.value === '__new__') {
+        newInput.style.display = 'block';
+        newInput.focus();
+      } else {
+        newInput.style.display = 'none';
+      }
+    };
+
+    toggleNewInput();
+    select.addEventListener('change', toggleNewInput);
+
+    cancelBtn.addEventListener('click', () => this.modal.remove());
+    okBtn.addEventListener('click', () => {
+      let playlistId = select.value;
+      let playlistName = playlistId !== '__new__' ? select.options[select.selectedIndex].text : newInput.value.trim();
+
+      if (playlistId === '__new__' && !playlistName) {
+        alert('Inserisci un nome valido per la nuova playlist.');
+        newInput.focus();
+        return;
+      }
+
+      if (onSelect) onSelect(playlistId, playlistName);
+      this.modal.remove();
     });
-    modal.querySelector('.close-playlist-modal')?.addEventListener('click', () => modal.remove());
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+    // close when clicking outside
+    this.modal.addEventListener('click', (e) => { if (e.target === this.modal) this.modal.remove(); });
   }
 
   updatePlaylistButton(songId, playlistId, isAdded) {
