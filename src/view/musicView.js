@@ -105,21 +105,26 @@ export default class MusicView {
 }
 
 // src/view/musicView.js
-  renderArtists(artists) {
+renderArtists(artists) {
   const resultsContainer = document.getElementById("results-container");
   if (!resultsContainer) return;
 
   resultsContainer.innerHTML = "";
 
-  const html = artists.map(artist => {
-    const picture =
-      artist.image ||
-      artist.artworkUrl100 || // iTunes field
-      artist.picture ||
-      "assets/img/avatar-placeholder.svg";
+  // Deduplicate by artistId
+  const uniqueArtistsMap = new Map();
+  artists.forEach(artist => {
+    if (!uniqueArtistsMap.has(artist.artistId)) {
+      uniqueArtistsMap.set(artist.artistId, artist);
+    }
+  });
+  const uniqueArtists = Array.from(uniqueArtistsMap.values());
+
+  const html = uniqueArtists.map(artist => {
+    const picture = artist.artwork || "assets/img/avatar-placeholder.svg";
 
     return `
-      <div class="card artist-card" data-artist-id="${artist.id}" data-artist-name="${artist.name}">
+      <div class="card artist-card" data-artist-id="${artist.artistId}" data-artist-name="${artist.name}">
         <img src="${picture}" alt="${artist.name}" />
         <h3>${artist.name}</h3>
         <p>🎵 ${artist.genre || "Unknown genre"}</p>
@@ -129,7 +134,7 @@ export default class MusicView {
 
   resultsContainer.insertAdjacentHTML("beforeend", html);
 
-  // Bind click events for artist cards
+  // Bind click events
   document.querySelectorAll(".artist-card").forEach(card => {
     card.addEventListener("click", () => {
       const artistId = card.dataset.artistId;
