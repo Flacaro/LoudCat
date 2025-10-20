@@ -36,7 +36,9 @@ export default class MusicController {
   this.view.bindAddToPlaylist(song => this.playlistController.handlePlaylist(song));
   this.view.bindShare(song => this.shareController.handleShare(song));
   this.view.bindCreatePlaylist(name => this.playlistController.createPlaylist(name));
-
+  this.view.bindArtistClick(({ artistId, artistName }) => {
+    this.artistProfileController.showArtistProfile(null, artistName);
+  });
   const user = this.userController.getCurrentUser();
 if (user) {
   this.isUserLoggedIn = true;
