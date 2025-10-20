@@ -54,7 +54,7 @@ export function renderData(data) {
 import { auth } from "../firebase.js";
 import { saveUserData, loadUserData } from "../model/modelAuth.js";
 import { db } from "../firebase.js";
-import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { collection, query, where, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 export function initProfileModal() {
   const profileBtn = document.getElementById("profileBtn");
@@ -220,6 +220,78 @@ export function initProfileModal() {
         }
       }
       feedback.textContent = msg;
+    }
+  });
+
+  // Reset buttons (favorites, playlists, friends/shares)
+  const resetFavBtn = document.getElementById('resetFavBtn');
+  const resetPlaylistsBtn = document.getElementById('resetPlaylistsBtn');
+  const resetFriendsBtn = document.getElementById('resetFriendsBtn');
+
+  resetFavBtn?.addEventListener('click', async () => {
+    if (!auth.currentUser) { feedback.textContent = 'Devi essere loggato per resettare i preferiti.'; return; }
+    if (!confirm('Sei sicuro di voler eliminare tutti i preferiti? Questa operazione è irreversibile.')) return;
+    feedback.textContent = 'Eliminazione preferiti in corso...';
+    try {
+      const uid = auth.currentUser.uid;
+      const favCol = collection(db, 'users', uid, 'favorites');
+      const snap = await getDocs(favCol);
+      const deletes = snap.docs.map(d => deleteDoc(doc(db, 'users', uid, 'favorites', d.id)));
+      await Promise.all(deletes);
+      feedback.textContent = 'Preferiti eliminati.';
+    } catch (err) {
+      console.error('Errore eliminazione preferiti:', err);
+      feedback.textContent = 'Errore durante l\'eliminazione dei preferiti.';
+    }
+  });
+
+  resetPlaylistsBtn?.addEventListener('click', async () => {
+    if (!auth.currentUser) { feedback.textContent = 'Devi essere loggato per resettare le playlist.'; return; }
+    if (!confirm('Sei sicuro di voler eliminare tutte le playlist? Questa operazione è irreversibile.')) return;
+    feedback.textContent = 'Eliminazione playlist in corso...';
+    try {
+      const uid = auth.currentUser.uid;
+      const plCol = collection(db, 'users', uid, 'playlists');
+      const snap = await getDocs(plCol);
+      const deletes = snap.docs.map(d => deleteDoc(doc(db, 'users', uid, 'playlists', d.id)));
+      await Promise.all(deletes);
+      feedback.textContent = 'Playlist eliminate.';
+    } catch (err) {
+      console.error('Errore eliminazione playlist:', err);
+      feedback.textContent = 'Errore durante l\'eliminazione delle playlist.';
+    }
+  });
+
+  resetFriendsBtn?.addEventListener('click', async () => {
+    if (!auth.currentUser) { feedback.textContent = 'Devi essere loggato per resettare gli amici.'; return; }
+    if (!confirm('Sei sicuro di voler eliminare tutte le condivisioni (inviate e ricevute)? Questa operazione è irreversibile.')) return;
+    feedback.textContent = 'Eliminazione condivisioni in corso...';
+    try {
+      const uid = auth.currentUser.uid;
+      const myEmail = (auth.currentUser.email || '').trim().toLowerCase();
+      // Delete shares where I am the sender
+      const sharesCol = collection(db, 'shares');
+      const qFrom = query(sharesCol, where('fromUid', '==', uid));
+      const qTo = query(sharesCol, where('toEmail', '==', myEmail));
+      const [snapFrom, snapTo] = await Promise.all([getDocs(qFrom), getDocs(qTo)]);
+      const delFrom = snapFrom.docs.map(d => deleteDoc(doc(db, 'shares', d.id)));
+      const delTo = snapTo.docs.map(d => deleteDoc(doc(db, 'shares', d.id)));
+      await Promise.all([...delFrom, ...delTo]);
+
+      // Also try removing entries in users/{uid}/shared if present
+      try {
+        const userSharedCol = collection(db, 'users', uid, 'shared');
+        const userSharedSnap = await getDocs(userSharedCol);
+        const delUserShared = userSharedSnap.docs.map(d => deleteDoc(doc(db, 'users', uid, 'shared', d.id)));
+        await Promise.all(delUserShared);
+      } catch (innerErr) {
+        console.debug('Nessuna subcollection shared da rimuovere o errore misc:', innerErr);
+      }
+
+      feedback.textContent = 'Condivisioni eliminate.';
+    } catch (err) {
+      console.error('Errore eliminazione condivisioni:', err);
+      feedback.textContent = 'Errore durante l\'eliminazione delle condivisioni.';
     }
   });
 }
