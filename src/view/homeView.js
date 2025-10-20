@@ -47,11 +47,29 @@ export default class HomeView {
   // Event listener per aprire il modale delle playlist
   container.querySelectorAll(".playlist-box").forEach(box => {
     box.addEventListener("click", () => {
-      const playlist = JSON.parse(decodeURIComponent(box.dataset.playlist));
-      this.showSongsModal(playlist.name, playlist.songs);
+      const playlist = this._parseDataAttribute(box.dataset.playlist);
+      this.showSongsModal(playlist.name || 'Playlist', playlist.songs || []);
     });
   });
 }
+
+  _parseDataAttribute(raw) {
+    if (!raw) return {};
+    try {
+      return JSON.parse(raw);
+    } catch (e) {
+      try {
+        return JSON.parse(decodeURIComponent(raw));
+      } catch (e2) {
+        try {
+          return JSON.parse(decodeURIComponent(decodeURIComponent(raw)));
+        } catch (e3) {
+          console.error('Failed to parse data attribute', raw);
+          return {};
+        }
+      }
+    }
+  }
 
 
 showSongsModal(title, songs) {

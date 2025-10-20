@@ -130,17 +130,33 @@ footer {
 }
 
 /* Toast notification styles */
-.toast-message {
+.toast-container {
   position: fixed;
-  bottom: 20px;
+  top: 20px;
   right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  z-index: 4000;
+  pointer-events: none; /* allow clicks through container except buttons inside */
+}
+
+.toast-message {
   background: #333;
   color: white;
-  padding: 1rem 1.5rem;
+  padding: 0.9rem 1.2rem;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  opacity: 0.9;
-  z-index: 3000;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  transform: translateY(-8px) scale(0.98);
+  opacity: 0;
+  transition: opacity 260ms ease, transform 260ms ease;
+  pointer-events: auto; /* enable interaction with the toast itself */
+  max-width: 320px;
+}
+
+.toast-message.visible {
+  transform: translateY(0) scale(1);
+  opacity: 0.98;
 }
 
 
@@ -166,6 +182,20 @@ footer {
 }
 
 .playlist-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* compat: overlay class used by PlaylistView */
+.playlist-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;

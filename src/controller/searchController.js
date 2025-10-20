@@ -12,6 +12,12 @@ export default class SearchController {
       this.view.renderLoading();
       const results = await this.model.search(query);
       this.view.renderResults(results);
+      // If attached to MusicController, update playlist-button state based on user's playlists
+      if (this.controller?.playlistController) {
+        // mark songs that are already present in user's playlists
+        const songs = Array.isArray(results.songs) ? results.songs : [];
+        await this._markPlaylistState(songs);
+      }
 
       const ref = doc(db, "searches", "latest");
       // Serialize results to plain objects because Firestore rejects custom class instances
@@ -63,7 +69,36 @@ export default class SearchController {
   const data = snap.data();
   if (!data?.results) return;
   this.view.renderResults(data.results);
+  if (this.controller?.playlistController) {
+    const songs = Array.isArray(data.results.songs) ? data.results.songs : [];
+    await this._markPlaylistState(songs);
+  }
 }
+
+  // check user's playlists and toggle the playlist button UI for results
+  async _markPlaylistState(songs) {
+    if (!Array.isArray(songs) || songs.length === 0) return;
+    try {
+      const playlists = await this.controller.playlistController.getPlaylists();
+      // build a map songId -> firstPlaylistId containing it
+      const map = new Map();
+      for (const pl of playlists) {
+        (pl.songs || []).forEach(s => {
+          const sid = s.id || (s.title ? s.title.replace(/\s+/g, '-').toLowerCase() : null);
+          if (sid && !map.has(sid)) map.set(sid, pl.id);
+        });
+      }
+
+      songs.forEach(s => {
+        const sid = s.id || (s.title ? s.title.replace(/\s+/g, '-').toLowerCase() : null);
+        const plId = sid ? map.get(sid) : null;
+        const isAdded = !!plId;
+        this.view.updatePlaylistButton(sid, plId || null, isAdded);
+      });
+    } catch (err) {
+      console.error('Error while marking playlist state:', err);
+    }
+  }
 
 
 
