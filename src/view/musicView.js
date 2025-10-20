@@ -104,7 +104,6 @@ export default class MusicView {
   this.results.insertAdjacentHTML("beforeend", html);
 }
 
-// src/view/musicView.js
 renderArtists(artists) {
   const resultsContainer = document.getElementById("results-container");
   if (!resultsContainer) return;
