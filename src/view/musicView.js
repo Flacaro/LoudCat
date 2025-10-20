@@ -33,23 +33,59 @@ renderAlbums(albums) {
   this.results.insertAdjacentHTML("beforeend", html);
 }
 
+// src/view/musicView.js
 renderArtists(artists) {
-  const html = artists
-    .map(artist => `
-      <div class="card artist-card">
-  <img src="${artist.image || 'assets/img/avatar-placeholder.svg'}" alt="${artist.name}" />
+  const resultsContainer = document.getElementById("results-container");
+  if (!resultsContainer) return;
+
+  resultsContainer.innerHTML = "";
+
+  const html = artists.map(artist => {
+    const picture =
+      artist.image ||
+      artist.artworkUrl100 || // iTunes field
+      artist.picture ||
+      "assets/img/avatar-placeholder.svg";
+
+    return `
+      <div class="card artist-card" data-artist-id="${artist.id}" data-artist-name="${artist.name}">
+        <img src="${picture}" alt="${artist.name}" />
         <h3>${artist.name}</h3>
-        ${artist.genre ? `<p>🎵 ${artist.genre}</p>` : ""}
-        ${artist.albums?.length ? `
-          <h4>Top Albums:</h4>
-          <ul>
-            ${artist.albums.map(a => `<li>${a}</li>`).join("")}
-          </ul>` : ""}
+        <p>🎵 ${artist.genre || "Unknown genre"}</p>
       </div>
-    `)
-    .join("");
-  this.results.insertAdjacentHTML("beforeend", html);
+    `;
+  }).join("");
+
+  resultsContainer.insertAdjacentHTML("beforeend", html);
+
+  // Bind click events for artist cards
+  document.querySelectorAll(".artist-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const artistId = card.dataset.artistId;
+      const artistName = card.dataset.artistName;
+      window.dispatchEvent(new CustomEvent("artist:click", { detail: { artistId, artistName } }));
+    });
+  });
 }
+
+
+
+
+bindArtistClick(handler) {
+  this.results.addEventListener("click", (e) => {
+    const card = e.target.closest(".artist-card");
+    if (!card) return;
+
+    const artistId = card.dataset.artistId;
+    const artistName = card.querySelector("h3")?.textContent.trim();
+
+    if (artistId || artistName) {
+      handler({ artistId, artistName });
+    }
+  });
+}
+
+
 
 renderSongs(songs) {
   const html = songs
