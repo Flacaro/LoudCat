@@ -6,7 +6,7 @@ import AlbumController from "./albumController.js";
 import UserController from "./userController.js";
 import ArtistProfileController from "./artistProfileController.js";
 import HomeView from "../view/homeView.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 export default class MusicController {
   constructor(model, view) {
@@ -30,43 +30,35 @@ export default class MusicController {
   
 
   async init() {
+
+    const auth = getAuth();
+    
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        this.isUserLoggedIn = true;
+        this.view.showToast(`Benvenuto, ${user.displayName || "Utente"}!`);
+        await this.loadUserCollections();
+      } else {
+        this.isUserLoggedIn = false;
+        this.homeView.clearWelcomeMessage();
+      }
+    });
+
     this.view.bindSearch(query => this.searchController.handleSearch(query));
-  this.view.bindAlbumClick(albumId => this.albumController.handleAlbumClick(albumId));
-  this.view.bindFavoriteToggle(song => this.favoriteController.handleFavoriteToggle(song));
-  this.view.bindAddToPlaylist(song => this.playlistController.handlePlaylist(song));
-  this.view.bindShare(song => this.shareController.handleShare(song));
-  this.view.bindCreatePlaylist(name => this.playlistController.createPlaylist(name));
+    this.view.bindAlbumClick(albumId => this.albumController.handleAlbumClick(albumId));
+    this.view.bindFavoriteToggle(song => this.favoriteController.handleFavoriteToggle(song));
+    this.view.bindAddToPlaylist(song => this.playlistController.handlePlaylist(song));
+    this.view.bindShare(song => this.shareController.handleShare(song));
+    this.view.bindCreatePlaylist(name => this.playlistController.createPlaylist(name));
 
   const user = this.userController.getCurrentUser();
-if (user) {
-  this.isUserLoggedIn = true;
-  this.homeView.showWelcomeMessage(user.displayName || "Utente");
-  await this.loadUserCollections();
-  // 🔹 Non fare nulla con la ricerca
-  return;
-}
 
-// Utente non loggato → carica eventuale ultima ricerca
-const latest = this.model.getLastSearch?.();
-if (latest) {
-  this.searchController.loadLatestSearch();
-}
+    // Utente non loggato → carica eventuale ultima ricerca
+    const latest = this.model.getLastSearch?.();
+    if (latest) {
+      this.searchController.loadLatestSearch();
+    }
   }
-
-  async loadHome() {
-    const auth = getAuth();
-    const user = auth.currentUser;
-    if (!user) return;
-
-    this.isHomeLoaded = true;
-    this.homeView.results.innerHTML = "";
-
-    const collections = await this.userController.loadUserCollections(user.uid);
-    this.homeView.showWelcomeMessage(user.displayName || "Utente");
-    this.homeView.renderUserCollections(collections.favorites, collections.playlists);
-  
-}
-
 
 async loadUserCollections() {
   const favorites = await this.favoriteController.getFavorites();
@@ -84,10 +76,8 @@ async loadHome() {
 
   const collections = await this.userController.loadUserCollections(user.uid);
 
-  this.homeView.showWelcomeMessage(user.displayName || "Utente");
-
-  // 🔹 Usa solo HomeView per il box
   this.homeView.renderUserCollections(collections.favorites, collections.playlists);
+
 }
 }
 

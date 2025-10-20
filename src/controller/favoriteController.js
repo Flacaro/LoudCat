@@ -19,6 +19,7 @@ export default class FavoriteController {
     console.error("Errore nel recupero dei preferiti:", err);
     return [];
   }
+  
 }
 
 
@@ -53,4 +54,6 @@ export default class FavoriteController {
       this.view.showToast("Errore nella gestione dei preferiti.");
     }
   }
+
+
 }
