@@ -4,19 +4,17 @@ import PlaylistController from "./playlistController.js";
 import ShareController from "./shareController.js";
 import AlbumController from "./albumController.js";
 import UserController from "./userController.js";
-<<<<<<< HEAD
 import ArtistProfileController from "./artistProfileController.js";
-=======
 import HomeView from "../view/homeView.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
->>>>>>> 7835cef09045066b302edb8b14e74fb85f677fcd
 
 export default class MusicController {
   constructor(model, view) {
     this.model = model;
     this.view = view;
     this.homeView = new HomeView();
+     this.isHomeLoaded = false;
+    this.isUserLoggedIn = false;
 
     this.userController = new UserController();
     this.searchController = new SearchController(model, view);
@@ -25,42 +23,11 @@ export default class MusicController {
     this.playlistController = new PlaylistController(view);
     this.shareController = new ShareController(view);
     this.albumController = new AlbumController(view, model);
-<<<<<<< HEAD
+
     this.artistProfileController = new ArtistProfileController();
   }
 
-  init() {
-    // Bind search bar
-    this.view.bindSearch(query => this.searchController.handleSearch(query));
-
-    // Bind album clicks
-    this.view.bindAlbumClick(albumId => this.albumController.handleAlbumClick(albumId));
-
-    // Bind favorites
-    this.view.bindFavoriteToggle(song => this.favoriteController.handleFavoriteToggle(song));
-
-    // Bind playlist
-    this.view.bindAddToPlaylist(song => this.playlistController.handlePlaylist(song));
-
-    // Bind sharing
-    this.view.bindShare(song => this.shareController.handleShare(song));
-
-    // Bind playlist creation
-    this.view.bindCreatePlaylist(name => this.playlistController.createPlaylist(name));
-
-    // Load previous search
-    this.searchController.loadLatestSearch();
-
-    // Bind artist clicks for Deezer
-    this.view.bindArtistClick(({ artistId, artistName }) => {
-      this.artistProfileController.showArtistProfile(artistId, artistName);
-    });
-  }
-=======
-
-    this.isHomeLoaded = false;
-    this.isUserLoggedIn = false;
-  }
+  
 
   async init() {
     this.view.bindSearch(query => this.searchController.handleSearch(query));
@@ -122,6 +89,7 @@ async loadHome() {
   // 🔹 Usa solo HomeView per il box
   this.homeView.renderUserCollections(collections.favorites, collections.playlists);
 }
-
->>>>>>> 7835cef09045066b302edb8b14e74fb85f677fcd
 }
+
+
+
