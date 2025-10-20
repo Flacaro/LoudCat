@@ -103,7 +103,7 @@ export default class MusicView {
     .join("");
   this.results.insertAdjacentHTML("beforeend", html);
 }
-
+// Render artist results with deduplication
 renderArtists(artists) {
   const resultsContainer = document.getElementById("results-container");
   if (!resultsContainer) return;
