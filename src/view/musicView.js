@@ -22,21 +22,62 @@ export default class MusicView {
       const pbtn = e.target.closest('.playlist-btn');
       const sbtn = e.target.closest('.share-btn');
       if (fav) {
-        const song = JSON.parse(decodeURIComponent(fav.dataset.song || '%7B%7D'));
+        const song = this._parseSongData(fav.dataset.song);
         if (this.favHandler) this.favHandler(song);
         return;
       }
       if (pbtn) {
-        const song = JSON.parse(decodeURIComponent(pbtn.dataset.song || '%7B%7D'));
+        const song = this._parseSongData(pbtn.dataset.song);
         if (this.playlistHandler) this.playlistHandler(song);
         return;
       }
       if (sbtn) {
-        const song = JSON.parse(decodeURIComponent(sbtn.dataset.song || '%7B%7D'));
+        const song = this._parseSongData(sbtn.dataset.song);
         if (this.shareHandler) this.shareHandler(song);
         return;
       }
     });
+  }
+
+  // Defensive parser for song data stored in data-* attributes.
+  // Some browsers may return the raw attribute value in dataset; the value
+  // might be percent-encoded or plain JSON. Try multiple strategies and
+  // fall back to an empty object while logging the problematic input.
+  _parseSongData(raw) {
+    if (!raw) return {};
+
+    const tryParse = (s) => {
+      try {
+        return JSON.parse(s);
+      } catch (err) {
+        return null;
+      }
+    };
+
+    // Candidate 1: as-is (maybe dataset already decoded)
+    let parsed = tryParse(raw);
+    if (parsed) return parsed;
+
+    // Candidate 2: percent-decoded once
+    try {
+      const dec = decodeURIComponent(raw);
+      parsed = tryParse(dec);
+      if (parsed) return parsed;
+    } catch (e) {
+      // ignore
+    }
+
+    // Candidate 3: percent-decoded twice (some encodings may be double-encoded)
+    try {
+      const dec2 = decodeURIComponent(decodeURIComponent(raw));
+      parsed = tryParse(dec2);
+      if (parsed) return parsed;
+    } catch (e) {
+      // ignore
+    }
+
+    console.error('Failed to parse song data from dataset:', raw);
+    return {};
   }
 
    showToast(message) {
@@ -64,21 +105,26 @@ export default class MusicView {
 }
 
 // src/view/musicView.js
-  renderArtists(artists) {
+renderArtists(artists) {
   const resultsContainer = document.getElementById("results-container");
   if (!resultsContainer) return;
 
   resultsContainer.innerHTML = "";
 
-  const html = artists.map(artist => {
-    const picture =
-      artist.image ||
-      artist.artworkUrl100 || // iTunes field
-      artist.picture ||
-      "assets/img/avatar-placeholder.svg";
+  // Deduplicate by artistId
+  const uniqueArtistsMap = new Map();
+  artists.forEach(artist => {
+    if (!uniqueArtistsMap.has(artist.artistId)) {
+      uniqueArtistsMap.set(artist.artistId, artist);
+    }
+  });
+  const uniqueArtists = Array.from(uniqueArtistsMap.values());
+
+  const html = uniqueArtists.map(artist => {
+    const picture = artist.artwork || "assets/img/avatar-placeholder.svg";
 
     return `
-      <div class="card artist-card" data-artist-id="${artist.id}" data-artist-name="${artist.name}">
+      <div class="card artist-card" data-artist-id="${artist.artistId}" data-artist-name="${artist.name}">
         <img src="${picture}" alt="${artist.name}" />
         <h3>${artist.name}</h3>
         <p>🎵 ${artist.genre || "Unknown genre"}</p>
@@ -88,7 +134,7 @@ export default class MusicView {
 
   resultsContainer.insertAdjacentHTML("beforeend", html);
 
-  // Bind click events for artist cards
+  // Bind click events
   document.querySelectorAll(".artist-card").forEach(card => {
     card.addEventListener("click", () => {
       const artistId = card.dataset.artistId;
@@ -161,22 +207,22 @@ bindArtistClick(handler) {
 
   this.results.querySelectorAll(".fav-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      const song = JSON.parse(decodeURIComponent(btn.dataset.song));
-      this.favHandler(song) && this.favHandler(song);
+      const song = this._parseSongData(btn.dataset.song);
+      this.favHandler && this.favHandler(song);
     });
 
   });
 
   this.results.querySelectorAll(".playlist-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      const song = JSON.parse(decodeURIComponent(btn.dataset.song));
-      this.playlistHandler(song) && this.playlistHandler(song);
+      const song = this._parseSongData(btn.dataset.song);
+      this.playlistHandler && this.playlistHandler(song);
     });
   });
 
   this.results.querySelectorAll(".share-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      const song = JSON.parse(decodeURIComponent(btn.dataset.song));
+      const song = this._parseSongData(btn.dataset.song);
       this.shareHandler && this.shareHandler(song);
     });
   });
@@ -255,7 +301,7 @@ bindAddToPlaylist(handler) {
   }
 
   updatePlaylistButton(songId, playlistId, isAdded) {
-  const btns = this.results.querySelectorAll(`.playlist-btn[data-song*="${songId}"]`);
+  const btns = this.results.querySelectorAll(`.playlist-btn[data-song-id="${songId}"]`);
   btns.forEach(btn => {
     btn.textContent = isAdded ? "- Rimuovi dalla playlist" : "+ Aggiungi alla playlist";
     btn.classList.toggle("btn-outline-primary", !isAdded);

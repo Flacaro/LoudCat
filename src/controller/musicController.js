@@ -44,13 +44,14 @@ export default class MusicController {
       }
     });
 
-    this.view.bindSearch(query => this.searchController.handleSearch(query));
-    this.view.bindAlbumClick(albumId => this.albumController.handleAlbumClick(albumId));
-    this.view.bindFavoriteToggle(song => this.favoriteController.handleFavoriteToggle(song));
-    this.view.bindAddToPlaylist(song => this.playlistController.handlePlaylist(song));
-    this.view.bindShare(song => this.shareController.handleShare(song));
-    this.view.bindCreatePlaylist(name => this.playlistController.createPlaylist(name));
-
+  this.view.bindAlbumClick(albumId => this.albumController.handleAlbumClick(albumId));
+  this.view.bindFavoriteToggle(song => this.favoriteController.handleFavoriteToggle(song));
+  this.view.bindAddToPlaylist(song => this.playlistController.handlePlaylist(song));
+  this.view.bindShare(song => this.shareController.handleShare(song));
+  this.view.bindCreatePlaylist(name => this.playlistController.createPlaylist(name));
+  this.view.bindArtistClick(({ artistId, artistName }) => {
+    this.artistProfileController.showArtistProfile(null, artistName);
+  });
   const user = this.userController.getCurrentUser();
 
     // Utente non loggato → carica eventuale ultima ricerca
