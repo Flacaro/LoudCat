@@ -7,6 +7,8 @@ import UserController from "./userController.js";
 import ArtistProfileController from "./artistProfileController.js";
 import HomeView from "../view/homeView.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { db } from "../firebase.js";
 
 export default class MusicController {
   constructor(model, view) {
@@ -24,6 +26,8 @@ export default class MusicController {
     this.shareController = new ShareController(view);
     this.albumController = new AlbumController(view, model);
     this.artistProfileController = new ArtistProfileController();
+    this._unsubFav = null;
+    this._unsubPlaylists = null;
   }
 
   
@@ -39,9 +43,12 @@ export default class MusicController {
         this.isUserLoggedIn = true;
         this.view.showToast(`Benvenuto, ${user.displayName || "Utente"}!`);
         await this.loadUserCollections();
+        // subscribe to realtime updates for favorites and playlists
+        this._subscribeRealtime(user.uid);
       } else {
         this.isUserLoggedIn = false;
         this.homeView.clearWelcomeMessage();
+        this._unsubscribeRealtime();
       }
     });
 
@@ -76,16 +83,70 @@ async loadUserCollections() {
   this.homeView.renderUserCollections(favorites, playlists);
 }
 
+  _subscribeRealtime(uid) {
+    try {
+      // unsubscribe previous if present
+      this._unsubscribeRealtime();
+
+      const favCol = collection(db, 'users', uid, 'favorites');
+      const playCol = collection(db, 'users', uid, 'playlists');
+
+      this._unsubFav = onSnapshot(favCol, async () => {
+        // refresh home data when favorites change
+        await this.loadUserCollections();
+      });
+
+      this._unsubPlaylists = onSnapshot(playCol, async () => {
+        // refresh home data when playlists change
+        await this.loadUserCollections();
+      });
+    } catch (err) {
+      console.error('Errore sottoscrizione realtime:', err);
+    }
+  }
+
+  _unsubscribeRealtime() {
+    try {
+      if (typeof this._unsubFav === 'function') this._unsubFav();
+      if (typeof this._unsubPlaylists === 'function') this._unsubPlaylists();
+    } catch (err) {
+      console.warn('Errore durante unsubscribe realtime:', err);
+    }
+    this._unsubFav = null;
+    this._unsubPlaylists = null;
+  }
+
 async loadHome() {
+  // Ensure the home container is visible and other sections are hidden,
+  // clear any existing results (albums/artist/results) and then load user collections.
   const auth = getAuth();
   const user = auth.currentUser;
-  if (!user) return;
 
-  this.homeView.results.innerHTML = "";
+  const resultsSection = document.getElementById("results-section");
+  const homeContainer = document.getElementById("home-container");
+  // There are multiple elements with id 'results-container' (legacy); clear them all
+  const resultsContainers = document.querySelectorAll('#results-container');
 
-  const collections = await this.userController.loadUserCollections(user.uid);
+  // Show home, hide results
+  if (homeContainer) homeContainer.style.display = 'block';
+  if (resultsSection) resultsSection.style.display = 'none';
 
-  this.homeView.renderUserCollections(collections.favorites, collections.playlists);
+  // Clear rendered content in all results containers to remove album/artist detail views
+  resultsContainers.forEach(c => { if (c) c.innerHTML = ''; });
+
+  if (!user) {
+    // Not logged in: show a minimal welcome message but don't attempt to load collections
+    this.homeView.showWelcomeMessage('Visitatore');
+    return;
+  }
+
+  this.homeView.showWelcomeMessage(user.displayName || 'Utente');
+
+  // Use controller method to fetch freshest data (favorites/playlists) so Home always reflects recent changes
+  await this.loadUserCollections();
+
+  // Smooth scroll to top for better UX when returning to Home
+  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0,0); }
 
 }
 }

@@ -28,6 +28,12 @@ export default class SearchController {
         await this._markPlaylistState(songs);
       }
 
+      // mark favorite state for rendered songs
+      if (this.controller?.favoriteController) {
+        const songs = Array.isArray(results.songs) ? results.songs : [];
+        await this._markFavoriteState(songs);
+      }
+
       const ref = doc(db, "searches", "latest");
       // Serialize results to plain objects because Firestore rejects custom class instances
       const safeResults = {};
@@ -90,6 +96,10 @@ export default class SearchController {
     const songs = Array.isArray(data.results.songs) ? data.results.songs : [];
     await this._markPlaylistState(songs);
   }
+  if (this.controller?.favoriteController) {
+    const songs = Array.isArray(data.results.songs) ? data.results.songs : [];
+    await this._markFavoriteState(songs);
+  }
 }
 
   // check user's playlists and toggle the playlist button UI for results
@@ -114,6 +124,21 @@ export default class SearchController {
       });
     } catch (err) {
       console.error('Error while marking playlist state:', err);
+    }
+  }
+
+  async _markFavoriteState(songs) {
+    if (!Array.isArray(songs) || songs.length === 0) return;
+    try {
+      const favs = await this.controller.favoriteController.getFavorites();
+      const favSet = new Set(favs.map(f => f.id));
+      songs.forEach(s => {
+        const sid = s.id || (s.title ? s.title.replace(/\s+/g, '-').toLowerCase() : null);
+        const isFav = sid ? favSet.has(sid) : false;
+        this.view.updateFavoriteState(sid, isFav);
+      });
+    } catch (err) {
+      console.error('Error while marking favorite state:', err);
     }
   }
 
