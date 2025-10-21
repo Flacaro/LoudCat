@@ -26,14 +26,14 @@ export default class AlbumViewController {
         ? backHandler
         : () => {
             console.debug('AlbumViewController.backHandler invoked, lastResults:', this.lastResults);
-            if (this.lastResults) {
-              // Prefer the shared parent view to re-render the results
+            const toRestore = this.lastResults || (this.parentView && this.parentView.getRenderedResults && this.parentView.getRenderedResults());
+            if (toRestore) {
               if (this.parentView && typeof this.parentView.renderResults === 'function') {
                 console.debug('Restoring results via parentView.renderResults');
-                this.parentView.renderResults(this.lastResults);
+                this.parentView.renderResults(toRestore);
               } else if (this.view && typeof this.view.renderResults === 'function') {
                 console.debug('Restoring results via album view renderResults fallback');
-                this.view.renderResults(this.lastResults);
+                this.view.renderResults(toRestore);
               } else {
                 console.debug('No renderResults available, clearing container');
                 this.view.container.innerHTML = "<p>Nessun risultato precedente</p>";

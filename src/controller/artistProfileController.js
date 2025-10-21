@@ -10,7 +10,8 @@ export default class ArtistProfileController {
   }
 
   // Show artist info by name
-  async showArtistProfile(_, artistName) {
+  // accept optional backHandler as first arg (provided by MusicController)
+  async showArtistProfile(backHandler, artistName) {
     try {
       if (!artistName) throw new Error("Nessun artista specificato");
       this.view.renderLoading();
@@ -23,7 +24,8 @@ export default class ArtistProfileController {
       const artist = await this.service.getArtistProfile(searched.id);
 
       this.view.renderArtistProfile(artist);
-      this.view.bindBack(this._onBack);
+      // prefer provided backHandler, else fallback to internal _onBack
+      this.view.bindBack(typeof backHandler === 'function' ? backHandler : this._onBack);
     } catch (err) {
       console.error("Error loading artist profile:", err);
       this.view.renderError("❌ Impossibile caricare il profilo artista.");

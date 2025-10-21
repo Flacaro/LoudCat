@@ -54,16 +54,27 @@ export default class MusicController {
     });
 
   this.view.bindAlbumClick(albumId => {
-    // prefer controller-held lastResults; fall back to view's rendered results
-    const albums = this.searchController?.lastResults?.albums || this.view.getRenderedResults()?.albums || null;
-    this.albumController.handleAlbumClick(albumId, albums);
+    // prefer controller-held lastResults (full results object); fall back to view's rendered results
+    const prevResults = this.searchController?.lastResults || this.view.getRenderedResults() || null;
+    this.albumController.handleAlbumClick(albumId, prevResults);
   });
   this.view.bindFavoriteToggle(song => this.favoriteController.handleFavoriteToggle(song));
   this.view.bindAddToPlaylist(song => this.playlistController.handlePlaylist(song));
   this.view.bindShare(song => this.shareController.handleShare(song));
   this.view.bindCreatePlaylist(name => this.playlistController.createPlaylist(name));
   this.view.bindArtistClick(({ artistId, artistName }) => {
-  this.artistProfileController.showArtistProfile(null, artistName);
+    // create a back handler that restores the last rendered search results if available
+    const prev = this.searchController?.lastResults || this.view.getRenderedResults() || null;
+    const backHandler = () => {
+      if (prev) {
+        this.view.renderResults(prev);
+      } else {
+        // fallback: show an empty results message
+        this.view.renderResults({ songs: [], albums: [], artists: [] });
+      }
+    };
+
+    this.artistProfileController.showArtistProfile(backHandler, artistName);
   });
   this.view.bindSearch(query => {
     homeContainer.style.display = "none";

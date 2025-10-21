@@ -1,19 +1,46 @@
 // src/services/artistProfileService.js
 export default class ArtistProfileService {
   constructor() {
-    // Works better than corsproxy.io for MusicBrainz
-    this.proxy = "https://api.allorigins.win/raw?url=";
+    // public proxies to try when direct requests are blocked by CORS
+    this.proxies = [
+      // order matters: try lightweight proxies known to work for JSON
+      "https://thingproxy.freeboard.io/fetch/",
+      "https://api.allorigins.win/raw?url=",
+      // fallback variants
+      "https://api.allorigins.cf/raw?url=",
+    ];
+  }
+
+  // Try direct fetch first, then fall back to a list of public proxies.
+  async _fetchJsonWithFallback(url) {
+    // try direct
+    try {
+      const res = await fetch(url);
+      if (res.ok) return await res.json();
+    } catch (err) {
+      // direct fetch failed - fall through to proxies
+      console.warn('Direct fetch failed for', url, err);
+    }
+
+    // try proxies in order
+    for (const p of this.proxies) {
+      const proxied = p.endsWith('=') ? p + encodeURIComponent(url) : p + url;
+      try {
+        const res = await fetch(proxied);
+        if (res.ok) return await res.json();
+        console.warn('Proxy responded with non-ok status', proxied, res.status);
+      } catch (err) {
+        console.warn('Proxy fetch failed', proxied, err);
+      }
+    }
+
+    throw new Error(`Impossibile recuperare JSON da ${url} (direct + proxies failed)`);
   }
 
   // Search artist by name
   async searchArtistByName(name) {
-    const endpoint = `https://musicbrainz.org/ws/2/artist?query=${encodeURIComponent(
-      name
-    )}&limit=1&fmt=json`;
-    const res = await fetch(this.proxy + encodeURIComponent(endpoint));
-    if (!res.ok) throw new Error("Errore nella ricerca artista MusicBrainz");
-
-    const data = await res.json();
+    const endpoint = `https://musicbrainz.org/ws/2/artist?query=${encodeURIComponent(name)}&limit=1&fmt=json`;
+    const data = await this._fetchJsonWithFallback(endpoint);
     const artist = data.artists?.[0];
     if (!artist) throw new Error("Artista non trovato");
 
@@ -23,26 +50,25 @@ export default class ArtistProfileService {
   // Get full artist profile
   async getArtistProfile(artistId) {
     const endpoint = `https://musicbrainz.org/ws/2/artist/${artistId}?fmt=json&inc=url-rels+release-groups`;
-    const res = await fetch(this.proxy + encodeURIComponent(endpoint));
-    if (!res.ok)
-      throw new Error("Errore nel caricamento dati artista MusicBrainz");
+    const data = await this._fetchJsonWithFallback(endpoint);
 
-    const data = await res.json();
-
-    // Try to fetch cover art from first release group
+    // Try to fetch cover art metadata from Cover Art Archive (JSON) for the first release group
     let artwork = "";
     const release = data["release-groups"]?.[0];
     if (release) {
       try {
-        const coverRes = await fetch(
-          this.proxy +
-            encodeURIComponent(
-              `https://coverartarchive.org/release-group/${release.id}/front-250`
-            )
-        );
-        if (coverRes.ok) artwork = coverRes.url;
-      } catch {
-        console.warn("No cover art available for this artist");
+        // Use the JSON endpoint which returns metadata including image URLs
+        const coverJsonUrl = `https://coverartarchive.org/release-group/${release.id}`;
+        try {
+          const coverData = await this._fetchJsonWithFallback(coverJsonUrl);
+          const image = (coverData.images || [])[0];
+          // prefer a thumbnail or image URL if available
+          artwork = image?.thumbnails?.small || image?.image || "";
+        } catch (err) {
+          console.warn(`Cover art metadata not available: ${err.message}`);
+        }
+      } catch (err) {
+        console.warn("No cover art available for this artist or proxy failed:", err);
       }
     }
 

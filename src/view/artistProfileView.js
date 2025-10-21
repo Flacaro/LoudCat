@@ -48,6 +48,11 @@ export default class ArtistProfileView {
   }
 
   bindBack(handler) {
+    // Ensure we don't accumulate multiple listeners over time.
+    if (this._boundBackHandler) {
+      try { window.removeEventListener('artist:back', this._boundBackHandler); } catch(e) {}
+    }
+    this._boundBackHandler = handler;
     window.addEventListener("artist:back", handler);
   }
 }
