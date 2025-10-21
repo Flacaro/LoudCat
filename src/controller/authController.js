@@ -13,20 +13,41 @@ export function initFirebaseAuth(controller) {
   }
   
 onUserChanged(async (user) => {
+  const homeContainer = document.getElementById("home-container");
+  const resultsContainer = document.getElementById("results-section");
+
   if (user) {
     showUserUI(user.email);
     console.log("Utente autenticato:", user.email);
 
-    // --- NUOVO: carica preferiti e playlist dal UserController ---
+    // Carica preferiti e playlist
     if (controller && controller.userController) {
       const { favorites, playlists } = await controller.userController.loadUserCollections(user.uid);
       controller.userController.renderUserCollections({ favorites, playlists }, controller.view);
     }
+
+    // Mostra home container
+    if (homeContainer) homeContainer.style.display = "block";
+    if (resultsContainer) resultsContainer.style.display = "none";
+
   } else {
     showLoginUI();
     console.log("Nessun utente autenticato");
+
+    // ✅ Pulizia home: rimuovi i box
+    if (homeContainer) {
+      homeContainer.innerHTML = ""; // svuota tutto
+      homeContainer.style.display = "none"; // nascondi container
+    }
+    if (resultsContainer) resultsContainer.style.display = "none";
+
+    // Eventuale reset dello stato interno dei controller
+    if (controller && controller.homeView) {
+      controller.homeView.results.innerHTML = "";
+    }
   }
 });
+
  // helper di validazione
  function isValidEmail(email) {
    return typeof email === "string" && /\S+@\S+\.\S+/.test(email);

@@ -9,4 +9,6 @@ export default class FavoriteView {
       btn.classList.toggle('btn-outline-warning', !isFav);
     }
   }
+
+
 }
