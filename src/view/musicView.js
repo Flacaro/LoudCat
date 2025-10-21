@@ -24,17 +24,17 @@ export default class MusicView {
       const pbtn = e.target.closest('.playlist-btn');
       const sbtn = e.target.closest('.share-btn');
       if (fav) {
-        const song = this._parseSongData(fav.dataset.song);
+        const song = this._parseSongData(fav);
         if (this.favHandler) this.favHandler(song);
         return;
       }
       if (pbtn) {
-        const song = this._parseSongData(pbtn.dataset.song);
+        const song = this._parseSongData(pbtn);
         if (this.playlistHandler) this.playlistHandler(song);
         return;
       }
       if (sbtn) {
-        const song = this._parseSongData(sbtn.dataset.song);
+        const song = this._parseSongData(sbtn);
         if (this.shareHandler) this.shareHandler(song);
         return;
       }
@@ -42,13 +42,13 @@ export default class MusicView {
   }
 
   // Defensive parser for song data stored in data-* attributes.
-  // Some browsers may return the raw attribute value in dataset; the value
-  // might be percent-encoded or plain JSON. Try multiple strategies and
-  // fall back to an empty object while logging the problematic input.
-  _parseSongData(raw) {
-    if (!raw) return {};
-
+  // Accept either a raw encoded string (what dataset.song may be) or the
+  // HTMLElement itself so we can fall back to individual data-* attributes
+  // such as data-song-id, data-song-title, etc. This avoids returning
+  // an empty object when the encoded payload is truncated by the HTML parser.
+  _parseSongData(input) {
     const tryParse = (s) => {
+      if (!s) return null;
       try {
         return JSON.parse(s);
       } catch (err) {
@@ -56,27 +56,41 @@ export default class MusicView {
       }
     };
 
-    // Candidate 1: as-is (maybe dataset already decoded)
+    // If caller passed an element, read the dataset.song first then fall
+    // back to individual attributes.
+    if (input instanceof HTMLElement) {
+      const raw = input.dataset.song;
+      let parsed = tryParse(raw) || tryParse(decodeURIComponent(raw || "")) || tryParse(decodeURIComponent(decodeURIComponent(raw || "")));
+      if (parsed) return parsed;
+
+      // Fallback: build object from individual data attributes (they are encoded when set)
+      const build = (k) => {
+        const v = input.dataset[k];
+        try { return v ? decodeURIComponent(v) : undefined; } catch (e) { return v; }
+      };
+      const fallback = {
+        id: input.dataset.songId || build('songId'),
+        title: build('songTitle') || input.dataset.songTitle,
+        artist: build('songArtist') || input.dataset.songArtist,
+        album: build('songAlbum') || input.dataset.songAlbum,
+        artwork: build('songArtwork') || input.dataset.songArtwork,
+        preview: build('songPreview') || input.dataset.songPreview,
+      };
+      return fallback;
+    }
+
+    // Otherwise input is a raw string: try parsing several decode strategies
+    const raw = input;
     let parsed = tryParse(raw);
     if (parsed) return parsed;
-
-    // Candidate 2: percent-decoded once
     try {
-      const dec = decodeURIComponent(raw);
-      parsed = tryParse(dec);
+      parsed = tryParse(decodeURIComponent(raw));
       if (parsed) return parsed;
-    } catch (e) {
-      // ignore
-    }
-
-    // Candidate 3: percent-decoded twice (some encodings may be double-encoded)
+    } catch (e) {}
     try {
-      const dec2 = decodeURIComponent(decodeURIComponent(raw));
-      parsed = tryParse(dec2);
+      parsed = tryParse(decodeURIComponent(decodeURIComponent(raw)));
       if (parsed) return parsed;
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
 
     console.error('Failed to parse song data from dataset:', raw);
     return {};
@@ -174,7 +188,8 @@ bindArtistClick(handler) {
                   album: s.album,
                   artwork: s.artwork,
                   preview: s.preview
-                }))}' data-song-id='${s.id || s.title.replace(/\s+/g,'-').toLowerCase()}'>
+                }))}' data-song-id='${s.id || s.title.replace(/\s+/g,'-').toLowerCase()}'
+                data-song-title='${encodeURIComponent(s.title || '')}' data-song-artist='${encodeURIComponent(s.artist || '')}' data-song-album='${encodeURIComponent(s.album || '')}' data-song-artwork='${encodeURIComponent(s.artwork || '')}' data-song-preview='${encodeURIComponent(s.preview || '')}'>
           ⭐ Aggiungi ai preferiti
         </button>
         <button class="btn btn-outline-primary playlist-btn" 
@@ -185,7 +200,8 @@ bindArtistClick(handler) {
                   album: s.album,
                   artwork: s.artwork,
                   preview: s.preview
-                }))}' data-song-id='${s.id || s.title.replace(/\s+/g,'-').toLowerCase()}'>
+                }))}' data-song-id='${s.id || s.title.replace(/\s+/g,'-').toLowerCase()}'
+                data-song-title='${encodeURIComponent(s.title || '')}' data-song-artist='${encodeURIComponent(s.artist || '')}' data-song-album='${encodeURIComponent(s.album || '')}' data-song-artwork='${encodeURIComponent(s.artwork || '')}' data-song-preview='${encodeURIComponent(s.preview || '')}'>
           + Aggiungi alla playlist
         </button>
         <button class="btn btn-outline-success share-btn" 
@@ -196,7 +212,8 @@ bindArtistClick(handler) {
                   album: s.album,
                   artwork: s.artwork,
                   preview: s.preview
-                }))}' data-song-id='${s.id || s.title.replace(/\s+/g,'-').toLowerCase()}'>
+                }))}' data-song-id='${s.id || s.title.replace(/\s+/g,'-').toLowerCase()}'
+                data-song-title='${encodeURIComponent(s.title || '')}' data-song-artist='${encodeURIComponent(s.artist || '')}' data-song-album='${encodeURIComponent(s.album || '')}' data-song-artwork='${encodeURIComponent(s.artwork || '')}' data-song-preview='${encodeURIComponent(s.preview || '')}'>
           ↗ Condividi
         </button>
       
@@ -206,9 +223,9 @@ bindArtistClick(handler) {
 
   this.results.insertAdjacentHTML("beforeend", html);
 
-  this.results.querySelectorAll(".fav-btn").forEach(btn => {
+    this.results.querySelectorAll(".fav-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      const song = this._parseSongData(btn.dataset.song);
+      const song = this._parseSongData(btn);
       this.favHandler && this.favHandler(song);
     });
 
@@ -216,14 +233,14 @@ bindArtistClick(handler) {
 
   this.results.querySelectorAll(".playlist-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      const song = this._parseSongData(btn.dataset.song);
+      const song = this._parseSongData(btn);
       this.playlistHandler && this.playlistHandler(song);
     });
   });
 
   this.results.querySelectorAll(".share-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      const song = this._parseSongData(btn.dataset.song);
+      const song = this._parseSongData(btn);
       this.shareHandler && this.shareHandler(song);
     });
   });
