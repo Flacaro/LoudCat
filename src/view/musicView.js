@@ -39,6 +39,14 @@ export default class MusicView {
         return;
       }
     });
+
+    this.results.addEventListener('click', (e) => {
+      const card = e.target.closest('.song-card');
+      if (!card) return;
+      if (e.target.closest('button, .fav-btn, .playlist-btn, .share-btn')) return;
+      const song = this._parseSongData(card);
+      if (this.songClickHandler) this.songClickHandler(song);
+    });
   }
 
   // Defensive parser for song data stored in data-* attributes.
@@ -171,64 +179,52 @@ bindArtistClick(handler) {
     }
   });
 }
+ 
+
   renderSongs(songs) {
   const html = songs
-    .map(s => `
-      <div class="card song-card">
-  <img src="${s.artwork || 'assets/img/avatar-placeholder.svg'}" alt="${s.title}" />
+    .map(s => {
+      const songObj = {
+        id: s.id || s.title.replace(/\s+/g,'-').toLowerCase(),
+        title: s.title,
+        artist: s.artist,
+        album: s.album,
+        artwork: s.artwork,
+        preview: s.preview
+      };
+      const encoded = encodeURIComponent(JSON.stringify(songObj));
+      return `
+      <div class="card song-card" data-song='${encoded}' data-song-id='${songObj.id}'>
+        <img src="${s.artwork || 'assets/img/avatar-placeholder.svg'}" alt="${s.title}" />
         <h4>${s.title}</h4>
         <p>${s.artist}</p>
         ${s.album ? `<p>${s.album}</p>` : ""}
         ${s.preview ? `<audio controls src="${s.preview}"></audio>` : "<p>Preview non disponibile</p>"}
         <button class="btn btn-outline-warning fav-btn" 
-                data-song='${encodeURIComponent(JSON.stringify({
-                  id: s.id || s.title.replace(/\s+/g,'-').toLowerCase(),
-                  title: s.title,
-                  artist: s.artist,
-                  album: s.album,
-                  artwork: s.artwork,
-                  preview: s.preview
-                }))}' data-song-id='${s.id || s.title.replace(/\s+/g,'-').toLowerCase()}'
-                data-song-title='${encodeURIComponent(s.title || '')}' data-song-artist='${encodeURIComponent(s.artist || '')}' data-song-album='${encodeURIComponent(s.album || '')}' data-song-artwork='${encodeURIComponent(s.artwork || '')}' data-song-preview='${encodeURIComponent(s.preview || '')}'>
+                data-song='${encoded}' data-song-id='${songObj.id}' data-song-title='${encodeURIComponent(s.title || '')}' data-song-artist='${encodeURIComponent(s.artist || '')}' data-song-album='${encodeURIComponent(s.album || '')}' data-song-artwork='${encodeURIComponent(s.artwork || '')}' data-song-preview='${encodeURIComponent(s.preview || '')}'>
           ⭐ Aggiungi ai preferiti
         </button>
         <button class="btn btn-outline-primary playlist-btn" 
-                data-song='${encodeURIComponent(JSON.stringify({
-                  id: s.id || s.title.replace(/\s+/g,'-').toLowerCase(),
-                  title: s.title,
-                  artist: s.artist,
-                  album: s.album,
-                  artwork: s.artwork,
-                  preview: s.preview
-                }))}' data-song-id='${s.id || s.title.replace(/\s+/g,'-').toLowerCase()}'
-                data-song-title='${encodeURIComponent(s.title || '')}' data-song-artist='${encodeURIComponent(s.artist || '')}' data-song-album='${encodeURIComponent(s.album || '')}' data-song-artwork='${encodeURIComponent(s.artwork || '')}' data-song-preview='${encodeURIComponent(s.preview || '')}'>
+                data-song='${encoded}' data-song-id='${songObj.id}' data-song-title='${encodeURIComponent(s.title || '')}' data-song-artist='${encodeURIComponent(s.artist || '')}' data-song-album='${encodeURIComponent(s.album || '')}' data-song-artwork='${encodeURIComponent(s.artwork || '')}' data-song-preview='${encodeURIComponent(s.preview || '')}'>
           + Aggiungi alla playlist
         </button>
         <button class="btn btn-outline-success share-btn" 
-                data-song='${encodeURIComponent(JSON.stringify({
-                  id: s.id || s.title.replace(/\s+/g,'-').toLowerCase(),
-                  title: s.title,
-                  artist: s.artist,
-                  album: s.album,
-                  artwork: s.artwork,
-                  preview: s.preview
-                }))}' data-song-id='${s.id || s.title.replace(/\s+/g,'-').toLowerCase()}'
-                data-song-title='${encodeURIComponent(s.title || '')}' data-song-artist='${encodeURIComponent(s.artist || '')}' data-song-album='${encodeURIComponent(s.album || '')}' data-song-artwork='${encodeURIComponent(s.artwork || '')}' data-song-preview='${encodeURIComponent(s.preview || '')}'>
+                data-song='${encoded}' data-song-id='${songObj.id}' data-song-title='${encodeURIComponent(s.title || '')}' data-song-artist='${encodeURIComponent(s.artist || '')}' data-song-album='${encodeURIComponent(s.album || '')}' data-song-artwork='${encodeURIComponent(s.artwork || '')}' data-song-preview='${encodeURIComponent(s.preview || '')}'>
           ↗ Condividi
         </button>
-      
-        </div>
-    `)
+      </div>
+    `;
+    })
     .join("");
 
   this.results.insertAdjacentHTML("beforeend", html);
 
-    this.results.querySelectorAll(".fav-btn").forEach(btn => {
+  // keep existing per-button bindings (optional redundancy safe)
+  this.results.querySelectorAll(".fav-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const song = this._parseSongData(btn);
       this.favHandler && this.favHandler(song);
     });
-
   });
 
   this.results.querySelectorAll(".playlist-btn").forEach(btn => {
@@ -244,7 +240,7 @@ bindArtistClick(handler) {
       this.shareHandler && this.shareHandler(song);
     });
   });
-}
+  }
 
   bindFavoriteToggle(handler) {
     this.favHandler = handler;

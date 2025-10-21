@@ -308,13 +308,7 @@ footer {
 }
 
 .playlist-modal-content {
-
-  background: #fff;
-  border-radius: 12px;
-  max-width: 90%;
-  max-height: 90%; /* limita l’altezza */
-  padding: 1.5rem;
-  box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+  overflow-y: auto;
 }
 
 .playlist-modal .modal-songs-container {
@@ -323,9 +317,6 @@ footer {
   gap: 1rem;
 }
 
-.song-card {
-  flex-direction: row;
-}
 
 #playlist-select, #new-playlist-name {
   width: 100%;
