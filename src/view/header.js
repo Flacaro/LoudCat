@@ -12,6 +12,14 @@ export function getPhotoFile() {
  return document.getElementById("photoFile");
 }
 
+export function bindHomeClick(handler) {
+  const btn = document.getElementById("homeBtn");
+  if (!btn) return;
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (typeof handler === "function") handler();
+  });
+}
 export function showUserUI(email) { 
   const authSection = document.getElementById("auth");
   const dataSection = document.getElementById("data");

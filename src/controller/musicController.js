@@ -9,6 +9,7 @@ import HomeView from "../view/homeView.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { db } from "../firebase.js";
+import { bindHomeClick } from "../view/header.js";
 
 export default class MusicController {
   constructor(model, view) {
@@ -30,8 +31,6 @@ export default class MusicController {
     this._unsubFav = null;
     this._unsubPlaylists = null;
   }
-
-  
 
   async init() {
 
@@ -82,6 +81,17 @@ export default class MusicController {
     this.searchController.handleSearch(query)
   });
   
+  bindHomeClick(() => {
+      // carica home se necessario
+      if (typeof this.loadHome === "function") this.loadHome();
+      // toggle visibilità
+      document.getElementById("results-section")?.classList.add("d-none");
+      const home = document.getElementById("home-container");
+      if (home) {
+        home.classList.remove("d-none");
+        home.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
 
   const user = this.userController.getCurrentUser();
 
