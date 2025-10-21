@@ -12,6 +12,15 @@ export default class SearchController {
       this.view.renderLoading();
       const results = await this.model.search(query);
       this.view.renderResults(results);
+
+      try {
+        const rc = this.view.results;
+        if (rc) rc.closest('section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (e) {
+        console.warn('Impossibile scrollare ai risultati', e);
+      }
+
+
       // If attached to MusicController, update playlist-button state based on user's playlists
       if (this.controller?.playlistController) {
         // mark songs that are already present in user's playlists
@@ -69,6 +78,14 @@ export default class SearchController {
   const data = snap.data();
   if (!data?.results) return;
   this.view.renderResults(data.results);
+
+  try {
+    const rc = this.view.results;
+    if (rc) rc.closest('section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (e) {
+    console.warn('Impossibile scrollare ai risultati caricati', e);
+  }
+
   if (this.controller?.playlistController) {
     const songs = Array.isArray(data.results.songs) ? data.results.songs : [];
     await this._markPlaylistState(songs);

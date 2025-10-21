@@ -242,9 +242,17 @@ bindArtistClick(handler) {
 
 
   bindSearch(handler) {
-    this.button.addEventListener("click", () => {
+    this.button.addEventListener("click", (e) => {
+      e.preventDefault();
       const query = this.input.value.trim();
-      if (query) handler(query);
+      if(query) handler(query);
+    });
+    this.input.addEventListener("keydown", (e) => {
+      if(e.key === "Enter") {
+        e.preventDefault();
+        const query = this.input.value.trim();
+        if(query) handler(query);
+      }
     });
   }
 
@@ -252,11 +260,18 @@ bindArtistClick(handler) {
     this.results.innerHTML = "<p>⏳ Ricerca in corso...</p>";
   }
 
-  renderResults({songs, albums, artists}) {
-    if(artists.length){ this.renderArtists(artists);}
-    if(songs.length){ this.renderSongs(songs);}
-    if(albums.length){ this.renderAlbums(albums);}
+  renderResults({songs = [], albums = [], artists = []} = {}) {
+    this.results.innerHTML = "";
 
+    if(Array.isArray(artists) && artists.length) this.renderArtists(artists);
+    if(Array.isArray(songs) && songs.length) this.renderSongs(songs);
+    if(Array.isArray(albums) && albums.length) this.renderAlbums(albums);
+
+    try {
+      this.results.closest('section')?.scrollIntoView({ behavior: 'smooth', block: 'start'});
+    } catch(e) {
+      console.warn('Impossibile scrollare i risultati', e)
+    }
   }
 
   renderError() {

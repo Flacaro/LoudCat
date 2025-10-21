@@ -23,7 +23,6 @@ export default class MusicController {
     this.playlistController = new PlaylistController(view);
     this.shareController = new ShareController(view);
     this.albumController = new AlbumController(view, model);
-
     this.artistProfileController = new ArtistProfileController();
   }
 
@@ -32,6 +31,8 @@ export default class MusicController {
   async init() {
 
     const auth = getAuth();
+    const resultsSection = document.getElementById("results-section");
+    const homeContainer = document.getElementById("home-container");
     
     onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -50,8 +51,15 @@ export default class MusicController {
   this.view.bindShare(song => this.shareController.handleShare(song));
   this.view.bindCreatePlaylist(name => this.playlistController.createPlaylist(name));
   this.view.bindArtistClick(({ artistId, artistName }) => {
-    this.artistProfileController.showArtistProfile(null, artistName);
+  this.artistProfileController.showArtistProfile(null, artistName);
   });
+  this.view.bindSearch(query => {
+    homeContainer.style.display = "none";
+    resultsSection.style.display = "block";
+    this.searchController.handleSearch(query)
+  });
+  
+
   const user = this.userController.getCurrentUser();
 
     // Utente non loggato → carica eventuale ultima ricerca
