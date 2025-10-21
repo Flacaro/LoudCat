@@ -4,6 +4,10 @@ export default class HomeView {
         this.welcomeMessage = document.getElementById("welcome-message");
     }
 
+  showWelcomeMessage(name) {
+    if (this.welcomeMessage) this.welcomeMessage.textContent = `Benvenuto, ${name}!`;
+  }
+
     clearWelcomeMessage() {
         this.welcomeMessage.textContent = "";
     }   
@@ -14,24 +18,44 @@ export default class HomeView {
     const container = document.createElement("div");
     container.className = "user-collections";
 
-    // Box Preferiti
+    // Box Preferiti (with artwork previews)
     const favBox = document.createElement("div");
     favBox.className = "card user-box mb-3 favorites-section";
     favBox.style.cursor = "pointer";
-    favBox.innerHTML = `<h4>I tuoi preferiti</h4><p>${favorites.length} brani</p>`;
+    const favPreviewHtml = (favorites.slice(0,3).map(song => `
+      <img src="${song.artwork || 'assets/img/avatar-placeholder.svg'}" alt="${song.title || ''}" class="preview-artwork"/>
+    `).join('')) || '';
+
+    favBox.innerHTML = `
+      <div class="d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">I tuoi preferiti</h4>
+        <small class="text-muted">${favorites.length} brani</small>
+      </div>
+      <div class="preview-container mt-2">${favPreviewHtml}</div>
+    `;
     container.appendChild(favBox);
 
     favBox.addEventListener("click", () => this.showSongsModal("I tuoi preferiti", favorites));
 
-    // Box Playlist
+    // Box Playlist (each with artwork previews)
     playlists.forEach(pl => {
         const plBox = document.createElement("div");
         plBox.className = "card user-box mb-3 playlist-box";
         plBox.style.cursor = "pointer";
-        plBox.innerHTML = `<h4>${pl.name}</h4><p>${pl.songs.length} brani</p>`;
+        const plPreviewHtml = (pl.songs || []).slice(0,3).map(song => `
+          <img src="${song.artwork || 'assets/img/avatar-placeholder.svg'}" alt="${song.title || ''}" class="preview-artwork"/>
+        `).join('');
+
+        plBox.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">${pl.name}</h4>
+            <small class="text-muted">${(pl.songs||[]).length} brani</small>
+          </div>
+          <div class="preview-container mt-2">${plPreviewHtml}</div>
+        `;
         container.appendChild(plBox);
 
-        plBox.addEventListener("click", () => this.showSongsModal(pl.name, pl.songs));
+        plBox.addEventListener("click", () => this.showSongsModal(pl.name, pl.songs || []));
     });
 
     this.results.appendChild(container);
