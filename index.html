@@ -18,71 +18,23 @@
 
   <body class="bg-light">
 
-    <header
-      class="py-3 mb-4 border-bottom bg-white position-sticky top-0 z-3 shadow-sm"
-    >
- 
+<header class="py-3 mb-4 border-bottom bg-white position-sticky top-0 z-3 shadow-sm">
+  <div class="container-fluid d-flex align-items-center gap-3">
+    <button id="homeBtn" class="btn btn-outline-primary me-2" title="Home">Home</button>
+    <form id="search-form" class="d-flex flex-grow-1" role="search" onsubmit="return false;">
+      <input id="search-input" class="form-control me-2" type="search" placeholder="Cerca..." aria-label="Search">
+      <button id="search-btn" class="btn btn-primary" type="button">Cerca</button>
+    </form>
 
-      <div
-        class="container d-flex flex-wrap align-items-center justify-content-between"
-      >
-       <h1 id="welcome-message"></h1>
-        <button id="home-btn">🏠 Home</button>
-
-        <div class="d-flex align-items-center">
-          <img
-            src="assets/img/logo.png"
-            alt="LoudCat Logo"
-            width="48"
-            class="me-2"
-          />
-          <h1 class="fs-3 fw-bold mb-0">LoudCat</h1>
-         
-
-        </div>
-
-        
-        <!-- ricerca -->
-        <section
-          id="search-section"
-          class="d-flex flex-grow-1 mx-3"
-          style="max-width: 500px;"
-        >
-          <input
-            type="text"
-            id="search-input"
-            class="form-control me-2"
-            placeholder="Cerca artista, album o brano..."
-          />
-          <button id="search-btn" class="btn btn-primary">🔍</button>
-        </section>
-
- 
-        <div class="text-end">
-          <button
-            id="registerBtn"
-            type="button"
-            class="btn btn-outline-primary me-2"
-          >
-            Registrati
-          </button>
-          <button id="loginBtn" type="button" class="btn btn-primary me-2">
-            Login
-          </button>
-          <button id="profileBtn" type="button" class="btn btn-outline-secondary me-2">
-            Profilo
-          </button>
-          <button
-            id="logoutBtn"
-            type="button"
-            class="btn btn-outline-danger"
-            style="display:none"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-    </header>
+    <div id="header-actions" class="d-flex align-items-center ms-3">
+      <span id="welcome-message" class="me-3 text-muted small d-none"></span>
+      <button id="profileBtn" class="btn btn-sm btn-light d-none">Profilo</button>
+      <button id="logoutBtn" class="btn btn-sm btn-outline-secondary ms-2 d-none">Logout</button>
+      <button id="loginBtn" class="btn btn-sm btn-light ms-2">Accedi</button>
+      <button id="registerBtn" class="btn btn-sm btn-outline-primary ms-2">Registrati</button>
+    </div>
+  </div>
+</header>
 
     <!-- Profile / Settings Modal -->
     <div id="profileModal" class="modal-overlay" style="display:none">

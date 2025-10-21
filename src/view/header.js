@@ -14,44 +14,54 @@ export function getPhotoFile() {
 
 export function bindHomeClick(handler) {
   const btn = document.getElementById("homeBtn");
-  if (!btn) return;
+  if (!btn) return; // evita TypeError se il bottone non esiste
   btn.addEventListener("click", (e) => {
     e.preventDefault();
     if (typeof handler === "function") handler();
   });
 }
-export function showUserUI(email) { 
-  const authSection = document.getElementById("auth");
-  const dataSection = document.getElementById("data");
+
+export function showUserUI(user) {
+  const welcome = document.getElementById("welcome-message");
   const logoutBtn = document.getElementById("logoutBtn");
   const profileBtn = document.getElementById("profileBtn");
   const loginBtn = document.getElementById("loginBtn");
   const registerBtn = document.getElementById("registerBtn");
 
-  if (authSection) authSection.style.display = "none";
-  if (dataSection) dataSection.style.display = "block";
-  if (logoutBtn) logoutBtn.style.display = "inline-block";
-  if (profileBtn) profileBtn.style.display = "inline-block";
-  if (loginBtn) loginBtn.style.display = "none";
-  if (registerBtn) registerBtn.style.display = "none";
-  document.querySelector("h1").textContent = `Benvenuto, ${email}!`;
+  if (welcome) {
+    const name = user && typeof user === "object" ? (user.displayName || user.email) : (user || "Utente");
+    welcome.textContent = `Ciao, ${name}`;
+    welcome.classList.remove("d-none");
+  } else {
+    console.warn('showUserUI: elemento #welcome-message non trovato');
+  }
+
+  if (logoutBtn) logoutBtn.classList.remove("d-none");
+  if (profileBtn) profileBtn.classList.remove("d-none");
+  if (loginBtn) loginBtn.classList.add("d-none");
+  if (registerBtn) registerBtn.classList.add("d-none");
 }
+
 export function showLoginUI() {
-  const authSection = document.getElementById("auth");
-  const dataSection = document.getElementById("data");
+  const welcome = document.getElementById("welcome-message");
   const logoutBtn = document.getElementById("logoutBtn");
   const profileBtn = document.getElementById("profileBtn");
   const loginBtn = document.getElementById("loginBtn");
   const registerBtn = document.getElementById("registerBtn");
 
-  if (authSection) authSection.style.display = "block";
-  if (dataSection) dataSection.style.display = "none";
-  if (logoutBtn) logoutBtn.style.display = "none";
-  if (profileBtn) profileBtn.style.display = "none";
-  if (loginBtn) loginBtn.style.display = "inline-block";
-  if (registerBtn) registerBtn.style.display = "inline-block";
-  document.querySelector("h1").textContent = "Firebase + MVC";
+  if (welcome) {
+    welcome.textContent = "";
+    welcome.classList.add("d-none");
+  } else {
+    console.warn('showLoginUI: elemento #welcome-message non trovato');
+  }
+
+  if (logoutBtn) logoutBtn.classList.add("d-none");
+  if (profileBtn) profileBtn.classList.add("d-none");
+  if (loginBtn) loginBtn.classList.remove("d-none");
+  if (registerBtn) registerBtn.classList.remove("d-none");
 }
+
 export function renderData(data) {
  const ul = document.getElementById("output");
  ul.innerHTML = Object.entries(data)

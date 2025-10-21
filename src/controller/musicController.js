@@ -32,6 +32,7 @@ export default class MusicController {
     this._unsubPlaylists = null;
   }
 
+
   async init() {
 
     const auth = getAuth();
@@ -81,17 +82,6 @@ export default class MusicController {
     this.searchController.handleSearch(query)
   });
   
-  bindHomeClick(() => {
-      // carica home se necessario
-      if (typeof this.loadHome === "function") this.loadHome();
-      // toggle visibilità
-      document.getElementById("results-section")?.classList.add("d-none");
-      const home = document.getElementById("home-container");
-      if (home) {
-        home.classList.remove("d-none");
-        home.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    });
 
   const user = this.userController.getCurrentUser();
 

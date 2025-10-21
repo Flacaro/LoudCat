@@ -5,20 +5,39 @@ import MusicController from "./controller/musicController.js";
 import { initFirebaseAuth } from "./controller/authController.js";
 import { initProfileModal } from "./view/header.js";
 
+
 document.addEventListener("DOMContentLoaded", () => {
   const service = new MusicService();
   const view = new MusicView();
   const controller = new MusicController(service, view);
   controller.init();
 
-  // Listener pulsante "🏠 Home"
-  document.getElementById("home-btn").addEventListener("click", async () => {
+  // helper sicuri per i binding (controllano che l'elemento esista)
+  const q = id => document.getElementById(id);
+  const on = (id, evt, handler) => {
+    const el = q(id);
+    if (!el) {
+      console.warn(`Elemento con id="${id}" non trovato in DOM — binding ${evt} saltato.`);
+      return;
+    }
+    el.addEventListener(evt, handler);
+  };
+
+  // Listener pulsante "🏠 Home" (uso del helper)
+  on("homeBtn", "click", async () => {
     await controller.loadHome();
+
+    try {
+      const user = controller.userController?.getCurrentUser?.();
+      if (user && typeof controller.homeView?.showWelcomeMessage === "function") {
+        controller.homeView.showWelcomeMessage(user);
+      }
+    } catch (e) {
+      console.warn("Impossibile ripristinare il messaggio di benvenuto:", e);
+    }
   });
- 
-  initFirebaseAuth(controller); 
+
+  initFirebaseAuth(controller);
 
   initProfileModal();
-
-  
 });

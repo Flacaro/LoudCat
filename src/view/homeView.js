@@ -5,9 +5,18 @@ export default class HomeView {
     this._songClickHandler = null; // callback opzionale
   }
 
-  clearWelcomeMessage() {
-    if (this.welcomeMessage) this.welcomeMessage.textContent = "";
-  }
+   clearWelcomeMessage() {
+      if (this.welcomeMessage) {
+        this.welcomeMessage.textContent = "";
+        this.welcomeMessage.classList.add("d-none");
+      }
+    }
+    showWelcomeMessage(user) {
+      if (!this.welcomeMessage) return;
+      const name = user && user.displayName ? user.displayName : (user && user.email) ? user.email : "Utente";
+      this.welcomeMessage.textContent = `Ciao, ${name}`;
+      this.welcomeMessage.classList.remove("d-none");
+    }
 
   // --- Render preferiti e playlist ---
   renderUserCollections(favorites = [], playlists = []) {
