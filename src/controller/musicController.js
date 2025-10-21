@@ -22,7 +22,8 @@ export default class MusicController {
     this.favoriteController = new FavoriteController(view);
     this.playlistController = new PlaylistController(view);
     this.shareController = new ShareController(view);
-    this.albumController = new AlbumController(view, model);
+  // Provide the shared view and model so AlbumController can restore results
+  this.albumController = new AlbumController(view, model);
     this.artistProfileController = new ArtistProfileController();
   }
 
@@ -45,7 +46,11 @@ export default class MusicController {
       }
     });
 
-  this.view.bindAlbumClick(albumId => this.albumController.handleAlbumClick(albumId));
+  this.view.bindAlbumClick(albumId => {
+    // prefer controller-held lastResults; fall back to view's rendered results
+    const albums = this.searchController?.lastResults?.albums || this.view.getRenderedResults()?.albums || null;
+    this.albumController.handleAlbumClick(albumId, albums);
+  });
   this.view.bindFavoriteToggle(song => this.favoriteController.handleFavoriteToggle(song));
   this.view.bindAddToPlaylist(song => this.playlistController.handlePlaylist(song));
   this.view.bindShare(song => this.shareController.handleShare(song));

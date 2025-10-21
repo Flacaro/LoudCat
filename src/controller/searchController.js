@@ -5,12 +5,16 @@ export default class SearchController {
   constructor(model, view) {
     this.model = model;
     this.view = view;
+    // store last results object { songs, albums, artists }
+    this.lastResults = null;
   }
 
   async handleSearch(query) {
     try {
       this.view.renderLoading();
       const results = await this.model.search(query);
+      // keep a reference so other controllers can reuse the recently rendered data
+      this.lastResults = results;
       this.view.renderResults(results);
 
       try {
@@ -77,6 +81,8 @@ export default class SearchController {
   if (!snap.exists()) return;
   const data = snap.data();
   if (!data?.results) return;
+  // save loaded results so controllers can access them
+  this.lastResults = data.results;
   this.view.renderResults(data.results);
 
   try {

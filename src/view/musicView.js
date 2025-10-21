@@ -12,6 +12,8 @@ export default class MusicView {
     this.results = document.getElementById("results-container");
     this.playlistView = new PlaylistView();
     this.favoriteView = new FavoriteView();
+    // store the last results object passed to renderResults
+    this._lastRenderedResults = null;
     // wire playlist create button via playlistView
     this.playlistView.bindCreatePlaylist((name) => {
       if (this.createPlaylistHandler) this.createPlaylistHandler(name);
@@ -262,6 +264,8 @@ bindArtistClick(handler) {
 
   renderResults({songs = [], albums = [], artists = []} = {}) {
     this.results.innerHTML = "";
+    // cache last rendered results for controllers that may request it
+    this._lastRenderedResults = { songs, albums, artists };
 
     if(Array.isArray(artists) && artists.length) this.renderArtists(artists);
     if(Array.isArray(songs) && songs.length) this.renderSongs(songs);
@@ -286,6 +290,11 @@ bindArtistClick(handler) {
     handler(albumId);
   });
 }
+
+  // helper used by controllers to obtain the last-rendered results (if any)
+  getRenderedResults() {
+    return this._lastRenderedResults;
+  }
 
 renderTracks(tracks, albumId) {
   const albumCard = this.results.querySelector(`.album-card[data-album-id="${albumId}"]`);
