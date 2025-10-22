@@ -247,3 +247,66 @@ footer {
   background: #1d4ed8;
 }
 
+/* Profile modal specific close button (red X in top-right) */
+#profileModal .modal-panel {
+  position: relative;
+  /* center the modal content and make it responsive */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 680px;
+  width: 90%;
+  margin: 0 auto;
+  padding: 1rem 1.25rem;
+  box-sizing: border-box;
+  text-align: center; /* ensure headings and paragraphs are centered by default */
+  /* create a little extra right padding so absolutely positioned close button can sit outside the main flow */
+  padding-right: 3rem;
+}
+#profileModal .btn-close {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255,0,0,0.9);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  /* absolutely position to top-right and nudge further right */
+  position: absolute;
+  top: 0.6rem;
+  right: -1.25rem; /* pushes the button slightly outside the panel on the right */
+}
+#profileModal .btn-close:hover {
+  background: rgba(255,0,0,1);
+}
+
+/* Center the profile info block (avatar + text). On narrow screens stack vertically. */
+#profileModal [data-panel="profile"] .d-flex.align-items-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+@media (min-width: 576px) {
+  #profileModal [data-panel="profile"] .d-flex.align-items-center {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    text-align: left; /* keep avatar to the left of text on wider viewports */
+  }
+  /* keep profile panel content centered but align internal text nicely */
+  #profileModal .modal-panel {
+    text-align: left;
+  }
+}
+
