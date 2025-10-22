@@ -36,7 +36,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  
 
   initFirebaseAuth(controller);
 
