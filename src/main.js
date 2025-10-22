@@ -5,7 +5,6 @@ import MusicController from "./controller/musicController.js";
 import { initFirebaseAuth } from "./controller/authController.js";
 import { initProfileModal } from "./view/header.js";
 
-
 document.addEventListener("DOMContentLoaded", () => {
   const service = new MusicService();
   const view = new MusicView();
@@ -36,6 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
       console.warn("Impossibile ripristinare il messaggio di benvenuto:", e);
     }
   });
+
+  
 
   initFirebaseAuth(controller);
 

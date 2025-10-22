@@ -1,152 +1,76 @@
+/* Body scuro */
 body {
   font-family: "Segoe UI", sans-serif;
   margin: 0;
-  background: #f9fafb;
-  color: #222;
+  background: #253f56 !important;
+  color: #fff;
 }
 
+/* Header */
 header {
-  background: #1e3a8a;
-  color: white;
+  background: #2c465f;
   text-align: center;
   padding: 1rem;
 }
 
-header .logo {
-  width: 50px;
-  vertical-align: middle;
+#welcome-message, #logoutBtn {
+  color: #fff !important;
 }
-
-/* Container principale */
-#home-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1rem;
-  padding: 1rem;
-}
-
-/* Card generiche per preferiti e playlist */
-.user-box {
-  background: #fff;
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+.playlist-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
+}
+.playlist-modal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+}
+
+
+
+/* Card generiche */
+.user-box, .card, .playlist-modal-content {
+  background: #43698d;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  color: #d1cfcf;  /* testi bianchi */
   transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
   text-align: center;
 }
 
-/* Container delle anteprime */
-.preview-container {
-  display: flex;
-  gap: 0.3rem;
-  margin: 0.5rem 0;
-  justify-content: center;
+/* Titoli e testi nelle card */
+.user-box h4, .card h4, .card h6, .playlist-modal-content h5 {
+  color: #43698d;
 }
 
-/* Piccole immagini delle anteprime */
-.preview-artwork {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid #ddd;
-}
-
-/* Home preview thumbnails */
-.preview-container {
-  display: flex;
-  gap: 0.5rem;
-}
-.preview-artwork {
-  width: 64px;
-  height: 64px;
-  object-fit: cover;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-}
-
-/* Forza le collection a impilarsi verticalmente */
-.user-collections {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem; /* spazio tra le card */
-}
-
-/* Ogni box deve occupare tutta la larghezza della riga */
-.user-box {
-  display: block !important;
-  width: 100%;
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0.75rem;
-}
-
-/* Mantieni le anteprime in riga (solo le miniature), non l'intero box */
-.user-box .preview-container {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  overflow-x: auto;
-}
-
-.user-box h4 {
-  margin-bottom: 0.5rem;
-  font-size: 1.1rem;
-  color: #333;
-}
-
-.user-box p {
-  font-size: 0.9rem;
-  color: #666;
+.user-box p, .card small, .playlist-modal-content p {
+  color: #43698d;
 }
 
 /* Effetto hover */
-.user-box:hover {
+.user-box:hover, .card:hover, .playlist-modal-content:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.6);
 }
 
-/* Messaggi quando non ci sono dati */
-#home-container p {
-  grid-column: 1 / -1; /* Occupa tutta la larghezza */
-  text-align: center;
-  color: #555;
-  font-style: italic;
+/* Anteprime / artwork */
+.preview-artwork, .song-artwork {
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  border: 1px solid #385977;
 }
 
-/* Responsive: su schermi piccoli 1 colonna */
-@media (max-width: 500px) {
-  #home-container {
-    grid-template-columns: 1fr;
-  }
-}
-
-
-main {
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 0 1rem;
-}
-
-#search-section {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-#search-input {
-  width: 70%;
-  padding: 0.6rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
+/* Bottoni */
 button {
   background: #2563eb;
   color: white;
@@ -160,195 +84,154 @@ button:hover {
   background: #1d4ed8;
 }
 
-#results-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1rem;
-}
-
-.card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  padding: 1rem;
-  text-align: center;
-}
-
-.card img {
-  width: 100%;
-  border-radius: 6px;
-}
-
+/* Footer */
 footer {
   text-align: center;
   margin-top: 2rem;
   font-size: 0.9rem;
-  color: #666;
+  color: #ccc;
 }
 
-/* Modal / Profile panel styles */
+/* Modal overlay */
 .modal-overlay {
-  position: fixed;
-  inset: 0;
-  display: none;
-  align-items: center;
+  background: rgba(0,0,0,0.7);
+}
+
+/* Griglia risultati ricerca */
+#results-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
   justify-content: center;
-  background: rgba(0,0,0,0.35);
-  z-index: 2000;
-}
-.modal-panel {
-  background: #fff;
-  width: 95%;
-  max-width: 500px;
-  border-radius: 10px;
-  padding: 1rem;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-}
-.modal-header { border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
-.modal-nav .btn { border-radius: 6px; }
-.btn-close { background: transparent; border: none; font-size: 1rem; }
-
-@media (min-width: 768px) {
-  .modal-panel { width: 1000px; max-width: 1100px; padding: 1.5rem; }
-  .modal-panel .modal-nav { gap: 0.5rem; }
-  .modal-panel section { padding: 0.5rem 0; }
-}
-
-/* Friends empty message styling (themed) */
-.friends-empty {
-  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  font-style: italic;
-  color: #1e3a8a; /* primary theme color */
-  text-align: center;
   padding: 1rem 0;
-  background: transparent;
-  border: none;
 }
 
-.user-card {
-  position: relative;
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: pointer;
-}
-.hover-card {
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: pointer;
-}
-.hover-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-
-/* Toast notification styles */
-.toast-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
+/* Card generica dei risultati */
+#results-container .card {
+  flex: 0 0 200px;        /* larghezza fissa */
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  z-index: 4000;
-  pointer-events: none; /* allow clicks through container except buttons inside */
-}
-
-.toast-message {
-  background: #333;
-  color: white;
-  padding: 0.9rem 1.2rem;
+  align-items: center;
+  text-align: center;
+  padding: 0.5rem;
   border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-  transform: translateY(-8px) scale(0.98);
-  opacity: 0;
-  transition: opacity 260ms ease, transform 260ms ease;
-  pointer-events: auto; /* enable interaction with the toast itself */
-  max-width: 320px;
-}
-
-.toast-message.visible {
-  transform: translateY(0) scale(1);
-  opacity: 0.98;
-}
-
-
-.favorites-grid, .playlists-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1rem;
-  margin-top: 0.5rem;
-}
-.favorites-grid, .playlists-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1rem;
-  margin-top: 0.5rem;
-}
-
-.favorites-section h3:hover {
-  color: #2563eb;
-  text-decoration: underline;
-  display: flex;
-  justify-content: center;
+  background: #43698d;
+  box-sizing: border-box;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
+  overflow: hidden;
 }
 
+#results-container .card img,
+#results-container .card .song-artwork .song-preview {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 0.3rem;
+}
+
+/* Assicura che l'audio si adatti al contenitore */
+#results-container .card audio,
+#results-container .card .song-preview {
+  width: 100%;        /* occupa tutta la larghezza della card */
+  max-width: 100%;    /* mai più largo della card */
+  display: block;     /* evita spazi indesiderati */
+  box-sizing: border-box;
+}
+
+#results-container .card h4,
+#results-container .card h3 {
+  font-size: 0.9rem;
+  margin: 0.3rem 0 0.1rem 0;
+  color: #fff;
+}
+
+#results-container .card p,
+#results-container .card small {
+  font-size: 0.8rem;
+  color: #d1cfcf;
+  margin: 0 0 0.3rem 0;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+#results-container .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+}
+
+/* Overlay */
 .playlist-modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.7);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  padding: 1rem;
-  overflow: auto; /* permette lo scroll se il contenuto è troppo grande */
+  opacity: 1;
+  transition: opacity 0.2s ease;
 }
 
-/* compat: overlay class used by PlaylistView */
-.playlist-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
+.playlist-modal.hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
+/* Contenuto del modale */
 .playlist-modal-content {
-  background: #fff;
+  background: #43698d;
+  padding: 1rem 1.5rem;
   border-radius: 12px;
-  max-width: 90%;
-  max-height: 90%; /* limita l’altezza */
-  overflow-y: auto; /* scroll verticale interno */
-  padding: 1.5rem;
-  box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }
 
-.playlist-modal .modal-songs-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
+/* Lista playlist */
+.playlist-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  max-height: 250px;
+  overflow-y: auto;
 }
 
-.playlist-modal .song-card {
-  flex: 1 1 150px; /* adattabile */
-  max-width: 200px;
+.playlist-list li {
+  padding: 0.6rem 1rem;
+  margin-bottom: 0.5rem;
+  background: #2c465f;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-#playlist-select, #new-playlist-name {
-  width: 100%;
-  margin: 10px 0;
-  padding: 5px;
+.playlist-list li:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
 }
 
-.modal-buttons {
-  text-align: right;
+/* Pulsante chiudi */
+.modal-close-btn {
+  margin-top: 1rem;
+  background: #fff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
 
+.modal-close-btn:hover {
+  background: #1d4ed8;
+}
 

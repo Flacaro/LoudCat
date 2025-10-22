@@ -9,7 +9,6 @@ import HomeView from "../view/homeView.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { db } from "../firebase.js";
-import { bindHomeClick } from "../view/header.js";
 
 export default class MusicController {
   constructor(model, view) {
@@ -62,6 +61,7 @@ export default class MusicController {
   this.view.bindAddToPlaylist(song => this.playlistController.handlePlaylist(song));
   this.view.bindShare(song => this.shareController.handleShare(song));
   this.view.bindCreatePlaylist(name => this.playlistController.createPlaylist(name));
+  
   this.view.bindArtistClick(({ artistId, artistName }) => {
     // create a back handler that restores the last rendered search results if available
     const prev = this.searchController?.lastResults || this.view.getRenderedResults() || null;
@@ -96,8 +96,10 @@ async loadUserCollections() {
   const favorites = await this.favoriteController.getFavorites();
   const playlists = await this.playlistController.getPlaylists();
 
-  this.homeView.renderUserCollections(favorites, playlists);
+  // Usa la nuova home in stile Spotify
+  this.homeView.renderSpotifyHome(favorites, playlists);
 }
+
 
   _subscribeRealtime(uid) {
     try {
@@ -133,38 +135,51 @@ async loadUserCollections() {
   }
 
 async loadHome() {
-  // Ensure the home container is visible and other sections are hidden,
-  // clear any existing results (albums/artist/results) and then load user collections.
   const auth = getAuth();
   const user = auth.currentUser;
 
   const resultsSection = document.getElementById("results-section");
   const homeContainer = document.getElementById("home-container");
-  // There are multiple elements with id 'results-container' (legacy); clear them all
   const resultsContainers = document.querySelectorAll('#results-container');
 
-  // Show home, hide results
+  // Mostra home, nascondi risultati
   if (homeContainer) homeContainer.style.display = 'block';
   if (resultsSection) resultsSection.style.display = 'none';
 
-  // Clear rendered content in all results containers to remove album/artist detail views
+  // Pulisci eventuali vecchi risultati
   resultsContainers.forEach(c => { if (c) c.innerHTML = ''; });
 
   if (!user) {
-    // Not logged in: show a minimal welcome message but don't attempt to load collections
     this.homeView.showWelcomeMessage('Visitatore');
     return;
   }
 
   this.homeView.showWelcomeMessage(user.displayName || 'Utente');
 
-  // Use controller method to fetch freshest data (favorites/playlists) so Home always reflects recent changes
-  await this.loadUserCollections();
+  // --- NUOVA PARTE ---
+  const favorites = await this.favoriteController.getFavorites();
+  const playlists = await this.playlistController.getPlaylists();
 
-  // Smooth scroll to top for better UX when returning to Home
+  // Puoi generare qualche consiglio fittizio per ora
+  const recommended = favorites.slice(0, 4).map(f => ({
+    title: f.title,
+    artist: f.artist,
+    artwork: f.artwork
+  }));
+
+  // 🎵 Mostra nuova home in stile Spotify
+  this.homeView.renderSpotifyHome(favorites, playlists, recommended);
+
+  // Scorri in alto per estetica
   try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0,0); }
-
 }
+
+
+
+
+
+
+
 }
 
 

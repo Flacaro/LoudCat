@@ -1,37 +1,96 @@
-/* === HomeView component === */
-
-.song-card {
-  position: relative;
-  border-radius: 6px;
-  overflow: hidden;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+/* --- Sezioni home --- */
+.home-section {
+  margin-bottom: 2rem;
 }
 
-.song-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+.home-section h5 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #ccc;
+  margin-bottom: 0.5rem;
 }
 
-.song-card .overlay-link {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
+/* --- Row orizzontale di card --- */
+.cards-row {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: none; /* Firefox */
+}
+.cards-row::-webkit-scrollbar {
+  display: none; /* Chrome, Edge */
 }
 
-.song-card .artwork-container {
+/* --- Card generiche --- */
+.card, .song-card, .playlist-card, .recommended-card, .create-card {
+  min-width: 150px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: #43698d;
+  color: #fff;
+}
+
+/* --- Effetto hover --- */
+.card:hover, .song-card:hover, .playlist-card:hover, .create-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+
+/* --- Card speciale “Crea playlist” --- */
+.create-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1rem;
+  border: 2px dashed #ccc;
+  background: #f5f5f5;
+  color: #555;
   height: 140px;
-  overflow: hidden;
 }
 
-.song-preview {
-  display: block;
-  width: 100%;
-  z-index: 2;
-  position: relative;
+/* --- Artwork --- */
+.song-artwork-wrapper {
+  padding: 10px;
+  display: flex;
+  justify-content: center;
 }
-@media (max-width: 576px) {
-  .song-card .artwork-container {
-    height: 120px;
-  }
+
+.song-artwork {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  background-size: cover;
+  background-position: center;
+}
+
+/* --- Titoli e info --- */
+.text-truncate {
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fw-semibold {
+  font-weight: 600;
+}
+
+small {
+  color: #ccc;
+}
+
+/* --- Preview audio --- */
+.song-preview {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0.5rem;
 }

@@ -16,9 +16,9 @@
 
   </head>
 
-  <body class="bg-light">
+  <body>
 
-<header class="py-3 mb-4 border-bottom bg-white position-sticky top-0 z-3 shadow-sm">
+<header class="py-3 mb-4 border-bottom position-sticky top-0 z-3 shadow-sm">
   <div class="container-fluid d-flex align-items-center gap-3">
     <button id="homeBtn" class="btn btn-outline-primary me-2" title="Home">Home</button>
     <form id="search-form" class="d-flex flex-grow-1" role="search" onsubmit="return false;">
@@ -160,10 +160,24 @@
         <h2 class="mb-3"></h2>
         <div id="results-container" class="row gy-3"></div>
       </section>
+
+      
     </main>
+    <!-- Modale Playlist -->
+    <div id="playlistModal" class="playlist-modal hidden">
+      <div class="playlist-modal-content">
+        <h5>Seleziona una playlist</h5>
+        <ul class="playlist-list">
+          <!-- Le playlist saranno inserite dinamicamente qui -->
+        </ul>
+        <button class="modal-close-btn">Annulla</button>
+      </div>
+    </div>
+
+
 
     <!-- footer -->
-    <footer class="text-center py-3 mt-5 border-top bg-white">
+    <footer class="text-center py-3 mt-5 border-top">
       <p class="mb-0">© 2025 LoudCat – Catalogo Musicale Client-side</p>
     </footer>
 

@@ -2,81 +2,27 @@ export default class HomeView {
   constructor() {
     this.results = document.getElementById("home-container");
     this.welcomeMessage = document.getElementById("welcome-message");
-    this._songClickHandler = null; // callback opzionale
+    this._songClickHandler = null;
   }
 
-   clearWelcomeMessage() {
-      if (this.welcomeMessage) {
-        this.welcomeMessage.textContent = "";
-        this.welcomeMessage.classList.add("d-none");
-      }
+  showWelcomeMessage(user) {
+    if (!this.welcomeMessage) return;
+    const name = user && user.displayName ? user.displayName : (user && user.email) ? user.email : "Utente";
+    this.welcomeMessage.textContent = `Ciao, ${name}`;
+    this.welcomeMessage.classList.remove("d-none");
+  }
+
+  clearWelcomeMessage() {
+    if (this.welcomeMessage) {
+      this.welcomeMessage.textContent = "";
+      this.welcomeMessage.classList.add("d-none");
     }
-    showWelcomeMessage(user) {
-      if (!this.welcomeMessage) return;
-      const name = user && user.displayName ? user.displayName : (user && user.email) ? user.email : "Utente";
-      this.welcomeMessage.textContent = `Ciao, ${name}`;
-      this.welcomeMessage.classList.remove("d-none");
-    }
-
-  // --- Render preferiti e playlist ---
-  renderUserCollections(favorites = [], playlists = []) {
-    this.results.innerHTML = "";
-
-    const container = document.createElement("div");
-    container.className = "user-collections";
-
-    // Sezione Preferiti
-    container.appendChild(
-      this._createCollectionBox(
-        "I tuoi preferiti",
-        favorites,
-        favorites.length,
-        () => this.showSongsModal("I tuoi preferiti", favorites)
-      )
-    );
-
-    // Sezioni Playlist
-    playlists.forEach((pl) => {
-      container.appendChild(
-        this._createCollectionBox(
-          pl.name,
-          pl.songs || [],
-          (pl.songs || []).length,
-          () => this.showSongsModal(pl.name, pl.songs || [])
-        )
-      );
-    });
-
-    this.results.appendChild(container);
   }
 
-  // --- Helper per costruire box di raccolte ---
-  _createCollectionBox(title, songs, count, onClick) {
-    const box = document.createElement("div");
-    box.className = "user-box playlist-box";
-    box.style.cursor = "pointer";
-
-    const previewHtml = songs
-      .slice(0, 3)
-      .map((song, i, arr) => {
-        if (i === 2 && arr.length > 3) {
-          return `<div class="more-count">+${arr.length - 2}</div>`;
-        }
-        return `<img src="${song.artwork || "assets/img/avatar-placeholder.svg"}" alt="${song.title}" class="preview-artwork"/>`;
-      })
-      .join("");
-
-    box.innerHTML = `
-      <h4>${title}</h4>
-      <small class="text-muted">${count} brani</small>
-      <div class="preview-container">${previewHtml}</div>
-    `;
-
-    box.addEventListener("click", onClick);
-    return box;
+  bindSongClick(handler) {
+    this._songClickHandler = typeof handler === "function" ? handler : null;
   }
 
-  // --- Modale con le canzoni ---
   showSongsModal(title, songs) {
     const modal = document.createElement("div");
     modal.className = "playlist-modal";
@@ -90,7 +36,6 @@ export default class HomeView {
       overflowY: "auto",
       borderRadius: "8px",
     });
-
     content.innerHTML = `
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0">${title}</h5>
@@ -109,13 +54,15 @@ export default class HomeView {
                   <img src="${s.artwork || "assets/img/avatar-placeholder.svg"}"
                        alt="${s.title || ""}" 
                        style="width:100%; height:100%; object-fit:cover;">
+                       
                 </div>
+                
                 <div class="card-body p-2">
                   <h6 class="card-title mb-1" 
                       style="font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                       ${s.title || "-"}
                   </h6>
-                  <p class="card-text text-muted mb-1"
+                   <p class="card-text text-muted mb-1"
                      style="font-size:0.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                      ${s.artist || ""}
                   </p>
@@ -136,7 +83,7 @@ export default class HomeView {
         </div>
       </div>
     `;
-
+    
     modal.appendChild(content);
     document.body.appendChild(modal);
 
@@ -157,7 +104,6 @@ export default class HomeView {
           if (other !== audio) other.pause();
         });
       });
-
       const restoreOverflow = () =>
         (content.style.overflowY = originalOverflow || "auto");
       audio.addEventListener("pause", restoreOverflow);
@@ -185,7 +131,7 @@ export default class HomeView {
             console.error("songClick handler error", err);
           }
           modal.remove();
-        } else if (song.id) {
+          } else if (song.id) {
           // fallback: navigazione standard
           window.location.href = `#/song?id=${encodeURIComponent(song.id)}`;
         }
@@ -193,9 +139,91 @@ export default class HomeView {
     });
   }
 
-  // --- Binding handler esterno ---
-  bindSongClick(handler) {
-    this._songClickHandler =
-      typeof handler === "function" ? handler : null;
+ renderSpotifyHome(favorites = [], playlists = [], recommended = []) {
+  if (!this.results) return;
+  this.results.innerHTML = '';
+
+  const container = document.createElement('div');
+  container.className = 'spotify-home';
+
+ const createRow = (items, type) => {
+  const section = document.createElement('div');
+  section.className = 'home-section';
+
+  const titleMap = { playlists: 'Le tue playlist', favorites: 'I tuoi preferiti', recommended: 'Consigliati per te' };
+  section.innerHTML = `<h5>${titleMap[type]}</h5>`;
+
+  const row = document.createElement('div');
+  row.className = 'cards-row';
+
+  // --- Card speciale “Crea playlist” SOLO per le playlist ---
+  if (type === 'playlists') {
+    const addCard = document.createElement('div');
+    addCard.className = 'playlist-card create-card';
+    addCard.textContent = '+ Crea playlist';
+
+    // Collega la card al handler della playlist
+    addCard.addEventListener('click', () => {
+      if (typeof this.playlistController?.handlePlaylist === 'function') {
+        this.playlistController.handlePlaylist({
+          id: "__new__",
+          title: null,
+          artist: null,
+          album: null,
+          artwork: null,
+          preview: null
+        });
+      }
+    });
+
+    row.appendChild(addCard);
   }
+
+  // --- Card normali ---
+  items.forEach(item => {
+    const card = document.createElement('div');
+    card.className = type === 'playlists' ? 'playlist-card' : 'song-card';
+
+    if (type === 'playlists') {
+      card.innerHTML = `
+        <div class="song-artwork-wrapper">
+          <div class="song-artwork" style="background-image:url('${item.songs?.[0]?.artwork || 'assets/img/avatar-placeholder.svg'}');"></div>
+        </div>
+        <div class="text-truncate fw-semibold mt-1">${item.name}</div>
+        <small>${(item.songs || []).length} brani</small>
+      `;
+      card.addEventListener('click', () => {
+        this.showSongsModal(item.name, item.songs || []);
+      });
+    } else {
+      card.innerHTML = `
+        <div class="song-artwork-wrapper">
+          <div class="song-artwork" style="background-image:url('${item.artwork || 'assets/img/avatar-placeholder.svg'}');"></div>
+        </div>
+        <div class="text-truncate fw-semibold mt-1">${item.title}</div>
+        <small>${item.artist || ''}</small>
+        ${
+          item.preview
+            ? `<audio class="song-preview" controls preload="none" src="${item.preview}"></audio>`
+            : `<div class="text-muted small">Preview non disponibile</div>`
+        }
+      `;
+    }
+
+    row.appendChild(card);
+  });
+
+  section.appendChild(row);
+  return section;
+};
+
+
+
+  if(playlists.length) container.appendChild(createRow(playlists, 'playlists'));
+  if(favorites.length) container.appendChild(createRow(favorites, 'favorites'));
+  if(recommended.length) container.appendChild(createRow(recommended, 'recommended'));
+
+  this.results.appendChild(container);
+}
+
 }

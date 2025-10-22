@@ -22,6 +22,8 @@ export default class PlaylistController {
 }
 
  async handlePlaylist(song) {
+
+  
   const auth = getAuth();
   const user = auth.currentUser;
   if (!user) {
