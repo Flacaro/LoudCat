@@ -103,7 +103,6 @@ main {
     /* Sfondo scuro principale */
     min-height: 100%;
     padding: 24px;
-    overflow-y: hidden;
 }
 
 .spotify-home {
