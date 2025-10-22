@@ -3,6 +3,11 @@ export default class HomeView {
     this.results = document.getElementById("home-container");
     this.welcomeMessage = document.getElementById("welcome-message");
     this._songClickHandler = null;
+    this.playlistController = null;
+  }
+
+  setPlaylistController(controller) {
+    this.playlistController = controller;
   }
 
   showWelcomeMessage(user) {
@@ -44,12 +49,11 @@ export default class HomeView {
       <div class="container-fluid">
         <div class="row g-3">
           ${songs
-            .map(
-              (s, i) => `
+        .map(
+          (s, i) => `
             <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-              <div class="card song-card h-100" data-index="${i}" data-song-id="${
-                s.id || ""
-              }">
+              <div class="card song-card h-100" data-index="${i}" data-song-id="${s.id || ""
+            }">
                 <div class="artwork-container">
                   <img src="${s.artwork || "assets/img/avatar-placeholder.svg"}"
                        alt="${s.title || ""}" 
@@ -66,24 +70,23 @@ export default class HomeView {
                      style="font-size:0.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                      ${s.artist || ""}
                   </p>
-                  ${
-                    s.preview
-                      ? `<audio class="song-preview" controls preload="none" src="${s.preview}">
+                  ${s.preview
+              ? `<audio class="song-preview" controls preload="none" src="${s.preview}">
                            Il tuo browser non supporta l'audio
                          </audio>`
-                      : `<div class="text-muted small">Preview non disponibile</div>`
-                  }
+              : `<div class="text-muted small">Preview non disponibile</div>`
+            }
                 </div>
                 <div class="overlay-link" aria-hidden="true"></div>
               </div>
             </div>
           `
-            )
-            .join("")}
+        )
+        .join("")}
         </div>
       </div>
     `;
-    
+
     modal.appendChild(content);
     document.body.appendChild(modal);
 
@@ -131,7 +134,7 @@ export default class HomeView {
             console.error("songClick handler error", err);
           }
           modal.remove();
-          } else if (song.id) {
+        } else if (song.id) {
           // fallback: navigazione standard
           window.location.href = `#/song?id=${encodeURIComponent(song.id)}`;
         }
@@ -139,91 +142,86 @@ export default class HomeView {
     });
   }
 
- renderSpotifyHome(favorites = [], playlists = [], recommended = []) {
-  if (!this.results) return;
-  this.results.innerHTML = '';
+  renderSpotifyHome(favorites = [], playlists = [], recommended = []) {
+    if (!this.results) return;
+    this.results.innerHTML = '';
 
-  const container = document.createElement('div');
-  container.className = 'spotify-home';
+    const container = document.createElement('div');
+    container.className = 'spotify-home';
 
- const createRow = (items, type) => {
-  const section = document.createElement('div');
-  section.className = 'home-section';
+    const createRow = (items, type) => {
+      const section = document.createElement('div');
+      section.className = 'home-section';
 
-  const titleMap = { playlists: 'Le tue playlist', favorites: 'I tuoi preferiti', recommended: 'Consigliati per te' };
-  section.innerHTML = `<h5>${titleMap[type]}</h5>`;
+      const titleMap = { playlists: 'Le tue playlist', favorites: 'I tuoi preferiti', recommended: 'Consigliati per te' };
+      section.innerHTML = `<h5>${titleMap[type]}</h5>`;
 
-  const row = document.createElement('div');
-  row.className = 'cards-row';
+      const row = document.createElement('div');
+      row.className = 'cards-row';
 
-  // --- Card speciale “Crea playlist” SOLO per le playlist ---
-  if (type === 'playlists') {
-    const addCard = document.createElement('div');
-    addCard.className = 'playlist-card create-card';
-    addCard.textContent = '+ Crea playlist';
+      // --- Card speciale “Crea playlist” SOLO per le playlist ---
+      if (type === 'playlists') {
+        const addCard = document.createElement('div');
+        addCard.className = 'playlist-card create-card';
+        addCard.textContent = 'Crea playlist';
 
-    // Collega la card al handler della playlist
-    addCard.addEventListener('click', () => {
-      if (typeof this.playlistController?.handlePlaylist === 'function') {
-        this.playlistController.handlePlaylist({
-          id: "__new__",
-          title: null,
-          artist: null,
-          album: null,
-          artwork: null,
-          preview: null
+        // Collega la card al handler della playlist
+        addCard.addEventListener('click', () => {
+          if (this.playlistController && typeof this.playlistController.createPlaylist === 'function') {
+            this.playlistController.createPlaylist();
+          } else {
+            console.error("PlaylistController o createPlaylist non è accessibile o definito in HomeView.");
+          }
+
         });
+
+        row.appendChild(addCard);
       }
-    });
 
-    row.appendChild(addCard);
-  }
+      // --- Card normali ---
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = type === 'playlists' ? 'playlist-card' : 'song-card';
 
-  // --- Card normali ---
-  items.forEach(item => {
-    const card = document.createElement('div');
-    card.className = type === 'playlists' ? 'playlist-card' : 'song-card';
-
-    if (type === 'playlists') {
-      card.innerHTML = `
+        if (type === 'playlists') {
+          card.innerHTML = `
+          <div class="song-artwork-wrapper">
+            <div class="song-artwork" style="background-image:url('${item.songs?.[0]?.artwork || 'assets/img/avatar-placeholder.svg'}');"></div>
+          </div>
+          <div class="text-truncate fw-semibold mt-1">${item.name}</div>
+            <small>${(item.songs || []).length} brani</small>
+          `;
+          card.addEventListener('click', () => {
+            this.showSongsModal(item.name, item.songs || []);
+          });
+        } else {
+          card.innerHTML = `
         <div class="song-artwork-wrapper">
-          <div class="song-artwork" style="background-image:url('${item.songs?.[0]?.artwork || 'assets/img/avatar-placeholder.svg'}');"></div>
-        </div>
-        <div class="text-truncate fw-semibold mt-1">${item.name}</div>
-        <small>${(item.songs || []).length} brani</small>
-      `;
-      card.addEventListener('click', () => {
-        this.showSongsModal(item.name, item.songs || []);
-      });
-    } else {
-      card.innerHTML = `
-        <div class="song-artwork-wrapper">
-          <div class="song-artwork" style="background-image:url('${item.artwork || 'assets/img/avatar-placeholder.svg'}');"></div>
+          <div class="song-artwork" style="background-image:url('${item.artwork || 'assets/img/avatar-placeholder.svg'}'); border-radius: 50%; /* Aggiungi questo per l'immagine tonda del brano */"></div>
         </div>
         <div class="text-truncate fw-semibold mt-1">${item.title}</div>
         <small>${item.artist || ''}</small>
-        ${
-          item.preview
-            ? `<audio class="song-preview" controls preload="none" src="${item.preview}"></audio>`
-            : `<div class="text-muted small">Preview non disponibile</div>`
-        }
+        ${item.preview
+              ? `<audio class="song-preview" controls preload="none" src="${item.preview}"></audio>`
+              : `<div class="text-muted small">Preview non disponibile</div>`
+            }
       `;
-    }
+        }
 
-    row.appendChild(card);
-  });
+        row.appendChild(card);
+      });
 
-  section.appendChild(row);
-  return section;
-};
+      section.appendChild(row);
+      return section;
+    };
 
 
 
-  if(playlists.length) container.appendChild(createRow(playlists, 'playlists'));
-  if(favorites.length) container.appendChild(createRow(favorites, 'favorites'));
-  if(recommended.length) container.appendChild(createRow(recommended, 'recommended'));
+    if (playlists.length) container.appendChild(createRow(playlists, 'playlists'));
+    if (favorites.length) container.appendChild(createRow(favorites, 'favorites'));
+    if (recommended.length) container.appendChild(createRow(recommended, 'recommended'));
 
-  this.results.appendChild(container);
-}
+    this.results.appendChild(container);
+  }
 
 }

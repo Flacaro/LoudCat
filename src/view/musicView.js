@@ -12,6 +12,9 @@ export default class MusicView {
     this.results = document.getElementById("results-container");
     this.playlistView = new PlaylistView();
     this.favoriteView = new FavoriteView();
+    this.playlistBtn = document.getElementById('sidebar-playlist-btn');
+        this.artistBtn = document.getElementById('sidebar-artist-btn');
+        this.albumBtn = document.getElementById('sidebar-album-btn');
     // store the last results object passed to renderResults
     this._lastRenderedResults = null;
     // wire playlist create button via playlistView
@@ -321,6 +324,7 @@ bindAddToPlaylist(handler) {
     btn.classList.toggle("btn-danger", isAdded);
   });
 }
+
 
 
 }

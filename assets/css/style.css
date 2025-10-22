@@ -2,13 +2,13 @@
 body {
   font-family: "Segoe UI", sans-serif;
   margin: 0;
-  background: #253f56 !important;
+  background: #19242f !important;
   color: #fff;
 }
 
 /* Header */
 header {
-  background: #2c465f;
+  background: #19242f;
   text-align: center;
   padding: 1rem;
 }
@@ -44,7 +44,7 @@ header .logo {
 
 /* Card generiche */
 .user-box, .card, .playlist-modal-content {
-  background: #43698d;
+  background: #19242f;
   border-radius: 12px;
   padding: 1rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.5);
