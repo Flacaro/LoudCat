@@ -130,25 +130,27 @@ export async function fetchArtists(query) {
   const params = `term=${encodeURIComponent(query)}&entity=musicArtist&limit=12`;
   const endpoint = `https://itunes.apple.com/search?${params}`;
   let data;
+
   try {
     const res = await fetch(endpoint);
-    if (!res.ok) throw new Error(`Errore nella richiesta API: ${res.status} ${res.statusText} (${endpoint})`);
+    if (!res.ok) throw new Error(`Errore nella richiesta API: ${res.status} ${res.statusText}`);
     data = await res.json();
   } catch (err) {
     try {
       data = await jsonpFetch(endpoint);
     } catch (jsonpErr) {
-      throw new Error(`fetchArtists failed for ${endpoint}: ${err.message}; jsonp: ${jsonpErr.message}`);
+      throw new Error(`fetchArtists failed: ${err.message}; jsonp: ${jsonpErr.message}`);
     }
   }
+
   return data.results.map((item) => ({
     name: item.artistName,
     artistId: item.artistId,
-    genre: item.primaryGenreName,
-    artwork: item.artworkUrl100 || 'assets/img/avatar-placeholder.svg',
-    albums: [] // optional: populate in MusicService if you want top albums
+    // remove artwork and genre completely
+    albums: [] // optional
   }));
 }
+
 
 export async function fetchAlbumById(albumId) {
   const endpoint = `https://itunes.apple.com/lookup?id=${albumId}&entity=song`;

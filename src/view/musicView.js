@@ -138,35 +138,23 @@ export default class MusicView {
 }
 // Render artist results with deduplication
 renderArtists(artists) {
-  const resultsContainer = document.getElementById("results-container");
+  const resultsContainer = this.results;
   if (!resultsContainer) return;
 
-  resultsContainer.innerHTML = "";
+  // deduplicate by artistId
+  const uniqueArtists = Array.from(new Map(artists.map(a => [a.artistId, a])).values());
 
-  // Deduplicate by artistId
-  const uniqueArtistsMap = new Map();
-  artists.forEach(artist => {
-    if (!uniqueArtistsMap.has(artist.artistId)) {
-      uniqueArtistsMap.set(artist.artistId, artist);
-    }
-  });
-  const uniqueArtists = Array.from(uniqueArtistsMap.values());
+  const html = uniqueArtists.map(artist => `
+    <div class="card artist-card" 
+         data-artist-id="${artist.artistId}" 
+         data-artist-name="${artist.name}">
+      <h3>${artist.name}</h3>
+    </div>
+  `).join("");
 
-  const html = uniqueArtists.map(artist => {
-    const picture = artist.artwork || "assets/img/avatar-placeholder.svg";
+  resultsContainer.innerHTML = html;
 
-    return `
-      <div class="card artist-card" data-artist-id="${artist.artistId}" data-artist-name="${artist.name}">
-        <img src="${picture}" alt="${artist.name}" />
-        <h3>${artist.name}</h3>
-        <p>🎵 ${artist.genre || "Unknown genre"}</p>
-      </div>
-    `;
-  }).join("");
-
-  resultsContainer.insertAdjacentHTML("beforeend", html);
-
-  // Bind click events
+  // bind click events
   document.querySelectorAll(".artist-card").forEach(card => {
     card.addEventListener("click", () => {
       const artistId = card.dataset.artistId;
@@ -175,6 +163,8 @@ renderArtists(artists) {
     });
   });
 }
+
+
 bindArtistClick(handler) {
   this.results.addEventListener("click", (e) => {
     const card = e.target.closest(".artist-card");

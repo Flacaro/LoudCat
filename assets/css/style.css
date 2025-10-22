@@ -132,6 +132,42 @@ footer {
   overflow: hidden;
 }
 
+/* 🔥 Artist card restyle – minimal, bold, fits LoudCat theme */
+#results-container .artist-card {
+  background: linear-gradient(135deg, #1b2a38, #243b55);
+  border: 1px solid #385977;
+  border-radius: 14px;
+  width: 200px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+#results-container .artist-card:hover {
+  transform: translateY(-6px) scale(1.03);
+  background: linear-gradient(135deg, #2f4b68, #162433);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.6);
+}
+
+#results-container .artist-card h3 {
+  font-size: 1rem;
+  color: #fff;
+  margin: 0;
+  letter-spacing: 0.6px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+
+#results-container .artist-card:hover h3 {
+  color: #64b5ff;
+}
+
+
 #results-container .card img,
 #results-container .card .song-artwork .song-preview {
   width: 100%;
