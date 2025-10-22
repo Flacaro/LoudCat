@@ -6,6 +6,7 @@ import AlbumController from "./albumController.js";
 import UserController from "./userController.js";
 import ArtistProfileController from "./artistProfileController.js";
 import HomeView from "../view/homeView.js";
+import { hideProfileModal } from "../view/header.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { db } from "../firebase.js";
@@ -161,6 +162,8 @@ async loadUserCollections() {
     }
     this._unsubFav = null;
     this._unsubPlaylists = null;
+    // Ensure profile modal is hidden on logout/unsubscribe
+    try { hideProfileModal(); } catch (e) { /* ignore */ }
   }
 
 async loadHome() {
@@ -174,6 +177,9 @@ async loadHome() {
   // Mostra home, nascondi risultati
   if (homeContainer) homeContainer.style.display = 'block';
   if (resultsSection) resultsSection.style.display = 'none';
+
+  // Ensure profile modal is not visible when loading home
+  try { hideProfileModal(); } catch (e) { /* ignore */ }
 
   // Pulisci eventuali vecchi risultati
   resultsContainers.forEach(c => { if (c) c.innerHTML = ''; });

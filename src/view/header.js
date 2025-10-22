@@ -489,3 +489,9 @@ function escapeHtml(str) {
     return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[s];
   });
 }
+
+// Helper used by controllers to hide the profile modal if it's open
+export function hideProfileModal() {
+  const m = document.getElementById('profileModal');
+  if (m) m.style.display = 'none';
+}
