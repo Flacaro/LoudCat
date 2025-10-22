@@ -4,6 +4,8 @@ body {
   margin: 0;
   background: #121212 !important;
   color: #fff;
+  overflow-y: hidden;
+ 
 }
 
 /* Header */
@@ -113,6 +115,7 @@ footer {
   gap: 1rem;
   justify-content: center;
   padding: 1rem 0;
+  overflow-y: hidden;
 }
 
 /* Card generica dei risultati */
@@ -145,6 +148,7 @@ footer {
   text-align: center;
   transition: all 0.25s ease;
   box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  overflow-y: hidden;
 }
 
 #results-container .artist-card:hover {
@@ -160,6 +164,7 @@ footer {
   letter-spacing: 0.6px;
   font-weight: 600;
   text-transform: uppercase;
+  overflow-y: hidden;
 }
 
 
@@ -175,6 +180,7 @@ footer {
   object-fit: cover;
   border-radius: 8px;
   margin-bottom: 0.3rem;
+  overflow-y: hidden;
 }
 
 /* Assicura che l'audio si adatti al contenitore */

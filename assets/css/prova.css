@@ -23,7 +23,6 @@ header .logo {
     background-color: #2d1f46;
     /* Calcola l'altezza rimanente sotto l'header */
     height: calc(100vh - 80px);
-    /* 80px = altezza stimata dell'header */
 }
 
 #sidebar-library {
@@ -40,13 +39,14 @@ header .logo {
     overflow-y: auto;
     /* Scorrevole per il contenuto della libreria */
     padding-bottom: 90px !important;
-    /* Spazio per il player (se lo aggiungerai) */
+    overflow-y: hidden;
 }
 
 #sidebar-library h5 {
     color: #ffffff;
     font-weight: bold;
     margin-bottom: 15px;
+    overflow-y: hidden;
 }
 
 #sidebar-library .btn {
@@ -65,6 +65,7 @@ header .logo {
 
 #sidebar-library .btn:hover {
     color: #ffffff;
+    overflow-y: hidden;
 }
 
 /* Se uno è attivo (se lo implementi) */
@@ -72,12 +73,13 @@ header .logo {
     background-color: #282828 !important;
     /* Sfondo leggermente grigio per attivo */
     color: #ffffff;
+    overflow-y: hidden;
 }
 
 /* Correzione testo "Brani salvati" */
 #sidebar-library .text-muted {
     color: #b3b3b3 !important;
-    /* Assicurati che non sia troppo scuro */
+    overflow-y: hidden;
 }
 
 #sidebar-library button.btn-dark {
@@ -101,6 +103,7 @@ main {
     /* Sfondo scuro principale */
     min-height: 100%;
     padding: 24px;
+    overflow-y: hidden;
 }
 
 .spotify-home {
