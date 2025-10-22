@@ -13,6 +13,12 @@ header {
   padding: 1rem;
 }
 
+header .logo {
+  width: 50px;
+  vertical-align: middle;
+}
+
+
 #welcome-message, #logoutBtn {
   color: #fff !important;
 }
