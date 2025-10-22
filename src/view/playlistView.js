@@ -16,9 +16,10 @@ export default class PlaylistView {
   showModal(song, playlists = [], onSelect) {
     if (this.modal) this.modal.remove();
 
-    this.modal = document.createElement('div');
-    this.modal.id = 'playlist-modal';
-    this.modal.className = 'playlist-modal-overlay';
+  this.modal = document.createElement('div');
+  this.modal.id = 'playlist-modal';
+  // use the overlay class defined in CSS so the modal is centered
+  this.modal.className = 'playlist-modal';
 
     this.modal.innerHTML = `
       <div class="playlist-modal-content">

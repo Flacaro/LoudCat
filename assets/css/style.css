@@ -38,6 +38,9 @@ header .logo {
   position: absolute;
   inset: 0;
   background: rgba(0,0,0,0.5);
+  /* allow clicks to pass through the pseudo-overlay to the modal element
+     so the modal content can receive focus and pointer events */
+  pointer-events: none;
 }
 
 
@@ -200,6 +203,9 @@ footer {
   text-align: center;
   color: #fff;
   box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  /* ensure the content sits above the overlay pseudo-element */
+  position: relative;
+  z-index: 2;
 }
 
 /* Lista playlist */

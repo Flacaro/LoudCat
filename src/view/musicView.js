@@ -205,12 +205,12 @@ bindArtistClick(handler) {
         <p>${s.artist}</p>
         ${s.album ? `<p>${s.album}</p>` : ""}
         ${s.preview ? `<audio controls src="${s.preview}"></audio>` : "<p>Preview non disponibile</p>"}
-        <button class="btn btn-outline-warning fav-btn" 
-                data-song='${encoded}'>⭐ Aggiungi ai preferiti</button>
-        <button class="btn btn-outline-primary playlist-btn" 
-                data-song='${encoded}'>+ Aggiungi alla playlist</button>
-        <button class="btn btn-outline-success share-btn" 
-                data-song='${encoded}'>↗ Condividi</button>
+  <button class="btn btn-outline-warning fav-btn" 
+    data-song='${encoded}' data-song-id='${songObj.id}' data-song-title='${encodeURIComponent(songObj.title || '')}' data-song-artist='${encodeURIComponent(songObj.artist || '')}' data-song-album='${encodeURIComponent(songObj.album || '')}' data-song-artwork='${encodeURIComponent(songObj.artwork || '')}' data-song-preview='${encodeURIComponent(songObj.preview || '')}'>⭐ Aggiungi ai preferiti</button>
+  <button class="btn btn-outline-primary playlist-btn" 
+    data-song='${encoded}' data-song-id='${songObj.id}' data-song-title='${encodeURIComponent(songObj.title || '')}' data-song-artist='${encodeURIComponent(songObj.artist || '')}' data-song-album='${encodeURIComponent(songObj.album || '')}' data-song-artwork='${encodeURIComponent(songObj.artwork || '')}' data-song-preview='${encodeURIComponent(songObj.preview || '')}'>+ Aggiungi alla playlist</button>
+  <button class="btn btn-outline-success share-btn" 
+    data-song='${encoded}' data-song-id='${songObj.id}' data-song-title='${encodeURIComponent(songObj.title || '')}' data-song-artist='${encodeURIComponent(songObj.artist || '')}' data-song-album='${encodeURIComponent(songObj.album || '')}' data-song-artwork='${encodeURIComponent(songObj.artwork || '')}' data-song-preview='${encodeURIComponent(songObj.preview || '')}'>↗ Condividi</button>
       </div>
     `;
   }).join("");
