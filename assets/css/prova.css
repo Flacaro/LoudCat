@@ -79,7 +79,7 @@ header .logo {
 /* Correzione testo "Brani salvati" */
 #sidebar-library .text-muted {
     color: #b3b3b3 !important;
-    overflow-y: hidden;
+    /* Assicurati che non sia troppo scuro */
 }
 
 #sidebar-library button.btn-dark {
