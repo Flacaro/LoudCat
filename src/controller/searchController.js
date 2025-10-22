@@ -70,7 +70,13 @@ export default class SearchController {
           }));
         }
       }
-      await setDoc(ref, { query, results: safeResults, updatedAt: new Date().toISOString() });
+
+      // ✅ Only write to Firestore if user is logged in
+      if (this.controller?.isUserLoggedIn) {
+        await setDoc(ref, { query, results: safeResults, updatedAt: new Date().toISOString() });
+        console.log("Ricerca salvata su Firestore");
+      }
+
       console.log("Ricerca salvata su Firestore");
     } catch (err) {
       console.error(err);
