@@ -6,6 +6,7 @@ import AlbumController from "./albumController.js";
 import UserController from "./userController.js";
 import ArtistProfileController from "./artistProfileController.js";
 import HomeView from "../view/homeView.js";
+import { hideProfileModal } from "../view/header.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { db } from "../firebase.js";
@@ -112,14 +113,43 @@ async loadUserCollections() {
       this._unsubFav = onSnapshot(favCol, async () => {
         // refresh home data when favorites change
         await this.loadUserCollections();
+        // also sync button states in any currently rendered results
+        try { await this._syncResultButtonStates(); } catch (e) { console.warn('Errore sync fav button states', e); }
       });
 
       this._unsubPlaylists = onSnapshot(playCol, async () => {
         // refresh home data when playlists change
         await this.loadUserCollections();
+        // also sync button states in any currently rendered results
+        try { await this._syncResultButtonStates(); } catch (e) { console.warn('Errore sync playlist button states', e); }
       });
     } catch (err) {
       console.error('Errore sottoscrizione realtime:', err);
+    }
+  }
+
+  // Synchronize the buttons shown in the current results view with the
+  // user's favorites and playlists. This is called on realtime updates so
+  // that buttons toggle to "Rimuovi" when items are added from other
+  // tabs/devices.
+  async _syncResultButtonStates() {
+    try {
+      const favorites = await this.favoriteController.getFavorites();
+      const playlists = await this.playlistController.getPlaylists();
+      const rendered = this.view.getRenderedResults() || {};
+      const songs = rendered.songs || [];
+
+      songs.forEach(s => {
+        const id = s.id || (s.title ? String(s.title).replace(/\s+/g,'-').toLowerCase() : null);
+        if (!id) return;
+        const isFav = favorites.some(f => f.id === id);
+        const isInPlaylist = playlists.some(pl => (pl.songs || []).some(t => t.id === id));
+        // update view buttons
+        this.view.updateFavoriteState(id, isFav);
+        this.view.updatePlaylistButton(id, null, isInPlaylist);
+      });
+    } catch (err) {
+      console.warn('Errore durante la sincronizzazione degli stati dei pulsanti:', err);
     }
   }
 
@@ -132,6 +162,8 @@ async loadUserCollections() {
     }
     this._unsubFav = null;
     this._unsubPlaylists = null;
+    // Ensure profile modal is hidden on logout/unsubscribe
+    try { hideProfileModal(); } catch (e) { /* ignore */ }
   }
 
 async loadHome() {
@@ -145,6 +177,9 @@ async loadHome() {
   // Mostra home, nascondi risultati
   if (homeContainer) homeContainer.style.display = 'block';
   if (resultsSection) resultsSection.style.display = 'none';
+
+  // Ensure profile modal is not visible when loading home
+  try { hideProfileModal(); } catch (e) { /* ignore */ }
 
   // Pulisci eventuali vecchi risultati
   resultsContainers.forEach(c => { if (c) c.innerHTML = ''; });
