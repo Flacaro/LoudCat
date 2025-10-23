@@ -324,7 +324,6 @@ export default class HomeView {
 
     // Render playlists, favorites e consigliati
     container.appendChild(createRow(playlists, "playlists"));
-    container.appendChild(createRow(favorites, "favorites"));
     // make favorites section clickable to open a modal with all favorites
     const favSection = createRow(favorites, "favorites");
     favSection.addEventListener('click', (e) => {

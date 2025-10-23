@@ -60,6 +60,13 @@ header .container-fluid {
   
 }
 
+header {
+  position: sticky; /* già presente */
+  top: 0;
+  z-index: 1000; /* un valore alto per stare sopra tutto */
+}
+
+
 #welcome-message,
 #logoutBtn {
   color: #fff !important;
