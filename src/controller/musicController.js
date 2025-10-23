@@ -67,10 +67,10 @@ export default class MusicController {
       const prev = this.searchController?.lastResults || this.view.getRenderedResults() || null;
       const backHandler = () => {
         if (prev) {
-          this.view.renderResults(prev);
+          this.view.renderResults(prev, this.controller?.isUserLoggedIn);
         } else {
           // fallback: show an empty results message
-          this.view.renderResults({ songs: [], albums: [], artists: [] });
+          this.view.renderResults({ songs: [], albums: [], artists: [] }, this.controller?.isUserLoggedIn);
         }
       };
 
