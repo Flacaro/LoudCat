@@ -3,7 +3,6 @@
 
 import PlaylistView from "./playlistView.js";
 import FavoriteView from "./favoriteView.js";
-import { showToast } from "./toastView.js";
 
 export default class MusicView {
   constructor() {
@@ -58,11 +57,6 @@ export default class MusicView {
     });
   }
 
-  // Defensive parser for song data stored in data-* attributes.
-  // Accept either a raw encoded string (what dataset.song may be) or the
-  // HTMLElement itself so we can fall back to individual data-* attributes
-  // such as data-song-id, data-song-title, etc. This avoids returning
-  // an empty object when the encoded payload is truncated by the HTML parser.
   _parseSongData(input) {
     const tryParse = (s) => {
       if (!s) return null;
@@ -112,14 +106,6 @@ export default class MusicView {
     console.error('Failed to parse song data from dataset:', raw);
     return {};
   }
-
-   showToast(message) {
-  const toast = document.createElement("div");
-  toast.className = "toast-message";
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 2000);
-}
 
   renderAlbums(albums) {
   const html = albums

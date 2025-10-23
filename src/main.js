@@ -36,6 +36,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  on("sidebar-playlist-btn", "click", async () => {
+    const playlists = await controller.playlistController.getPlaylists() || [];
+    controller.homeView.renderOnlyPlaylists(playlists);
+  });
+
+
+
 
   initFirebaseAuth(controller);
 

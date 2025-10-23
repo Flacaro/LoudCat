@@ -161,66 +161,68 @@ export default class MusicController {
     try { hideProfileModal(); } catch (e) { /* ignore */ }
   }
 
-  async loadHome() {
-    const auth = getAuth();
-    const user = auth.currentUser;
+async loadHome() {
+  const auth = getAuth();
+  const user = auth.currentUser;
 
-    const resultsSection = document.getElementById("results-section");
-    const homeContainer = document.getElementById("home-container");
-    const resultsContainers = document.querySelectorAll('#results-container');
+  const resultsSection = document.getElementById("results-section");
+  const homeContainer = document.getElementById("home-container");
+  const resultsContainers = document.querySelectorAll('#results-container');
 
-    // Mostra home, nascondi risultati
-    if (homeContainer) homeContainer.style.display = 'block';
-    if (resultsSection) resultsSection.style.display = 'none';
+  // Mostra home, nascondi risultati
+  if (homeContainer) homeContainer.style.display = 'block';
+  if (resultsSection) resultsSection.style.display = 'none';
 
-    // Nascondi eventuale profile modal
-    try { hideProfileModal(); } catch (e) { console.log("errore hideProfileModal"); }
+  // Nascondi eventuale profile modal
+  try { hideProfileModal(); } catch (e) { console.log("errore hideProfileModal"); }
 
-    // Pulisci eventuali vecchi risultati
-    resultsContainers.forEach(c => { if (c) c.innerHTML = ''; });
+  // Pulisci eventuali vecchi risultati
+  resultsContainers.forEach(c => { if (c) c.innerHTML = ''; });
 
-    if (!user) {
-      this.homeView.showWelcomeMessage('Visitatore');
-      return;
-    }
-
-    this.homeView.showWelcomeMessage(user.displayName || 'Utente');
-
-    const favorites = await this.favoriteController.getFavorites() || [];
-    const playlists = await this.playlistController.getPlaylists() || [];
-
-    // --- Calcolo consigliati da Firebase ---
-    let recommended = await this.getRecommendedSongs() || [];
-
-    // --- Arricchisci consigli con iTunes ---
-    try {
-      // Prendi i generi più ascoltati dai consigli Firebase
-      const genres = [...new Set(recommended.map(s => s.genre).filter(Boolean))];
-
-      if (genres.length > 0) {
-        const itunesSongs = await getRecommendedFromItunes(genres, recommended);
-        // Combina i due array e limita a 10
-        recommended = [...recommended, ...itunesSongs].slice(0, 10);
-      }
-    } catch (err) {
-      console.warn("Errore nel fetch consigli iTunes", err);
-    }
-
-    // Normalizza dati per la view
-    recommended = recommended.map(s => ({
-      id: s.id || null,
-      title: s.title || "Titolo sconosciuto",
-      artist: s.artist || "Artista sconosciuto",
-      artwork: s.artwork || "assets/img/avatar-placeholder.svg",
-      genre: s.primaryGenreName || ""
-    }));
-
-    // Render home con playlists, preferiti e consigliati
-    this.homeView.renderSpotifyHome(favorites, playlists, recommended);
-
-    // Scroll in alto per estetica
-    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
+  if (!user) {
+    this.homeView.showWelcomeMessage('Visitatore');
+    return;
   }
+
+  this.homeView.showWelcomeMessage(user.displayName || 'Utente');
+
+  // Recupera tutte le collezioni
+  const [favorites, playlists, firebaseRecommended] = await Promise.all([
+    this.favoriteController.getFavorites(),
+    this.playlistController.getPlaylists(),
+    this.getRecommendedSongs()
+  ]);
+
+  let recommended = firebaseRecommended;
+
+  // Arricchisci consigli con iTunes
+  try {
+    const genres = [...new Set(recommended.map(s => s.genre).filter(Boolean))];
+    if (genres.length > 0) {
+      const itunesSongs = await getRecommendedFromItunes(genres, recommended);
+      recommended = [...recommended, ...itunesSongs].slice(0, 10);
+    }
+  } catch (err) {
+    console.warn("Errore nel fetch consigli iTunes", err);
+  }
+
+  // Normalizza dati per la view
+  recommended = recommended.map(s => ({
+    id: s.id || null,
+    title: s.title || "Titolo sconosciuto",
+    artist: s.artist || "Artista sconosciuto",
+    artwork: s.artwork || "assets/img/avatar-placeholder.svg",
+    genre: s.primaryGenreName || s.genre || ""
+  }));
+
+  // Render finale, una sola volta
+  this.homeView.renderSpotifyHome(favorites, playlists, recommended);
+
+  requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+  // Scroll in alto
+  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
+}
+
 
 
 
