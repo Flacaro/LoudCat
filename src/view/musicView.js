@@ -125,23 +125,38 @@ export default class MusicView {
 }
 // Render artist results with deduplication
 renderArtists(artists) {
-  const resultsContainer = this.results;
+  const resultsContainer = document.getElementById("results-container");
   if (!resultsContainer) return;
 
-  // deduplicate by artistId
-  const uniqueArtists = Array.from(new Map(artists.map(a => [a.artistId, a])).values());
+  resultsContainer.innerHTML = "";
 
-  const html = uniqueArtists.map(artist => `
-    <div class="card artist-card" 
-         data-artist-id="${artist.artistId}" 
-         data-artist-name="${artist.name}">
-      <h3>${artist.name}</h3>
-    </div>
-  `).join("");
+  // Deduplicate by artistId
+  const uniqueArtistsMap = new Map();
+  artists.forEach(artist => {
+    if (!uniqueArtistsMap.has(artist.artistId)) {
+      uniqueArtistsMap.set(artist.artistId, artist);
+    }
+  });
+  const uniqueArtists = Array.from(uniqueArtistsMap.values());
 
-  resultsContainer.innerHTML = html;
+  const html = uniqueArtists
+    .map(artist => {
+      // Use the canonical name for display, or fallback to API name
+      const displayName = artist.canonicalName || artist.name || "Unknown";
 
-  // bind click events
+      return `
+        <div class="artist-card" 
+          data-artist-id="${artist.artistId}" 
+          data-artist-name="${displayName}">
+          <h3>${displayName}</h3>
+        </div>
+      `;
+    })
+    .join("");
+
+  resultsContainer.insertAdjacentHTML("beforeend", html);
+
+  // Bind click events
   document.querySelectorAll(".artist-card").forEach(card => {
     card.addEventListener("click", () => {
       const artistId = card.dataset.artistId;
@@ -150,6 +165,7 @@ renderArtists(artists) {
     });
   });
 }
+
 
 showToast(message) {
   const toast = document.createElement("div");
