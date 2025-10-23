@@ -1,14 +1,13 @@
+import PlaylistController from "../controller/playlistController.js";
+
 export default class HomeView {
   constructor() {
     this.results = document.getElementById("home-container");
     this.welcomeMessage = document.getElementById("welcome-message");
     this._songClickHandler = null;
-    this.playlistController = null;
+    this.playlistController = new PlaylistController(this);
   }
-
-  setPlaylistController(controller) {
-    this.playlistController = controller;
-  }
+  
 
   showWelcomeMessage(user) {
     if (!this.welcomeMessage) return;
@@ -144,6 +143,52 @@ export default class HomeView {
     });
   }
 
+  showCreatePlaylistModal(onConfirm) {
+  const modal = document.createElement("div");
+  modal.className = "playlist-modal";
+
+  const content = document.createElement("div");
+  content.className = "playlist-modal-content card p-3";
+  Object.assign(content.style, {
+    maxWidth: "400px",
+    width: "100%",
+    borderRadius: "12px",
+    textAlign: "center",
+  });
+
+  content.innerHTML = `
+    <h5 class="mb-3">Crea nuova playlist</h5>
+    <input id="playlistNameInput" class="form-control mb-3" type="text" placeholder="Nome playlist" />
+    <div class="d-flex justify-content-end gap-2">
+      <button id="cancelBtn" class="btn btn-secondary">Annulla</button>
+      <button id="createBtn" class="btn btn-primary">Crea</button>
+    </div>
+  `;
+
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+
+  const input = content.querySelector("#playlistNameInput");
+  const btnCreate = content.querySelector("#createBtn");
+  const btnCancel = content.querySelector("#cancelBtn");
+
+  const closeModal = () => modal.remove();
+
+  btnCancel.addEventListener("click", closeModal);
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  btnCreate.addEventListener("click", () => {
+    const name = input.value.trim();
+    closeModal();
+    if (typeof onConfirm === "function") onConfirm(name);
+  });
+
+  input.focus();
+}
+
+
   renderSpotifyHome(favorites = [], playlists = [], recommended = []) {
     if (!this.results) return;
     this.results.innerHTML = "";
@@ -169,14 +214,11 @@ export default class HomeView {
       if (type === "playlists") {
         const addCard = document.createElement("div");
         addCard.className = "playlist-card create-card";
-        addCard.textContent = "+ Crea playlist";
+        addCard.textContent = "Crea playlist";
 
         addCard.addEventListener("click", () => {
-          if (this.playlistController?.createPlaylist) {
-            this.playlistController.createPlaylist();
-          } else {
-            console.error("PlaylistController o createPlaylist non definito in HomeView.");
-          }
+            this.playlistController.handleCreatePlaylist();
+          
         });
 
         row.appendChild(addCard);
@@ -233,4 +275,26 @@ export default class HomeView {
 
     this.results.appendChild(container);
   }
+
+  showToast(message, type = "info") {
+  // Rimuovi eventuali toast precedenti
+  document.querySelectorAll(".custom-toast").forEach(t => t.remove());
+
+  const toast = document.createElement("div");
+  toast.className = `custom-toast ${type}`;
+  toast.textContent = message;
+
+  document.body.appendChild(toast);
+
+  // Forza reflow e fade-in
+  requestAnimationFrame(() => toast.classList.add("show"));
+
+  // Rimuovi dopo 3 secondi
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+  
 }

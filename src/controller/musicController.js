@@ -62,7 +62,6 @@ export default class MusicController {
   this.view.bindAddToPlaylist(song => this.playlistController.handlePlaylist(song));
   this.view.bindShare(song => this.shareController.handleShare(song));
   this.view.bindCreatePlaylist(name => this.playlistController.createPlaylist(name));
-  this.homeView.setPlaylistController(this.playlistController);
   this.view.bindArtistClick(({ artistId, artistName }) => {
     // create a back handler that restores the last rendered search results if available
     const prev = this.searchController?.lastResults || this.view.getRenderedResults() || null;

@@ -115,6 +115,47 @@ export default class PlaylistController {
       this.view.showToast("Errore durante la creazione della playlist.");
     }
   }
+  
+async handleCreatePlaylist() {
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  if (!user) {
+    this.view.showToast("Devi effettuare il login per creare una playlist.");
+    return;
+  }
+
+  // Apri il modal nella view (simile a showPlaylistModal)
+  this.view.showCreatePlaylistModal(async (playlistName) => {
+    if (!playlistName || playlistName.trim() === "") {
+      this.view.showToast("Nome playlist non valido.");
+      return;
+    }
+
+    try {
+      const plRef = doc(collection(db, "users", user.uid, "playlists"));
+
+      await setDoc(plRef, {
+        name: playlistName.trim(),
+        songs: [],
+        createdAt: new Date().toISOString()
+      });
+
+      this.view.showToast(`Playlist "${playlistName.trim()}" creata!`);
+
+      // Aggiorna la lista delle playlist (se hai un metodo apposito)
+      if (this.view.refreshPlaylists) {
+        this.view.refreshPlaylists();
+      }
+
+    } catch (err) {
+      console.error("Errore nella creazione della playlist:", err);
+      this.view.showToast("Errore durante la creazione della playlist.");
+    }
+  });
+}
+
+  
 
 
 }
