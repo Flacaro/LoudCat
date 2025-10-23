@@ -1,6 +1,7 @@
-import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { doc, getDoc, collection, getDocs, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { db } from "../firebase.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { showToast } from "../view/toastView.js";
 
 export default class UserController {
 
@@ -42,7 +43,7 @@ export default class UserController {
     <p>${favorites.length} brani</p>
   `;
   container.appendChild(favBox);
-  favBox.addEventListener("click", () => this.showSongsModal("I tuoi preferiti", favorites));
+  favBox.addEventListener("click", () => this.showSongsModal("I tuoi preferiti", favorites, null, true));
 
   // --- Playlist ---
   playlists.forEach(pl => {
@@ -62,7 +63,7 @@ export default class UserController {
     `;
     container.appendChild(plBox);
 
-    plBox.addEventListener("click", () => this.showSongsModal(pl.name, pl.songs));
+  plBox.addEventListener("click", () => this.showSongsModal(pl.name, pl.songs, pl.id, false));
   });
 
   // Messaggi se non ci sono dati
@@ -78,7 +79,7 @@ export default class UserController {
   }
 }
 
-  showSongsModal(title, songs) {
+  showSongsModal(title, songs, playlistId = null, isFavorites = false) {
   const modal = document.createElement("div");
   modal.className = "playlist-modal"; 
   modal.innerHTML = `
@@ -94,6 +95,9 @@ export default class UserController {
               <img src="${song.artwork || 'assets/img/avatar-placeholder.svg'}" alt="${song.title}" />
               <h4>${song.title}</h4>
               <p>${song.artist}</p>
+              <div class="d-flex justify-content-center mt-2">
+                <button class="btn btn-sm btn-danger trash-btn" data-song-id="${song.id}" title="Rimuovi">🗑</button>
+              </div>
             </div>
           </div>
         `).join("")}
@@ -110,6 +114,55 @@ export default class UserController {
     modal.remove();
   }
 });
+  // Delegate trash button clicks
+  modal.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.trash-btn');
+    if (!btn) return;
+    const songId = btn.dataset.songId;
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      showToast('Devi effettuare il login per rimuovere elementi.');
+      return;
+    }
+
+    // disable button to avoid double clicks
+    btn.disabled = true;
+
+    try {
+      if (isFavorites) {
+        // favorites are stored as documents under users/{uid}/favorites/{songId}
+        const favRef = doc(db, 'users', user.uid, 'favorites', songId);
+        await deleteDoc(favRef);
+        showToast('Brano rimosso dai preferiti.');
+      } else if (playlistId) {
+        // remove song from playlist songs array
+        const plRef = doc(db, 'users', user.uid, 'playlists', playlistId);
+        const snap = await getDoc(plRef);
+        const data = snap.exists() ? snap.data() : null;
+        if (data && Array.isArray(data.songs)) {
+          const updated = data.songs.filter(s => s.id !== songId);
+          await updateDoc(plRef, { songs: updated });
+          showToast('Brano rimosso dalla playlist.');
+        } else {
+          showToast('Playlist non trovata o formato inatteso.');
+        }
+      } else {
+        // generic: try to remove from favorites as fallback
+        const favRef = doc(db, 'users', user.uid, 'favorites', songId);
+        await deleteDoc(favRef);
+        showToast('Brano rimosso.');
+      }
+
+      // remove card from modal UI
+      const cardCol = btn.closest('.col-md-4');
+      if (cardCol) cardCol.remove();
+    } catch (err) {
+      console.error('Errore durante la rimozione:', err);
+      showToast('Errore durante la rimozione del brano.');
+      btn.disabled = false;
+    }
+  });
 
 }
 
