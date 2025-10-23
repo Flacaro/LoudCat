@@ -222,6 +222,34 @@ bindArtistClick(handler) {
   this.results.insertAdjacentHTML("beforeend", html);
 }
 
+  renderSongsnoAuth(songs){
+    const html = songs.map(s => {
+    const songObj = {
+      id: s.id || s.title.replace(/\s+/g,'-').toLowerCase(),
+      title: s.title,
+      artist: s.artist,
+      album: s.album,
+      artwork: s.artwork,
+      preview: s.preview
+    };
+    const encoded = encodeURIComponent(JSON.stringify(songObj));
+    return `
+      <div class="card song-card" data-song='${encoded}' data-song-id='${songObj.id}'>
+        <img src="${s.artwork || 'assets/img/avatar-placeholder.svg'}" alt="${s.title}" />
+        <h4>${s.title}</h4>
+        <p>${s.artist}</p>
+        ${s.album ? `<p>${s.album}</p>` : ""}
+        ${s.preview ? `<audio controls src="${s.preview}"></audio>` : "<p>Preview non disponibile</p>"}
+        <p class="login-warning" style="color: #dc3545; font-weight: bold; margin-top: 10px;">
+          Devi accedere per poter usare queste funzioni!
+        </p>
+      </div>
+      `;
+    }).join("");
+
+    this.results.insertAdjacentHTML("beforeend", html);
+  }
+
 
   bindFavoriteToggle(handler) {
     this.favHandler = handler;
@@ -256,14 +284,16 @@ bindArtistClick(handler) {
     this.results.innerHTML = "<p>⏳ Ricerca in corso...</p>";
   }
 
-  renderResults({songs = [], albums = [], artists = []} = {}) {
+  renderResults({songs = [], albums = [], artists = []} = {}, userLogged) {
     this.results.innerHTML = "";
     // cache last rendered results for controllers that may request it
     this._lastRenderedResults = { songs, albums, artists };
 
     if(Array.isArray(artists) && artists.length) this.renderArtists(artists);
-    if(Array.isArray(songs) && songs.length) this.renderSongs(songs);
+    if(Array.isArray(songs) && songs.length && userLogged) this.renderSongs(songs);
+    else this.renderSongsnoAuth(songs);
     if(Array.isArray(albums) && albums.length) this.renderAlbums(albums);
+    
 
     try {
       this.results.closest('section')?.scrollIntoView({ behavior: 'smooth', block: 'start'});

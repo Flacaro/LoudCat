@@ -15,7 +15,7 @@ export default class SearchController {
       const results = await this.model.search(query);
       // keep a reference so other controllers can reuse the recently rendered data
       this.lastResults = results;
-      this.view.renderResults(results);
+      this.view.renderResults(results, this.controller?.isUserLoggedIn);
 
       try {
         const rc = this.view.results;
@@ -95,7 +95,7 @@ export default class SearchController {
   if (!data?.results) return;
   // save loaded results so controllers can access them
   this.lastResults = data.results;
-  this.view.renderResults(data.results);
+  this.view.renderResults(data.results, this.controller?.isUserLoggedIn);
 
   try {
     const rc = this.view.results;
