@@ -15,10 +15,14 @@ body {
 
 main {
   flex: 1 1 auto;
-  padding: 1rem;
+  padding-bottom: none;
+  border-top: none;
+  padding-top: none;
   overflow-y: auto; /* scroll verticale principale */
   overflow-x: hidden;
   background-color: #2d1f46;
+  color: #fff;
+
 }
 
 footer {
@@ -27,12 +31,14 @@ footer {
   text-align: center;
   padding: 0.5rem;
   border-top: 1px solid #444;
+  color: #fff;
 }
 
 #app-layout {
   display: flex;
   flex: 1 1 auto; /* prende tutto lo spazio rimanente */
-  overflow: hidden; /* scroll solo nel main */
+  overflow: hidden;
+
 }
 
 header.app-header {
@@ -63,7 +69,8 @@ header .container-fluid {
 header {
   position: sticky; /* già presente */
   top: 0;
-  z-index: 1000; /* un valore alto per stare sopra tutto */
+  z-index: 1000;
+  padding-bottom: none;
 }
 
 
