@@ -429,3 +429,133 @@ button:hover {
     justify-content: center;
   }
 }
+/* ================================
+   ALBUM VIEW POLISHED STYLING
+================================ */
+.album-detail {
+  background-color: #1e1e1e;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  color: #e0e0e0;
+  max-width: 800px;
+  margin: 2rem auto;
+}
+
+.album-detail img {
+  width: 100%;
+  max-width: 300px;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+}
+
+.album-detail h2 {
+  margin-top: 0.5rem;
+  font-size: 1.8rem;
+  color: #ffffff;
+}
+
+.album-detail p {
+  font-size: 0.95rem;
+  color: #c0c0c0;
+  margin: 0.25rem 0;
+}
+
+.album-detail ol {
+  padding-left: 0;
+  list-style: none;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.album-detail ol li {
+  display: flex;
+  flex-direction: column;
+  background-color: #2a2a3c;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.album-detail ol li:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  background-color: #343454;
+}
+
+.album-detail ol li audio {
+  width: 100%;
+  border-radius: 6px;
+  margin-top: 4px;
+}
+
+.star-rating {
+  display: flex;
+  gap: 6px;
+  margin: 0.5rem 0;
+}
+
+.star {
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #888;
+  transition: color 0.2s;
+}
+
+.star:hover,
+.star.active {
+  color: #ffd700;
+}
+
+#review-text {
+  width: 100%;
+  min-height: 60px;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background-color: #2a2a3c;
+  color: #e0e0e0;
+  resize: vertical;
+}
+
+#submit-review {
+  background-color: #3a3aff;
+  color: white;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s, transform 0.1s;
+}
+
+#submit-review:hover {
+  background-color: #1f1fff;
+  transform: translateY(-1px);
+}
+
+#user-review-list {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#user-review-list p {
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  background-color: #2a2a3c;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  margin: 0;
+  color: #d0d0d0;
+  transition: background 0.2s;
+}
+
+#user-review-list p:hover {
+  background-color: #343454;
+}
+
