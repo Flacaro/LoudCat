@@ -160,42 +160,66 @@ export default class MusicController {
     try { hideProfileModal(); } catch (e) { /* ignore */ }
   }
 
- async loadHome() {
+  async loadHome() {
   const auth = getAuth();
   const user = auth.currentUser;
 
+  const resultsSection = document.getElementById("results-section");
   const homeContainer = document.getElementById("home-container");
   const resultsContainers = document.querySelectorAll('#results-container');
 
-  // Mostra home
+  // Mostra home, nascondi risultati
   if (homeContainer) homeContainer.style.display = 'block';
+  if (resultsSection) resultsSection.style.display = 'none';
 
   // Nascondi eventuale profile modal
   try { hideProfileModal(); } catch (e) { console.log("errore hideProfileModal"); }
 
-  // Pulisci eventuali vecchi risultati (solo sicurezza)
+  // Pulisci eventuali vecchi risultati
   resultsContainers.forEach(c => { if (c) c.innerHTML = ''; });
 
-  // Mostra messaggio di benvenuto
-  if (!user) {
-    this.homeView.showWelcomeMessage('Visitatore');
-    return;
-  }
-  this.homeView.showWelcomeMessage(user.displayName || 'Utente');
+  console.log("=== LOAD HOME START ===");
 
-  // Recupera collezioni dell’utente
-  const [favorites, playlists] = await Promise.all([
-    this.favoriteController.getFavorites(),
-    this.playlistController.getPlaylists()
-  ]);
-
-  // 🔹 Usa le ultime canzoni cercate come consigliati
+  let favorites = [];
+  let playlists = [];
   let recommended = [];
-  if (this.searchController.lastResults?.songs?.length) {
-    recommended = this.searchController.lastResults.songs.slice(0, 10);
+
+  if (user) {
+    this.homeView.showWelcomeMessage(user.displayName || 'Utente');
+
+    // Recupera collezioni utente
+    [favorites, playlists] = await Promise.all([
+      this.favoriteController.getFavorites(),
+      this.playlistController.getPlaylists()
+    ]);
+
+    // Consigli basati su ultima ricerca, se esiste
+    if (this.searchController.lastResults?.songs?.length > 0) {
+      recommended = this.searchController.lastResults.songs.slice(0, 10);
+    } else {
+      recommended = await this.getRandomSongs(10);
+    }
+
+  } else {
+    this.homeView.showWelcomeMessage('Visitatore');
+
+    // 🔹 Prova a caricare ultima ricerca pubblica da Firestore
+    try {
+      const ref = doc(db, "searches", "latest");
+      const snap = await getDoc(ref);
+      if (snap.exists() && snap.data()?.results?.songs?.length) {
+        recommended = snap.data().results.songs.slice(0, 10);
+      } else {
+        // 🔹 Se non c’è nessuna ricerca salvata, carica canzoni casuali
+        recommended = await this.getRandomSongs(10);
+      }
+    } catch (err) {
+      console.warn("Errore caricamento ultima ricerca pubblica:", err);
+      recommended = await this.getRandomSongs(10);
+    }
   }
 
-  // Normalizza i dati per la view
+  // Normalizza
   recommended = recommended.map(s => ({
     id: s.id || null,
     title: s.title || "Titolo sconosciuto",
@@ -203,25 +227,47 @@ export default class MusicController {
     artwork: s.artwork || "assets/img/avatar-placeholder.svg"
   }));
 
-  // Render finale nella home
+  console.log("🎵 Recommended:", recommended);
+  console.log("❤️ Favorites:", favorites);
+  console.log("📀 Playlists:", playlists);
+
+  // Render finale
   this.homeView.renderSpotifyHome(favorites, playlists, recommended);
 
-  // Trigger resize per eventuali layout JS
   requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
-
-  // Scroll in alto
   try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
 }
 
 
 
-async getRecommendedSongs() {
-  const lastResults = this.searchController?.lastResults;
-  if (!lastResults?.songs?.length) return [];
+  async getRecommendedSongs() {
+    const lastResults = this.searchController?.lastResults;
+    if (!lastResults?.songs?.length) return [];
 
-  // Prendi direttamente le canzoni dell'ultima ricerca
-  return lastResults.songs.slice(0, 10); // Limita a 10
+    // Prendi direttamente le prime 10 canzoni
+    return lastResults.songs.slice(0, 10);
+  }
+  
+
+  async getRandomSongs(limit = 10) {
+  try {
+    const allSongsSnap = await getDocs(collection(db, "songs"));
+    const allSongs = allSongsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    if (allSongs.length === 0) {
+      console.warn("⚠️ Nessuna canzone trovata in Firestore");
+      return [];
+    }
+
+    // Mischia e limita
+    const shuffled = allSongs.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, limit);
+  } catch (err) {
+    console.error("Errore nel caricamento delle canzoni casuali:", err);
+    return [];
+  }
 }
+
 
 
 
