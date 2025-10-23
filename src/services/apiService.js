@@ -1,4 +1,5 @@
 // apiService.js
+
 // Servizio che gestisce le chiamate alle API pubbliche
 
 // JSONP helper for iTunes endpoints (keeps app frontend-only when CORS blocks fetch)
@@ -74,6 +75,7 @@ export async function fetchSongs(query, type = "artist") {
     album: item.collectionName,
     artwork: item.artworkUrl100,
     preview: item.previewUrl,
+    genre: item.primaryGenreName || ""
   }));
 }
 
@@ -179,5 +181,24 @@ export async function fetchAlbumById(albumId) {
     releaseDate: albumInfo.releaseDate,
     primaryGenreName: albumInfo.primaryGenreName
   };
+}
+
+export async function getRecommendedFromItunes(userGenres, userSongs) {
+  const recommended = [];
+
+  for (const genre of userGenres) {
+    // cerca canzoni simili su iTunes per il genere
+    const results = await fetchSongs(genre, "track"); // o "artist" se preferisci
+    results.forEach(song => {
+      if (!userSongs.some(s => s.title === song.title && s.artist === song.artist) &&
+          !recommended.some(r => r.title === song.title && r.artist === song.artist)) {
+        recommended.push(song);
+      }
+    });
+
+    if (recommended.length >= 10) break; // massimo 10 consigli
+  }
+
+  return recommended.slice(0, 10);
 }
 

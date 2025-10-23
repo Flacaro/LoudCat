@@ -7,7 +7,7 @@ export default class HomeView {
     this._songClickHandler = null;
     this.playlistController = new PlaylistController(this);
   }
-  
+
 
   showWelcomeMessage(user) {
     if (!this.welcomeMessage) return;
@@ -15,8 +15,8 @@ export default class HomeView {
       user && user.displayName
         ? user.displayName
         : user && user.email
-        ? user.email
-        : "Utente";
+          ? user.email
+          : "Utente";
     this.welcomeMessage.textContent = `Ciao, ${name}`;
     this.welcomeMessage.classList.remove("d-none");
   }
@@ -54,12 +54,11 @@ export default class HomeView {
       <div class="container-fluid">
         <div class="row g-3">
           ${songs
-            .map(
-              (s, i) => `
+        .map(
+          (s, i) => `
             <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-              <div class="card song-card h-100" data-index="${i}" data-song-id="${
-                s.id || ""
-              }">
+              <div class="card song-card h-100" data-index="${i}" data-song-id="${s.id || ""
+            }">
                 <div class="artwork-container">
                   <img src="${s.artwork || "assets/img/avatar-placeholder.svg"}"
                        alt="${s.title || ""}" 
@@ -74,19 +73,18 @@ export default class HomeView {
                      style="font-size:0.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                      ${s.artist || ""}
                   </p>
-                  ${
-                    s.preview
-                      ? `<audio class="song-preview" controls preload="none" src="${s.preview}">
+                  ${s.preview
+              ? `<audio class="song-preview" controls preload="none" src="${s.preview}">
                            Il tuo browser non supporta l'audio
                          </audio>`
-                      : `<div class="text-muted small">Preview non disponibile</div>`
-                  }
+              : `<div class="text-muted small">Preview non disponibile</div>`
+            }
                 </div>
                 <div class="overlay-link" aria-hidden="true"></div>
               </div>
             </div>`
-            )
-            .join("")}
+        )
+        .join("")}
         </div>
       </div>
     `;
@@ -144,19 +142,19 @@ export default class HomeView {
   }
 
   showCreatePlaylistModal(onConfirm) {
-  const modal = document.createElement("div");
-  modal.className = "playlist-modal";
+    const modal = document.createElement("div");
+    modal.className = "playlist-modal";
 
-  const content = document.createElement("div");
-  content.className = "playlist-modal-content card p-3";
-  Object.assign(content.style, {
-    maxWidth: "400px",
-    width: "100%",
-    borderRadius: "12px",
-    textAlign: "center",
-  });
+    const content = document.createElement("div");
+    content.className = "playlist-modal-content card p-3";
+    Object.assign(content.style, {
+      maxWidth: "400px",
+      width: "100%",
+      borderRadius: "12px",
+      textAlign: "center",
+    });
 
-  content.innerHTML = `
+    content.innerHTML = `
     <h5 class="mb-3">Crea nuova playlist</h5>
     <input id="playlistNameInput" class="form-control mb-3" type="text" placeholder="Nome playlist" />
     <div class="d-flex justify-content-end gap-2">
@@ -165,28 +163,28 @@ export default class HomeView {
     </div>
   `;
 
-  modal.appendChild(content);
-  document.body.appendChild(modal);
+    modal.appendChild(content);
+    document.body.appendChild(modal);
 
-  const input = content.querySelector("#playlistNameInput");
-  const btnCreate = content.querySelector("#createBtn");
-  const btnCancel = content.querySelector("#cancelBtn");
+    const input = content.querySelector("#playlistNameInput");
+    const btnCreate = content.querySelector("#createBtn");
+    const btnCancel = content.querySelector("#cancelBtn");
 
-  const closeModal = () => modal.remove();
+    const closeModal = () => modal.remove();
 
-  btnCancel.addEventListener("click", closeModal);
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) closeModal();
-  });
+    btnCancel.addEventListener("click", closeModal);
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
 
-  btnCreate.addEventListener("click", () => {
-    const name = input.value.trim();
-    closeModal();
-    if (typeof onConfirm === "function") onConfirm(name);
-  });
+    btnCreate.addEventListener("click", () => {
+      const name = input.value.trim();
+      closeModal();
+      if (typeof onConfirm === "function") onConfirm(name);
+    });
 
-  input.focus();
-}
+    input.focus();
+  }
 
 
   renderSpotifyHome(favorites = [], playlists = [], recommended = []) {
@@ -197,104 +195,104 @@ export default class HomeView {
     container.className = "spotify-home";
 
     const createRow = (items, type) => {
-      const section = document.createElement("div");
-      section.className = "home-section";
+        const section = document.createElement("div");
+        section.className = "home-section";
 
-      const titleMap = {
-        playlists: "Le tue playlist",
-        favorites: "I tuoi preferiti",
-        recommended: "Consigliati per te",
-      };
-      section.innerHTML = `<h5>${titleMap[type]}</h5>`;
+        const titleMap = {
+            playlists: "Le tue playlist",
+            favorites: "I tuoi preferiti",
+            recommended: "Consigliati per te",
+        };
+        section.innerHTML = `<h5>${titleMap[type]}</h5>`;
 
-      const row = document.createElement("div");
-      row.className = "cards-row";
+        const row = document.createElement("div");
+        row.className = "cards-row";
 
-      // Card “Crea playlist”
-      if (type === "playlists") {
-        const addCard = document.createElement("div");
-        addCard.className = "playlist-card create-card";
-        addCard.textContent = "Crea playlist";
-
-        addCard.addEventListener("click", () => {
-            this.playlistController.handleCreatePlaylist();
-          
-        });
-
-        row.appendChild(addCard);
-      }
-
-      // Card normali
-      items.forEach((item) => {
-        const card = document.createElement("div");
-        card.className = type === "playlists" ? "playlist-card" : "song-card";
-
+        // Card “Crea playlist”
         if (type === "playlists") {
-          card.innerHTML = `
-            <div class="song-artwork-wrapper">
-              <div class="song-artwork" style="background-image:url('${
-                item.songs?.[0]?.artwork ||
-                "assets/img/avatar-placeholder.svg"
-              }');"></div>
-            </div>
-            <div class="text-truncate fw-semibold mt-1">${item.name}</div>
-            <small>${(item.songs || []).length} brani</small>
-          `;
-          card.addEventListener("click", () => {
-            this.showSongsModal(item.name, item.songs || []);
-          });
-        } else {
-          card.innerHTML = `
-            <div class="song-artwork-wrapper">
-              <div class="song-artwork" 
-                   style="background-image:url('${
-                     item.artwork || "assets/img/avatar-placeholder.svg"
-                   }'); border-radius: 50%;"></div>
-            </div>
-            <div class="text-truncate fw-semibold mt-1">${item.title}</div>
-            <small>${item.artist || ""}</small>
-            ${
-              item.preview
-                ? `<audio class="song-preview" controls preload="none" src="${item.preview}"></audio>`
-                : `<div class="text-muted small">Preview non disponibile</div>`
-            }
-          `;
+            const addCard = document.createElement("div");
+            addCard.className = "playlist-card create-card";
+            addCard.textContent = "Crea playlist";
+            addCard.addEventListener("click", () => {
+                this.playlistController.handleCreatePlaylist();
+            });
+            row.appendChild(addCard);
         }
 
-        row.appendChild(card);
-      });
+        if (items.length === 0) {
+            // Placeholder se non ci sono canzoni/playlist
+            const placeholder = document.createElement("div");
+            placeholder.className = "placeholder-card text-muted";
+            placeholder.textContent = type === "recommended" 
+                ? "Nessun consiglio disponibile al momento" 
+                : "Nessun elemento da mostrare";
+            row.appendChild(placeholder);
+        } else {
+            items.forEach((item) => {
+                const card = document.createElement("div");
+                card.className = type === "playlists" ? "playlist-card" : "song-card";
 
-      section.appendChild(row);
-      return section;
+                if (type === "playlists") {
+                    card.innerHTML = `
+                        <div class="song-artwork-wrapper">
+                            <div class="song-artwork" style="background-image:url('${item.songs?.[0]?.artwork || "assets/img/avatar-placeholder.svg"}');"></div>
+                        </div>
+                        <div class="text-truncate fw-semibold mt-1">${item.name}</div>
+                        <small>${(item.songs || []).length} brani</small>
+                    `;
+                    card.addEventListener("click", () => {
+                        this.showSongsModal(item.name, item.songs || []);
+                    });
+                } else {
+                    card.innerHTML = `
+                        <div class="song-artwork-wrapper">
+                            <div class="song-artwork" 
+                                style="background-image:url('${item.artwork || "assets/img/avatar-placeholder.svg"}'); border-radius: 50%;"></div>
+                        </div>
+                        <div class="text-truncate fw-semibold mt-1">${item.title}</div>
+                        <small>${item.artist || ""}</small>
+                        ${item.preview 
+                            ? `<audio class="song-preview" controls preload="none" src="${item.preview}"></audio>` 
+                            : `<div class="text-muted small">Preview non disponibile</div>`}
+                    `;
+                }
+                row.appendChild(card);
+            });
+        }
+
+        section.appendChild(row);
+        return section;
     };
 
-    if (playlists.length) container.appendChild(createRow(playlists, "playlists"));
-    if (favorites.length) container.appendChild(createRow(favorites, "favorites"));
-    if (recommended.length)
-      container.appendChild(createRow(recommended, "recommended"));
+    // Render playlists, favorites e consigliati
+    container.appendChild(createRow(playlists, "playlists"));
+    container.appendChild(createRow(favorites, "favorites"));
+    container.appendChild(createRow(recommended, "recommended")); // sempre renderizzata
 
     this.results.appendChild(container);
-  }
-
-  showToast(message, type = "info") {
-  // Rimuovi eventuali toast precedenti
-  document.querySelectorAll(".custom-toast").forEach(t => t.remove());
-
-  const toast = document.createElement("div");
-  toast.className = `custom-toast ${type}`;
-  toast.textContent = message;
-
-  document.body.appendChild(toast);
-
-  // Forza reflow e fade-in
-  requestAnimationFrame(() => toast.classList.add("show"));
-
-  // Rimuovi dopo 3 secondi
-  setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
 }
 
-  
+
+
+  showToast(message, type = "info") {
+    // Rimuovi eventuali toast precedenti
+    document.querySelectorAll(".custom-toast").forEach(t => t.remove());
+
+    const toast = document.createElement("div");
+    toast.className = `custom-toast ${type}`;
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    // Forza reflow e fade-in
+    requestAnimationFrame(() => toast.classList.add("show"));
+
+    // Rimuovi dopo 3 secondi
+    setTimeout(() => {
+      toast.classList.remove("show");
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+
 }

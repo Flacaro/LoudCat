@@ -1,5 +1,5 @@
 export default class Song {
-  constructor({ id, title, artist, album, duration, preview, artwork}) {
+  constructor({ id, title, artist, album, duration, preview, artwork, primaryGenreName}) {
     this.id = id;
     this.title = title;
     this.artist = artist;
@@ -7,6 +7,8 @@ export default class Song {
     this.duration = duration;
     this.preview = preview;
     this.artwork = artwork;
+    this.primaryGenreName = primaryGenreName;
+
     
 }
 
