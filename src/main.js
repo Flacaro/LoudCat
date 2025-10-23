@@ -40,4 +40,12 @@ document.addEventListener("DOMContentLoaded", () => {
   initFirebaseAuth(controller);
 
   initProfileModal();
+
+  const mobileBtn = document.getElementById("mobile-menu-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+
+  mobileBtn.addEventListener("click", () => {
+    mobileMenu.classList.toggle("d-none");
+  });
+
 });

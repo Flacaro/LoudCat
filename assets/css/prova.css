@@ -9,12 +9,6 @@ header {
     padding: 1rem;
 }
 
-header .logo {
-    width: 50px;
-    vertical-align: middle;
-    color: #fff;
-}
-
 #app-layout {
     display: flex;
     /* Sposta il layout sotto l'header */

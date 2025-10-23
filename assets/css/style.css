@@ -4,7 +4,7 @@ body {
   margin: 0;
   background: #25374a !important;
   color: #fff;
- 
+
 }
 
 /* Header */
@@ -19,10 +19,19 @@ header .logo {
   vertical-align: middle;
 }
 
+header .container-fluid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap; /* permette al contenuto di andare a capo */
+  gap: 10px;
+}
 
-#welcome-message, #logoutBtn {
+#welcome-message,
+#logoutBtn {
   color: #fff !important;
 }
+
 .playlist-modal {
   position: fixed;
   top: 0;
@@ -34,11 +43,12 @@ header .logo {
   align-items: center;
   z-index: 1000;
 }
+
 .playlist-modal::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   /* allow clicks to pass through the pseudo-overlay to the modal element
      so the modal content can receive focus and pointer events */
   pointer-events: none;
@@ -47,36 +57,47 @@ header .logo {
 
 
 /* Card generiche */
-.user-box, .card, .playlist-modal-content {
+.user-box,
+.card,
+.playlist-modal-content {
   background: #25374a;
   border-radius: 12px;
   padding: 1rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-  color: #d1cfcf;  /* testi bianchi */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  color: #d1cfcf;
+  /* testi bianchi */
   transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
   text-align: center;
 }
 
 /* Titoli e testi nelle card */
-.user-box h4, .card h4, .card h6, .playlist-modal-content h5 {
+.user-box h4,
+.card h4,
+.card h6,
+.playlist-modal-content h5 {
   color: #43698d;
 }
 
-.user-box p, .card small, .playlist-modal-content p {
+.user-box p,
+.card small,
+.playlist-modal-content p {
   color: #25374a;
 }
 
 /* Effetto hover */
-.user-box:hover, .card:hover, .playlist-modal-content:hover {
+.user-box:hover,
+.card:hover,
+.playlist-modal-content:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
 }
 
 /* Anteprime / artwork */
-.preview-artwork, .song-artwork {
+.preview-artwork,
+.song-artwork {
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   border: 1px solid #385977;
 }
 
@@ -104,7 +125,7 @@ footer {
 
 /* Modal overlay */
 .modal-overlay {
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
 }
 
 /* Griglia risultati ricerca */
@@ -119,7 +140,8 @@ footer {
 
 /* Card generica dei risultati */
 #results-container .card {
-  flex: 0 0 200px;        /* larghezza fissa */
+  flex: 0 0 200px;
+  /* larghezza fissa */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -128,7 +150,7 @@ footer {
   border-radius: 8px;
   background: #43698d;
   box-sizing: border-box;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
   overflow: hidden;
@@ -146,14 +168,14 @@ footer {
   justify-content: center;
   text-align: center;
   transition: all 0.25s ease;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
   overflow-y: hidden;
 }
 
 #results-container .artist-card:hover {
   transform: translateY(-6px) scale(1.03);
   background: linear-gradient(135deg, #2f4b68, #162433);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.6);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.6);
 }
 
 #results-container .artist-card h3 {
@@ -185,9 +207,12 @@ footer {
 /* Assicura che l'audio si adatti al contenitore */
 #results-container .card audio,
 #results-container .card .song-preview {
-  width: 100%;        /* occupa tutta la larghezza della card */
-  max-width: 100%;    /* mai più largo della card */
-  display: block;     /* evita spazi indesiderati */
+  width: 100%;
+  /* occupa tutta la larghezza della card */
+  max-width: 100%;
+  /* mai più largo della card */
+  display: block;
+  /* evita spazi indesiderati */
   box-sizing: border-box;
 }
 
@@ -210,7 +235,7 @@ footer {
 
 #results-container .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
 }
 
 /* Overlay */
@@ -220,7 +245,7 @@ footer {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -243,7 +268,7 @@ footer {
   width: 90%;
   text-align: center;
   color: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   /* ensure the content sits above the overlay pseudo-element */
   position: relative;
   z-index: 2;
@@ -257,6 +282,7 @@ footer {
   max-height: 250px;
   overflow-y: auto;
 }
+
 
 .playlist-list li {
   padding: 0.6rem 1rem;
@@ -284,6 +310,43 @@ footer {
   transition: background 0.2s ease;
 }
 
+#logo {
+  height: 40px;
+  width: 40px;
+  color: #fff;
+  object-fit: contain;
+}
+
+#search-form {
+  flex: 1 1 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#search-input {
+  width: 100%;
+  max-width: 400px;
+}
+
+#header-actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 5px;
+}
+
+#header-actions button {
+    font-size: 0.75rem; /* pulsanti più piccoli */
+    padding: 2px 6px;
+  }
+  
+/* Per dispositivi piccoli: input più stretto */
+@media (max-width: 768px) {
+  #search-input {
+    max-width: 200px;
+  }
+}
+
 .modal-close-btn:hover {
   background: #1d4ed8;
 }
@@ -301,10 +364,12 @@ footer {
   margin: 0 auto;
   padding: 1rem 1.25rem;
   box-sizing: border-box;
-  text-align: center; /* ensure headings and paragraphs are centered by default */
+  text-align: center;
+  /* ensure headings and paragraphs are centered by default */
   /* create a little extra right padding so absolutely positioned close button can sit outside the main flow */
   padding-right: 3rem;
 }
+
 #profileModal .btn-close {
   background: transparent;
   border: none;
@@ -316,15 +381,17 @@ footer {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: rgba(255,0,0,0.9);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  background: rgba(255, 0, 0, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   /* absolutely position to top-right and nudge further right */
   position: absolute;
   top: 0.6rem;
-  right: -1.25rem; /* pushes the button slightly outside the panel on the right */
+  right: -1.25rem;
+  /* pushes the button slightly outside the panel on the right */
 }
+
 #profileModal .btn-close:hover {
-  background: rgba(255,0,0,1);
+  background: rgba(255, 0, 0, 1);
 }
 
 /* Center the profile info block (avatar + text). On narrow screens stack vertically. */
@@ -343,8 +410,10 @@ footer {
     align-items: center;
     justify-content: center;
     gap: 1rem;
-    text-align: left; /* keep avatar to the left of text on wider viewports */
+    text-align: left;
+    /* keep avatar to the left of text on wider viewports */
   }
+
   /* keep profile panel content centered but align internal text nicely */
   #profileModal .modal-panel {
     text-align: left;
@@ -353,18 +422,23 @@ footer {
 
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
 }
+
 .modal {
   background: white;
   padding: 20px;
   border-radius: 10px;
   width: 300px;
 }
+
 .modal-buttons {
   margin-top: 10px;
   display: flex;
@@ -377,7 +451,8 @@ footer {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background-color: #1db954; /* Verde Spotify */
+  background-color: #1db954;
+  /* Verde Spotify */
   color: #fff;
   padding: 12px 16px;
   border-radius: 8px;
