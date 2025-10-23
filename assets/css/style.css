@@ -1,17 +1,39 @@
-/* Body scuro */
-body {
-  font-family: "Segoe UI", sans-serif;
+/* ================================
+   BODY E LAYOUT GENERALE
+================================ */
+html, body {
+  height: 100%;
   margin: 0;
-  background: #25374a !important;
-  color: #fff;
-
+  padding: 0;
+  overflow: hidden; /* niente scroll globale */
+  background-color: #25374a;
 }
 
-/* Header */
+#app-layout {
+  display: flex;
+  height: calc(100vh - 80px); /* altezza totale meno header */
+  margin: 0;
+  background-color: #2d1f46;
+}
+
+main {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px;
+  box-sizing: border-box;
+  background-color: #2d1f46;
+}
+
+
+
 header {
+  flex: 0 0 80px; /* altezza fissa */
   background: #25374a;
   text-align: center;
   padding: 1rem;
+  box-sizing: border-box;
 }
 
 header .logo {
@@ -23,7 +45,7 @@ header .container-fluid {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap; /* permette al contenuto di andare a capo */
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -32,103 +54,168 @@ header .container-fluid {
   color: #fff !important;
 }
 
-.playlist-modal {
-  position: fixed;
+/* LAYOUT PRINCIPALE */
+#app-layout {
+  display: flex;
+  margin-top: 0;
+  background-color: #2d1f46;
+  height: calc(100vh - 80px);
+}
+
+#sidebar-library {
+  width: 250px;
+  min-width: 250px;
+  background-color: #2b2356;
+  position: sticky;
+  top: 80px;
+  height: calc(100vh - 80px);
+  overflow-y: auto;
+  padding-bottom: 90px;
+}
+
+#sidebar-library h5 {
+  color: #ffffff;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+#sidebar-library .btn,
+#sidebar-library button.btn-dark {
+  width: 100%;
+  text-align: left;
+  background-color: transparent;
+  border: none;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 4px;
+  color: #b3b3b3;
+  cursor: pointer;
+}
+
+#sidebar-library .btn:hover,
+#sidebar-library .btn.active,
+#sidebar-library button.btn-dark:hover {
+  color: #ffffff;
+}
+
+main {
+  flex: 1;
+  height: calc(100vh - 80px);
+  overflow-y: scroll;
+  overflow-x: hidden;
+  background-color: #2d1f46;
+  min-height: 100%;
+  padding: 24px;
+}
+
+/* ================================
+   CARD HOME (RIGA SCORREVOLE)
+================================ */
+.cards-row {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 24px;
+  padding-bottom: 24px;
+  overscroll-behavior-x: contain;
+}
+
+.cards-row::-webkit-scrollbar {
+  display: none;
+}
+
+.cards-row .song-card,
+.cards-row .playlist-card {
+  flex: 0 0 180px;
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  background-color: #636388;
+  border-radius: 8px;
+  box-shadow: 0 4px 60px rgba(0,0,0,0.3);
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cards-row .song-card:hover,
+.cards-row .playlist-card:hover {
+  background-color: #282828;
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+}
+
+/* ================================
+   CARD SIDEBAR / PLAYLIST / PREFERITI (GRIGLIA)
+================================ */
+.grid-layout,
+.favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
+  gap: 20px;
+  justify-items: center;
+  align-items: start;
+  padding: 20px;
+  overflow-x: hidden;
+}
+
+.grid-layout .song-card,
+.grid-layout .playlist-card,
+.favorites-grid .song-card {
+  width: 100%;
+  max-width: 220px;
+  background-color: #636388;
+  border-radius: 10px;
+  padding: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.grid-layout .song-card:hover,
+.grid-layout .playlist-card:hover,
+.favorites-grid .song-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+}
+
+/* Card "Crea Playlist" */
+.create-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #7d7db1, #636388);
+  height: 180px;
+  cursor: pointer;
+}
+
+/* Artwork */
+.song-artwork-wrapper {
+  width: 100%;
+  padding-bottom: 100%;
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.song-artwork {
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.playlist-modal::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  /* allow clicks to pass through the pseudo-overlay to the modal element
-     so the modal content can receive focus and pointer events */
-  pointer-events: none;
-}
-
-
-
-/* Card generiche */
-.user-box,
-.card,
-.playlist-modal-content {
-  background: #25374a;
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  color: #d1cfcf;
-  /* testi bianchi */
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: pointer;
-  text-align: center;
-}
-
-/* Titoli e testi nelle card */
-.user-box h4,
-.card h4,
-.card h6,
-.playlist-modal-content h5 {
-  color: #43698d;
-}
-
-.user-box p,
-.card small,
-.playlist-modal-content p {
-  color: #25374a;
-}
-
-/* Effetto hover */
-.user-box:hover,
-.card:hover,
-.playlist-modal-content:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
-}
-
-/* Anteprime / artwork */
-.preview-artwork,
-.song-artwork {
+  background-size: cover;
+  background-position: center;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
   border: 1px solid #385977;
 }
 
-/* Bottoni */
-button {
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 0.6rem 1rem;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #1d4ed8;
-}
-
-/* Footer */
-footer {
-  text-align: center;
-  margin-top: 2rem;
-  font-size: 0.9rem;
-  color: #ccc;
-}
-
-/* Modal overlay */
-.modal-overlay {
-  background: rgba(0, 0, 0, 0.7);
-}
-
-/* Griglia risultati ricerca */
+/* ================================
+   CARD RISULTATI RICERCA
+================================ */
 #results-container {
   display: flex;
   flex-wrap: wrap;
@@ -138,10 +225,8 @@ footer {
   overflow-y: hidden;
 }
 
-/* Card generica dei risultati */
 #results-container .card {
   flex: 0 0 200px;
-  /* larghezza fissa */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -149,50 +234,11 @@ footer {
   padding: 0.5rem;
   border-radius: 8px;
   background: #43698d;
-  box-sizing: border-box;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
   transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
   overflow: hidden;
 }
-
-/* 🔥 Artist card restyle – minimal, bold, fits LoudCat theme */
-#results-container .artist-card {
-  background: linear-gradient(135deg, #1b2a38, #243b55);
-  border: 1px solid #385977;
-  border-radius: 14px;
-  width: 200px;
-  height: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-  overflow-y: hidden;
-}
-
-#results-container .artist-card:hover {
-  transform: translateY(-6px) scale(1.03);
-  background: linear-gradient(135deg, #2f4b68, #162433);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.6);
-}
-
-#results-container .artist-card h3 {
-  font-size: 1rem;
-  color: #fff;
-  margin: 0;
-  letter-spacing: 0.6px;
-  font-weight: 600;
-  text-transform: uppercase;
-  overflow-y: hidden;
-}
-
-
-#results-container .artist-card:hover h3 {
-  color: #64b5ff;
-}
-
 
 #results-container .card img,
 #results-container .card .song-artwork .song-preview {
@@ -201,19 +247,6 @@ footer {
   object-fit: cover;
   border-radius: 8px;
   margin-bottom: 0.3rem;
-  overflow-y: hidden;
-}
-
-/* Assicura che l'audio si adatti al contenitore */
-#results-container .card audio,
-#results-container .card .song-preview {
-  width: 100%;
-  /* occupa tutta la larghezza della card */
-  max-width: 100%;
-  /* mai più largo della card */
-  display: block;
-  /* evita spazi indesiderati */
-  box-sizing: border-box;
 }
 
 #results-container .card h4,
@@ -235,352 +268,56 @@ footer {
 
 #results-container .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.4);
 }
 
-/* Overlay */
-.playlist-modal {
+/* ================================
+   MODALI
+================================ */
+.playlist-modal,
+#profileModal,
+.auth-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
+  inset: 0;
   display: flex;
   justify-content: center;
   align-items: center;
+  background: rgba(0,0,0,0.55);
   z-index: 1000;
   opacity: 1;
   transition: opacity 0.2s ease;
 }
 
-.playlist-modal.hidden {
+.playlist-modal.hidden,
+#profileModal.hidden {
   opacity: 0;
   pointer-events: none;
 }
 
-/* Contenuto del modale */
-.playlist-modal-content {
+.playlist-modal-content,
+.profile-panel--light,
+.auth-panel {
   background: #43698d;
-  padding: 1rem 1.5rem;
   border-radius: 12px;
+  padding: 1rem 1.5rem;
   max-width: 400px;
   width: 90%;
   text-align: center;
   color: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  /* ensure the content sits above the overlay pseudo-element */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
   position: relative;
   z-index: 2;
-}
-
-/* Ensure song cards inside the playlist modal leave space for action buttons */
-.playlist-modal .song-card {
-  padding-bottom: 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0.5rem;
-  min-height: 180px; /* give room for artwork + text + button */
-}
-
-/* Trash button styling inside modals */
-.playlist-modal .trash-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #e53e3e;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 0.95rem;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-}
-
-.playlist-modal .trash-btn:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
-
-.playlist-modal .modal-songs-container .col-md-4 {
-  display: flex;
-  align-items: stretch;
-}
-
-.playlist-modal .modal-songs-container .col-md-4 .card {
-  flex: 1 1 auto;
-}
-
-/* Lista playlist */
-.playlist-list {
-  list-style: none;
-  padding: 0;
-  margin: 1rem 0;
-  max-height: 250px;
-  overflow-y: auto;
-}
-
-
-.playlist-list li {
-  padding: 0.6rem 1rem;
-  margin-bottom: 0.5rem;
-  background: #2c465f;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.playlist-list li:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.1);
-}
-
-/* Pulsante chiudi */
-.modal-close-btn {
-  margin-top: 1rem;
-  background: #fff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 0.6rem 1rem;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-#logo {
-  height: 40px;
-  width: 40px;
-  color: #fff;
-  object-fit: contain;
-}
-
-#search-form {
-  flex: 1 1 300px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-#search-input {
-  width: 100%;
-  max-width: 400px;
-}
-
-#header-actions {
-  flex: 0 0 auto;
-  display: flex;
-  gap: 5px;
-}
-
-#header-actions button {
-    font-size: 0.75rem; /* pulsanti più piccoli */
-    padding: 2px 6px;
-  }
-  
-/* Per dispositivi piccoli: input più stretto */
-@media (max-width: 768px) {
-  #search-input {
-    max-width: 200px;
-  }
-}
-
-.modal-close-btn:hover {
-  background: #1d4ed8;
-}
-
-/* Profile modal specific close button (red X in top-right) */
-#profileModal .modal-panel {
-  position: relative;
-  /* center the modal content and make it responsive */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* Playlist card: ensure relative positioning for action buttons */
-.playlist-card {
-  position: relative;
-  padding: 1rem;
-  display: inline-block;
-  width: 180px;
-  height: 200px;
-  vertical-align: top;
-}
-
-/* Trash button specifically for playlist cards (top-right) */
-.playlist-card .playlist-trash-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: #e53e3e;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 8px;
-  font-size: 0.9rem;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-  z-index: 4;
-}
-
-.playlist-card .playlist-trash-btn:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
- 
-
-/* legacy red close button rules removed; new definition below */
-
-/* Center the profile info block (avatar + text). On narrow screens stack vertically. */
-#profileModal [data-panel="profile"] .d-flex.align-items-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  text-align: center;
-}
-
-@media (min-width: 576px) {
-  #profileModal [data-panel="profile"] .d-flex.align-items-center {
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    text-align: left;
-    /* keep avatar to the left of text on wider viewports */
-  }
-
-  /* keep profile panel content centered but align internal text nicely */
-  #profileModal .modal-panel {
-    text-align: left;
-  }
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* Auth overlay: center the login/register form in the viewport */
-#auth {
-  display: none; /* controlled via inline style or JS */
-}
-.auth-overlay {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.55);
-  z-index: 1300;
-}
-.auth-panel {
-  background: #25374a;
-  border-radius: 12px;
-  padding: 1.25rem;
-  width: 95%;
-  max-width: 420px;
-  color: #fff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-}
-.auth-panel .form-control {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  color: #fff;
-}
-.auth-panel .btn-secondary {
-  background: #6c757d;
-  border-color: #6c757d;
-}
-
-.modal {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 300px;
-}
-
-.modal-buttons {
-  margin-top: 10px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-/* Toast base */
-.custom-toast {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: #1db954;
-  /* Verde Spotify */
-  color: #fff;
-  padding: 12px 16px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  font-size: 0.9rem;
-  z-index: 9999;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-/* Mostra il toast */
-.custom-toast.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Tipo "errore" */
-.custom-toast.error {
-  background-color: #e74c3c;
-}
-
-/* Tipo "avviso" */
-.custom-toast.warning {
-  background-color: #f39c12;
-}
-
-/* Tipo "successo" (uguale al base Spotify) */
-.custom-toast.info {
-  background-color: #1db954;
-}
-
-/* Profile modal as centered, light-themed overlay */
-#profileModal {
-  position: fixed;
-  inset: 0;
-  display: none; /* toggled via JS to add overlay class */
-  align-items: center;
-  justify-content: center;
-  z-index: 1400;
-}
-
-#profileModal.modal-overlay {
-  display: flex;
-  background: rgba(0,0,0,0.45);
 }
 
 .profile-panel--light {
   background: #ffffff;
   color: #111827;
-  border-radius: 12px;
   padding: 1.25rem;
   max-width: 720px;
   width: 95%;
-  box-shadow: 0 12px 36px rgba(15,23,42,0.3);
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
 }
 
 .profile-panel--light h4,
@@ -590,34 +327,74 @@ footer {
   color: #0f172a;
 }
 
-/* Move close button inside the panel to the top-right corner */
+/* Pulsanti chiudi modali */
+.modal-close-btn,
 #profileModal .btn-close {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: #9ca3af; /* gray-400 */
+  background: #9ca3af;
   color: #0f172a;
   border: none;
   border-radius: 6px;
-  width: 36px;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 150ms ease, color 150ms ease;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
 
+.modal-close-btn:hover,
 #profileModal .btn-close:hover {
-  background: #f60c0c; /* gray-500 */
-  color: #ffffff;
+  background: #f60c0c;
+  color: #fff;
 }
 
-/* Light themed inputs inside profile */
-.profile-panel--light input.form-control,
-.profile-panel--light textarea.form-control {
-  background: #f8fafc;
-  border: 1px solid #e6edf3;
-  color: #0f172a;
+/* ================================
+   PULSANTI GENERICI
+================================ */
+button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+/* ================================
+   TOASTER
+================================ */
+.custom-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #1db954;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  font-size: 0.9rem;
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.custom-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.custom-toast.error { background-color: #e74c3c; }
+.custom-toast.warning { background-color: #f39c12; }
+.custom-toast.info { background-color: #1db954; }
+
+/* ================================
+   MEDIA QUERIES
+================================ */
+@media (max-width: 768px) {
+  #search-input { max-width: 200px; }
 }
 
 @media (min-width: 576px) {

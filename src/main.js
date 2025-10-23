@@ -38,10 +38,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   on("sidebar-playlist-btn", "click", async () => {
     const playlists = await controller.playlistController.getPlaylists() || [];
-    controller.homeView.renderOnlyPlaylists(playlists);
+    controller.homeView.renderOnlySection("playlists", playlists);
   });
 
-
+  on("sidebar-favorites-btn", "click", async () => {
+  const favorites = await controller.favoriteController.getFavorites() || [];
+  controller.homeView.renderOnlySection("favorites", favorites);
+});
 
 
   initFirebaseAuth(controller);
