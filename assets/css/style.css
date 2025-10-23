@@ -433,29 +433,7 @@ footer {
 }
  
 
-#profileModal .btn-close {
-  background: transparent;
-  border: none;
-  font-size: 1.1rem;
-  color: #fff;
-  width: 36px;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgba(255, 0, 0, 0.9);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  /* absolutely position to top-right and nudge further right */
-  position: absolute;
-  top: 0.6rem;
-  right: -1.25rem;
-  /* pushes the button slightly outside the panel on the right */
-}
-
-#profileModal .btn-close:hover {
-  background: rgba(255, 0, 0, 1);
-}
+/* legacy red close button rules removed; new definition below */
 
 /* Center the profile info block (avatar + text). On narrow screens stack vertically. */
 #profileModal [data-panel="profile"] .d-flex.align-items-center {
@@ -578,4 +556,71 @@ footer {
 /* Tipo "successo" (uguale al base Spotify) */
 .custom-toast.info {
   background-color: #1db954;
+}
+
+/* Profile modal as centered, light-themed overlay */
+#profileModal {
+  position: fixed;
+  inset: 0;
+  display: none; /* toggled via JS to add overlay class */
+  align-items: center;
+  justify-content: center;
+  z-index: 1400;
+}
+
+#profileModal.modal-overlay {
+  display: flex;
+  background: rgba(0,0,0,0.45);
+}
+
+.profile-panel--light {
+  background: #ffffff;
+  color: #111827;
+  border-radius: 12px;
+  padding: 1.25rem;
+  max-width: 720px;
+  width: 95%;
+  box-shadow: 0 12px 36px rgba(15,23,42,0.3);
+}
+
+.profile-panel--light h4,
+.profile-panel--light h5,
+.profile-panel--light p,
+.profile-panel--light small {
+  color: #0f172a;
+}
+
+/* Move close button inside the panel to the top-right corner */
+#profileModal .btn-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #9ca3af; /* gray-400 */
+  color: #0f172a;
+  border: none;
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+#profileModal .btn-close:hover {
+  background: #f60c0c; /* gray-500 */
+  color: #ffffff;
+}
+
+/* Light themed inputs inside profile */
+.profile-panel--light input.form-control,
+.profile-panel--light textarea.form-control {
+  background: #f8fafc;
+  border: 1px solid #e6edf3;
+  color: #0f172a;
+}
+
+@media (min-width: 576px) {
+  .profile-panel--light { display: flex; gap: 1.25rem; align-items: flex-start; }
+  #profileModal .modal-panel { position: relative; }
 }
