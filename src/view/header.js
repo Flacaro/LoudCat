@@ -110,7 +110,14 @@ export function initProfileModal() {
     if (emailEl) emailEl.textContent = `Email: ${emailText}`;
     if (nameEl) nameEl.textContent = `Username: ${usernameText ? usernameText : "-"}`;
     if (avatarEl) avatarEl.src = "assets/img/avatar-placeholder.svg";
-    if (modal) modal.style.display = "flex";
+    if (modal) {
+      // ensure overlay class is present and visible
+      modal.classList.add('modal-overlay');
+      const panel = modal.querySelector('.modal-panel');
+      if (panel) panel.classList.add('profile-panel--light');
+      // override any inline hiding and ensure modal displays
+      modal.style.display = 'flex';
+    }
     // focus first nav button if available
     const firstNav = modal.querySelector("[data-tab]");
     firstNav?.focus();
@@ -123,7 +130,12 @@ export function initProfileModal() {
     }
   }
   function closeModal() {
-    if (modal) modal.style.display = "none";
+    if (modal) {
+      modal.classList.remove('modal-overlay');
+      const panel = modal.querySelector('.modal-panel');
+      if (panel) panel.classList.remove('profile-panel--light');
+      modal.style.display = 'none';
+    }
   }
 
   profileBtn?.addEventListener("click", openModal);
@@ -481,5 +493,10 @@ function escapeHtml(str) {
 // Helper used by controllers to hide the profile modal if it's open
 export function hideProfileModal() {
   const m = document.getElementById('profileModal');
-  if (m) m.style.display = 'none';
+  if (m) {
+    m.classList.remove('modal-overlay');
+    const panel = m.querySelector('.modal-panel');
+    if (panel) panel.classList.remove('profile-panel--light');
+    m.style.display = 'none';
+  }
 }

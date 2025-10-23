@@ -1,4 +1,8 @@
 import PlaylistController from "../controller/playlistController.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { doc, getDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { db } from "../firebase.js";
+
 
 export default class HomeView {
   constructor() {
@@ -232,19 +236,22 @@ export default class HomeView {
           const card = document.createElement("div");
           card.className = type === "playlists" ? "playlist-card" : "song-card";
 
-          if (type === "playlists") {
-            card.innerHTML = `
-                        <div class="song-artwork-wrapper">
-                            <div class="song-artwork" style="background-image:url('${item.songs?.[0]?.artwork || "assets/img/avatar-placeholder.svg"}');"></div>
-                        </div>
-                        <div class="text-truncate fw-semibold mt-1">${item.name}</div>
-                        <small>${(item.songs || []).length} brani</small>
-                    `;
-            card.addEventListener("click", () => {
-              this.showSongsModal(item.name, item.songs || []);
-            });
-          } else {
-            card.innerHTML = `
+        if (type === "playlists") {
+          card.innerHTML = `
+            <div class="song-artwork-wrapper">
+              <div class="song-artwork" style="background-image:url('${item.songs?.[0]?.artwork || "assets/img/avatar-placeholder.svg"}');"></div>
+            </div>
+            <div class="text-truncate fw-semibold mt-1">${item.name}</div>
+            <small>${(item.songs || []).length} brani</small>
+            <button class="btn btn-sm btn-danger playlist-trash-btn" data-playlist-id="${item.id || ''}" title="Elimina playlist">🗑</button>
+          `;
+          card.addEventListener("click", (e) => {
+            // if click is on trash button, don't open modal
+            if (e.target.closest('.playlist-trash-btn')) return;
+            this.showSongsModal(item.name, item.songs || [], item.id, false);
+          });
+        } else {
+                    card.innerHTML = `
                         <div class="song-artwork-wrapper">
                             <div class="song-artwork" 
                                 style="background-image:url('${item.artwork || "assets/img/avatar-placeholder.svg"}'); border-radius: 50%;"></div>
@@ -270,28 +277,46 @@ export default class HomeView {
     container.appendChild(createRow(recommended, "recommended")); // sempre renderizzata
 
     this.results.appendChild(container);
+
+    // delegated handler for playlist deletion (trash on playlist cards)
+    container.addEventListener('click', async (ev) => {
+      const btn = ev.target.closest('.playlist-trash-btn');
+      if (!btn) return;
+      ev.stopPropagation();
+      const playlistId = btn.dataset.playlistId;
+      if (!playlistId) return;
+
+      const confirmed = window.confirm('Sei sicuro di voler eliminare questa playlist? Questa operazione non è reversibile.');
+      if (!confirmed) return;
+
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) { this.showToast('Devi effettuare il login per eliminare playlist.', 'warning'); return; }
+
+      btn.disabled = true;
+      try {
+        const plRef = doc(db, 'users', user.uid, 'playlists', playlistId);
+        await deleteDoc(plRef);
+        this.showToast('Playlist eliminata.', 'info');
+        const card = btn.closest('.playlist-card');
+        if (card) card.remove();
+      } catch (err) {
+        console.error('Errore eliminazione playlist:', err);
+        this.showToast('Errore durante l\'eliminazione della playlist.', 'error');
+        btn.disabled = false;
+      }
+    });
   }
 
 
-
   showToast(message, type = "info") {
-    // Rimuovi eventuali toast precedenti
     document.querySelectorAll(".custom-toast").forEach(t => t.remove());
-
     const toast = document.createElement("div");
     toast.className = `custom-toast ${type}`;
     toast.textContent = message;
-
     document.body.appendChild(toast);
-
-    // Forza reflow e fade-in
     requestAnimationFrame(() => toast.classList.add("show"));
-
-    // Rimuovi dopo 3 secondi
-    setTimeout(() => {
-      toast.classList.remove("show");
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    setTimeout(() => { toast.classList.remove("show"); setTimeout(() => toast.remove(), 300); }, 3000);
   }
 
   renderOnlyPlaylists(playlists) {

@@ -43,7 +43,6 @@ export default class MusicController {
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         this.isUserLoggedIn = true;
-        this.view.showToast(`Benvenuto, ${user.displayName || "Utente"}!`);
         await this.loadUserCollections();
         // subscribe to realtime updates for favorites and playlists
         this._subscribeRealtime(user.uid);

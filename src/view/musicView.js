@@ -25,6 +25,7 @@ export default class MusicView {
   const fav = e.target.closest('.fav-btn');
   const pbtn = e.target.closest('.playlist-btn');
   const sbtn = e.target.closest('.share-btn');
+  
 
   if (fav) {
     const song = this._parseSongData(fav);
