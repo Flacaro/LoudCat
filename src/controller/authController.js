@@ -1,8 +1,7 @@
 
 // authController.js
 import { register, login, logout, onUserChanged, saveUserData, loadUserData } from "../model/modelAuth.js";
-import { getEmail, getPassword, getUsername, getPhotoFile, showUserUI, showLoginUI, renderData } from "../view/header.js";
-import { storage } from "../firebase.js";
+import { getEmail, getPassword, getUsername, showUserUI, showLoginUI, renderData } from "../view/header.js";
 
 
 export function initFirebaseAuth(controller) {
@@ -88,16 +87,7 @@ onUserChanged(async (user) => {
     if (confirmLoginBtn) confirmLoginBtn.style.display = "none";
   });
 
-  // preview selected photo immediately
-  const photoInputEl = document.getElementById("photoFile");
-  const photoPreview = document.getElementById("photoPreview");
-  photoInputEl?.addEventListener("change", (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) { if (photoPreview) photoPreview.src = "assets/img/avatar-placeholder.svg"; return; }
-    const reader = new FileReader();
-    reader.onload = (ev) => { if (photoPreview) photoPreview.src = ev.target.result; };
-    reader.readAsDataURL(file);
-  });
+  // photo upload removed: no preview handling
 
   // Show auth form when Login clicked (hide username/photo)
   loginBtnEl?.addEventListener("click", () => {
@@ -119,8 +109,7 @@ onUserChanged(async (user) => {
       if (!email || !pass) { alert("Inserisci email e password."); return; }
       if (!isValidEmail(email)) { alert("Formato email non valido."); return; }
       if (pass.length < 6) { alert("La password deve avere almeno 6 caratteri."); return; }
-      const username = getUsername ? getUsername() : null;
-      const photoInput = getPhotoFile ? getPhotoFile() : null;
+  const username = getUsername ? getUsername() : null;
 
       // Disable button to prevent duplicate submissions while uploading
       confirmRegisterBtn.disabled = true;
@@ -128,38 +117,10 @@ onUserChanged(async (user) => {
       const cred = await register(email, pass);
       const user = cred.user;
 
-      // Upload avatar if present — generate a unique filename and save the public download URL
-      let photoURL = null;
-      try {
-        const file = photoInput && photoInput.files && photoInput.files[0];
-        if (file) {
-          const { ref: storageRef, uploadBytes, getDownloadURL } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js");
-          // create a safe, unique filename to avoid collisions
-          const safeName = `${Date.now()}_${Math.random().toString(36).slice(2,8)}_${file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_")}`;
-          const sRef = storageRef(storage, `avatars/${user.uid}/${safeName}`);
-          try {
-            await uploadBytes(sRef, file);
-          } catch (uploadErr) {
-            // Enhanced logging: surface Firebase Storage error code/message
-            console.error("UploadBytes failed:", uploadErr && uploadErr.code, uploadErr && uploadErr.message, uploadErr);
-            alert("Caricamento avatar fallito: " + (uploadErr && uploadErr.message ? uploadErr.message : "errore di rete o permessi"));
-            // don't rethrow; allow registration to continue without avatar
-          }
-          try {
-            photoURL = await getDownloadURL(sRef);
-          } catch (dlErr) {
-            console.error("getDownloadURL failed:", dlErr && dlErr.code, dlErr && dlErr.message, dlErr);
-          }
-        }
-      } catch (upErr) {
-        console.warn("Errore caricamento avatar:", upErr && upErr.code, upErr && upErr.message, upErr);
-      }
-
-      // update profile with username/photo (photoURL should be an https download URL)
+      // photo upload removed: only save username
       try {
         const { updateProfile } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
-        await updateProfile(user, { displayName: username || null, photoURL: photoURL || null });
-        // Ensure auth user is reloaded so UI reads the fresh photoURL/displayName
+        await updateProfile(user, { displayName: username || null });
         if (typeof user.reload === "function") {
           await user.reload();
         }
@@ -167,7 +128,7 @@ onUserChanged(async (user) => {
         console.warn("Impossibile aggiornare il profilo utente:", profErr && profErr.message ? profErr.message : profErr);
       }
 
-      const userDoc = { email: user.email, username: username || null, photoURL: photoURL || null, createdAt: new Date().toISOString() };
+      const userDoc = { email: user.email, username: username || null, createdAt: new Date().toISOString() };
       await saveUserData(user.uid, userDoc);
       console.log("Registrazione avvenuta:", user.email);
       alert("Registrazione effettuata con successo: " + user.email);

@@ -9,7 +9,8 @@ export function getUsername() {
  return document.getElementById("username").value;
 }
 export function getPhotoFile() {
- return document.getElementById("photoFile");
+ // photo upload removed: keep API compatible but return null
+ return null;
 }
 
 export function bindHomeClick(handler) {
@@ -105,23 +106,10 @@ export function initProfileModal() {
       console.warn("Impossibile leggere i dati utente da Firestore:", err);
     }
 
-    // If photoURL is present but doesn't look like an http(s) URL, try resolving via Storage
-    try {
-      if (photoURL && typeof photoURL === 'string' && !/^https?:\/\//i.test(photoURL)) {
-        const storageMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js");
-        const { ref: storageRef, getDownloadURL } = storageMod;
-        // assume stored path like 'avatars/{uid}/{filename}'
-        const sRef = storageRef(storage, photoURL);
-        const resolved = await getDownloadURL(sRef);
-        photoURL = resolved;
-      }
-    } catch (resolveErr) {
-      console.debug("Impossibile risolvere photoURL via Storage, user may have full URL already:", resolveErr);
-    }
-
+    // Remove photo resolution logic: always use placeholder in profile
     if (emailEl) emailEl.textContent = `Email: ${emailText}`;
     if (nameEl) nameEl.textContent = `Username: ${usernameText ? usernameText : "-"}`;
-    if (avatarEl) avatarEl.src = photoURL ? photoURL : "assets/img/avatar-placeholder.svg";
+    if (avatarEl) avatarEl.src = "assets/img/avatar-placeholder.svg";
     if (modal) modal.style.display = "flex";
     // focus first nav button if available
     const firstNav = modal.querySelector("[data-tab]");

@@ -91,25 +91,24 @@
         </main>
     </div>
 
-    <section id="auth" class="container my-4" style="display:none">
-        <h2 class="mb-3">Accesso utente</h2>
-        <div class="mb-3">
-            <div id="registerFields">
-                <input id="username" type="text" class="form-control mb-2" placeholder="Username " />
-                <input id="photoFile" type="file" accept="image/*" class="form-control mb-2" />
-                <div class="mb-2">
-                    <img id="photoPreview" src="assets/img/avatar-placeholder.svg" alt="Anteprima avatar" width="80"
-                        height="80" class="rounded-circle" style="display:block;" />
+    <section id="auth" style="display:none">
+        <div class="auth-overlay">
+            <div class="auth-panel container my-4">
+                <h2 class="mb-3">Accesso utente</h2>
+                <div class="mb-3">
+                    <div id="registerFields">
+                        <input id="username" type="text" class="form-control mb-2" placeholder="Username " />
+                    </div>
+
+                    <input id="email" type="email" class="form-control mb-2" placeholder="Email" />
+                    <input id="password" type="password" class="form-control mb-2" placeholder="Password" />
+
+                    <div class="d-flex gap-2 mt-2">
+                        <button id="confirmRegisterBtn" class="btn btn-success">Conferma registrazione</button>
+                        <button id="confirmLoginBtn" class="btn btn-success" style="display:none">Login</button>
+                        <button id="cancelAuthBtn" class="btn btn-secondary">Annulla</button>
+                    </div>
                 </div>
-            </div>
-
-            <input id="email" type="email" class="form-control mb-2" placeholder="Email" />
-            <input id="password" type="password" class="form-control mb-2" placeholder="Password" />
-
-            <div class="d-flex gap-2 mt-2">
-                <button id="confirmRegisterBtn" class="btn btn-success">Conferma registrazione</button>
-                <button id="confirmLoginBtn" class="btn btn-success" style="display:none">Login</button>
-                <button id="cancelAuthBtn" class="btn btn-secondary">Annulla</button>
             </div>
         </div>
     </section>

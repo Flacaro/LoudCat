@@ -432,6 +432,38 @@ footer {
   align-items: center;
 }
 
+/* Auth overlay: center the login/register form in the viewport */
+#auth {
+  display: none; /* controlled via inline style or JS */
+}
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1300;
+}
+.auth-panel {
+  background: #25374a;
+  border-radius: 12px;
+  padding: 1.25rem;
+  width: 95%;
+  max-width: 420px;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+.auth-panel .form-control {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+.auth-panel .btn-secondary {
+  background: #6c757d;
+  border-color: #6c757d;
+}
+
 .modal {
   background: white;
   padding: 20px;
