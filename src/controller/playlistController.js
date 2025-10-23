@@ -55,7 +55,8 @@ export default class PlaylistController {
       this.view.showPlaylistModal(song, playlists, async (playlistId, playlistName) => {
         let plRef;
         if (playlistId === "__new__") {
-          await this.createPlaylist(song);
+          // Pass the name provided in the modal so we don't show a native prompt
+          await this.createPlaylist(song, playlistName);
           this.view.showToast(`Playlist "${playlistName}" creata e canzone aggiunta!`);
           return;
         } else {
@@ -75,7 +76,7 @@ export default class PlaylistController {
     }
   }
 
-  async createPlaylist(song = null) {
+  async createPlaylist(song = null, playlistName = null) {
     const auth = getAuth();
     const user = auth.currentUser;
 
@@ -84,7 +85,18 @@ export default class PlaylistController {
       return;
     }
 
-    const playlistName = prompt("Inserisci il nome della nuova playlist:");
+    // If a name was not provided (legacy call), try to get it from the view's centered modal.
+    if (!playlistName) {
+      if (typeof this.view.showCreatePlaylistModal === 'function') {
+        // Await the modal's callback result
+        playlistName = await new Promise(resolve => {
+          this.view.showCreatePlaylistModal(name => resolve(name));
+        });
+      } else {
+        // Fallback to the native prompt only if the view doesn't expose the modal (legacy)
+        playlistName = prompt("Inserisci il nome della nuova playlist:");
+      }
+    }
 
     if (!playlistName || playlistName.trim() === "") {
       if (playlistName !== null) { // Evita il toast se l'utente ha premuto Annulla
