@@ -104,7 +104,7 @@ export default class HomeView {
     modal.addEventListener("click", (e) => {
       if (e.target === modal) modal.remove();
     });
-
+    
     // Delegated handler for per-song trash buttons inside the modal
     modal.addEventListener('click', async (e) => {
       const btn = e.target.closest('.trash-btn');
@@ -309,13 +309,13 @@ export default class HomeView {
           }
           row.appendChild(card);
           card.addEventListener("click", (e) => {
-            if (e.target.closest("audio") || e.target.closest("button")) return;
-            this.showSongsModal(item.title, [item], null, true);
-          });
+  if (e.target.closest("audio") || e.target.closest("button")) return;
+  this.showSongsModal(item.title, [item], null, true);
+});
 
         });
 
-
+        
       }
 
       section.appendChild(row);
@@ -398,7 +398,7 @@ export default class HomeView {
     const row = document.createElement("div");
 
     if (type === "favorites" || type === "playlists") {
-      row.className = "cards-row grid-layout"; // ✅ stessa logica anche per playlist
+      row.className = "cards-row grid-layout"; 
     } else {
       row.className = "cards-row";
     }
@@ -433,8 +433,9 @@ export default class HomeView {
           card.innerHTML = `
           <div class="song-artwork-wrapper">
             <div class="song-artwork"
-              style="background-image:url('${item.songs?.[0]?.artwork || "assets/img/avatar-placeholder.svg"
-            }');"></div>
+              style="background-image:url('${
+                item.songs?.[0]?.artwork || "assets/img/avatar-placeholder.svg"
+              }');"></div>
           </div>
           <div class="text-truncate fw-semibold mt-1">${item.name}</div>
           <small>${(item.songs || []).length} brani</small>
@@ -446,12 +447,14 @@ export default class HomeView {
           card.innerHTML = `
           <div class="song-artwork-wrapper">
             <div class="song-artwork"
-              style="background-image:url('${item.artwork || "assets/img/avatar-placeholder.svg"
-            }'); border-radius:50%;"></div>
+              style="background-image:url('${
+                item.artwork || "assets/img/avatar-placeholder.svg"
+              }'); border-radius:50%;"></div>
           </div>
           <div class="text-truncate fw-semibold mt-1">${item.title}</div>
           <small>${item.artist || ""}</small>
-          ${item.preview
+          ${
+            item.preview
               ? `<audio class="song-preview" controls preload="none" src="${item.preview}"></audio>`
               : `<div class="text-muted small">Preview non disponibile</div>`
             }

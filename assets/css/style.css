@@ -1,39 +1,49 @@
 /* ================================
    BODY E LAYOUT GENERALE
 ================================ */
-html, body {
-  height: 100%;
+html,
+body {
   margin: 0;
   padding: 0;
-  overflow: hidden; /* niente scroll globale */
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-family: sans-serif;
   background-color: #25374a;
+  color: #ffffff
+}
+
+main {
+  flex: 1 1 auto;
+  padding: 1rem;
+  overflow-y: auto; /* scroll verticale principale */
+  overflow-x: hidden;
+  background-color: #2d1f46;
+}
+
+footer {
+  flex: 0 0 auto;
+  background-color: #25374a;
+  text-align: center;
+  padding: 0.5rem;
+  border-top: 1px solid #444;
 }
 
 #app-layout {
   display: flex;
-  height: calc(100vh - 80px); /* altezza totale meno header */
-  margin: 0;
-  background-color: #2d1f46;
+  flex: 1 1 auto; /* prende tutto lo spazio rimanente */
+  overflow: hidden; /* scroll solo nel main */
 }
 
-main {
-  flex: 1;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 24px;
-  box-sizing: border-box;
-  background-color: #2d1f46;
-}
-
-
-
-header {
-  flex: 0 0 80px; /* altezza fissa */
-  background: #25374a;
-  text-align: center;
-  padding: 1rem;
-  box-sizing: border-box;
+header.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  padding: 0.5rem 1rem;
+  background-color: #25374a;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  
 }
 
 header .logo {
@@ -47,6 +57,7 @@ header .container-fluid {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 10px;
+  
 }
 
 #welcome-message,
@@ -54,23 +65,12 @@ header .container-fluid {
   color: #fff !important;
 }
 
-/* LAYOUT PRINCIPALE */
-#app-layout {
-  display: flex;
-  margin-top: 0;
-  background-color: #2d1f46;
-  height: calc(100vh - 80px);
-}
 
 #sidebar-library {
-  width: 250px;
-  min-width: 250px;
+  flex: 0 0 250px;
   background-color: #2b2356;
-  position: sticky;
-  top: 80px;
-  height: calc(100vh - 80px);
+  padding: 1rem;
   overflow-y: auto;
-  padding-bottom: 90px;
 }
 
 #sidebar-library h5 {
@@ -98,15 +98,6 @@ header .container-fluid {
   color: #ffffff;
 }
 
-main {
-  flex: 1;
-  height: calc(100vh - 80px);
-  overflow-y: scroll;
-  overflow-x: hidden;
-  background-color: #2d1f46;
-  min-height: 100%;
-  padding: 24px;
-}
 
 /* ================================
    CARD HOME (RIGA SCORREVOLE)
@@ -136,7 +127,7 @@ main {
   padding: 16px;
   background-color: #636388;
   border-radius: 8px;
-  box-shadow: 0 4px 60px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 60px rgba(0, 0, 0, 0.3);
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -145,7 +136,7 @@ main {
 .cards-row .playlist-card:hover {
   background-color: #282828;
   transform: translateY(-5px);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
 }
 
 /* ================================
@@ -154,7 +145,7 @@ main {
 .grid-layout,
 .favorites-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
   justify-items: center;
   align-items: start;
@@ -177,7 +168,7 @@ main {
 .grid-layout .playlist-card:hover,
 .favorites-grid .song-card:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
 }
 
 /* Card "Crea Playlist" */
@@ -209,9 +200,10 @@ main {
   background-size: cover;
   background-position: center;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   border: 1px solid #385977;
 }
+
 
 /* ================================
    CARD RISULTATI RICERCA
@@ -234,7 +226,7 @@ main {
   padding: 0.5rem;
   border-radius: 8px;
   background: #43698d;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
   overflow: hidden;
@@ -244,10 +236,19 @@ main {
 #results-container .card .song-artwork .song-preview {
   width: 100%;
   height: 120px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 8px;
   margin-bottom: 0.3rem;
 }
+.song-card audio.song-preview {
+  width: 100%;       /* prende tutta la larghezza della card */
+  height: 32px;      /* altezza fissa comoda */
+  border-radius: 4px;
+  overflow: hidden;
+  display: block;
+  padding-top: 2px;
+}
+
 
 #results-container .card h4,
 #results-container .card h3 {
@@ -266,9 +267,9 @@ main {
   white-space: nowrap;
 }
 
-#results-container .card:hover {
+#results-container .card:hover .playlist-modal:hover {
   transform: translateY(-5px);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
 }
 
 /* ================================
@@ -282,10 +283,11 @@ main {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0, 0, 0, 0.55);
   z-index: 1000;
   opacity: 1;
   transition: opacity 0.2s ease;
+
 }
 
 .playlist-modal.hidden,
@@ -300,11 +302,13 @@ main {
   background: #43698d;
   border-radius: 12px;
   padding: 1rem 1.5rem;
+  overflow-y: auto;
   max-width: 400px;
+  max-height: 90vh;
   width: 90%;
   text-align: center;
   color: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   position: relative;
   z-index: 2;
 }
@@ -373,7 +377,7 @@ button:hover {
   color: #fff;
   padding: 12px 16px;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   font-size: 0.9rem;
   z-index: 9999;
   opacity: 0;
@@ -386,18 +390,42 @@ button:hover {
   transform: translateY(0);
 }
 
-.custom-toast.error { background-color: #e74c3c; }
-.custom-toast.warning { background-color: #f39c12; }
-.custom-toast.info { background-color: #1db954; }
+.custom-toast.error {
+  background-color: #e74c3c;
+}
+
+.custom-toast.warning {
+  background-color: #f39c12;
+}
+
+.custom-toast.info {
+  background-color: #1db954;
+}
 
 /* ================================
    MEDIA QUERIES
 ================================ */
 @media (max-width: 768px) {
-  #search-input { max-width: 200px; }
+  #search-input {
+    max-width: 200px;
+  }
 }
 
 @media (min-width: 576px) {
-  .profile-panel--light { display: flex; gap: 1.25rem; align-items: flex-start; }
-  #profileModal .modal-panel { position: relative; }
+  .profile-panel--light {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+  }
+
+  #profileModal .modal-panel {
+    position: relative;
+  }
+}
+
+@media (max-width: 768px) {
+  .cards-row {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
