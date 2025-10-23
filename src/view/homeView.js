@@ -36,7 +36,7 @@ export default class HomeView {
     this._songClickHandler = typeof handler === "function" ? handler : null;
   }
 
-  showSongsModal(title, songs) {
+  showSongsModal(title, songs, playlistId = null, isFavorites = false) {
     const modal = document.createElement("div");
     modal.className = "playlist-modal";
 
@@ -84,6 +84,9 @@ export default class HomeView {
               : `<div class="text-muted small">Preview non disponibile</div>`
             }
                 </div>
+                <div class="d-flex justify-content-center mt-2">
+                  <button class="btn btn-sm btn-danger trash-btn" data-song-id="${s.id || ''}" title="Rimuovi">🗑</button>
+                </div>
                 <div class="overlay-link" aria-hidden="true"></div>
               </div>
             </div>`
@@ -100,6 +103,47 @@ export default class HomeView {
     content.querySelector(".btn-close")?.addEventListener("click", () => modal.remove());
     modal.addEventListener("click", (e) => {
       if (e.target === modal) modal.remove();
+    });
+
+    // Delegated handler for per-song trash buttons inside the modal
+    modal.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.trash-btn');
+      if (!btn) return;
+      const songId = btn.dataset.songId;
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) { this.showToast('Devi effettuare il login per rimuovere elementi.', 'warning'); return; }
+
+      btn.disabled = true;
+      try {
+        if (isFavorites) {
+          const favRef = doc(db, 'users', user.uid, 'favorites', songId);
+          await deleteDoc(favRef);
+          this.showToast('Brano rimosso dai preferiti.', 'info');
+        } else if (playlistId) {
+          const plRef = doc(db, 'users', user.uid, 'playlists', playlistId);
+          const snap = await getDoc(plRef);
+          const data = snap.exists() ? snap.data() : null;
+          if (data && Array.isArray(data.songs)) {
+            const updated = data.songs.filter(s => s.id !== songId);
+            await updateDoc(plRef, { songs: updated });
+            this.showToast('Brano rimosso dalla playlist.', 'info');
+          } else {
+            this.showToast('Playlist non trovata o formato inatteso.', 'warning');
+          }
+        } else {
+          const favRef = doc(db, 'users', user.uid, 'favorites', songId);
+          await deleteDoc(favRef);
+          this.showToast('Brano rimosso.', 'info');
+        }
+
+        const col = btn.closest('.col-12, .col-12');
+        if (col) col.remove();
+      } catch (err) {
+        console.error('Errore durante la rimozione:', err);
+        this.showToast('Errore durante la rimozione del brano.', 'error');
+        btn.disabled = false;
+      }
     });
 
     // Gestione audio
@@ -273,7 +317,14 @@ export default class HomeView {
 
     // Render playlists, favorites e consigliati
     container.appendChild(createRow(playlists, "playlists"));
-    container.appendChild(createRow(favorites, "favorites"));
+    // make favorites section clickable to open a modal with all favorites
+    const favSection = createRow(favorites, "favorites");
+    favSection.addEventListener('click', (e) => {
+      // ignore clicks on interactive controls inside the section
+      if (e.target.closest('button, a, audio')) return;
+      this.showSongsModal('I tuoi preferiti', favorites);
+    });
+    container.appendChild(favSection);
     container.appendChild(createRow(recommended, "recommended")); // sempre renderizzata
 
     this.results.appendChild(container);
