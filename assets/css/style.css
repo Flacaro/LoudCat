@@ -287,6 +287,8 @@ header .btn-outline-primary:hover {
   background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
   opacity: 0;
   transition: var(--transition);
+  /* Ensure decorative pseudo-elements don't intercept pointer events */
+  pointer-events: none;
 }
 
 .cards-row .song-card:hover::before,

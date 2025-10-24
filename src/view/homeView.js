@@ -114,6 +114,11 @@ export default class HomeView {
       const user = auth.currentUser;
       if (!user) { this.showToast('Devi effettuare il login per rimuovere elementi.', 'warning'); return; }
 
+      // Debug: log context to help trace failures when invoked from Home
+      try {
+        console.debug('HomeView: delete click', { playlistId, songId, userId: user?.uid });
+      } catch (e) { /* ignore logging errors */ }
+
       btn.disabled = true;
       try {
         if (isFavorites) {
@@ -121,9 +126,17 @@ export default class HomeView {
           await deleteDoc(favRef);
           this.showToast('Brano rimosso dai preferiti.', 'info');
         } else if (playlistId) {
+          if (!playlistId) {
+            console.error('HomeView: playlistId mancante al momento della rimozione', { songId, songsLength: (songs || []).length });
+            this.showToast('Impossibile individuare la playlist. Riprova.', 'error');
+            btn.disabled = false;
+            return;
+          }
+
           const plRef = doc(db, 'users', user.uid, 'playlists', playlistId);
           const snap = await getDoc(plRef);
           const data = snap.exists() ? snap.data() : null;
+          console.debug('HomeView: playlist document fetched', { exists: snap.exists(), songsCount: data && Array.isArray(data.songs) ? data.songs.length : 0 });
           if (data && Array.isArray(data.songs)) {
             const updated = data.songs.filter(s => s.id !== songId);
             await updateDoc(plRef, { songs: updated });
@@ -137,11 +150,15 @@ export default class HomeView {
           this.showToast('Brano rimosso.', 'info');
         }
 
-        const col = btn.closest('.col-12, .col-12');
+        // remove the visual card safely: find the closest .card then its column wrapper
+        const cardEl = btn.closest('.card');
+        let col = null;
+        if (cardEl) col = cardEl.closest('[class*="col-"]');
+        if (!col) col = btn.closest('.col-12, .col-md-4, .col-sm-6, .col-lg-3');
         if (col) col.remove();
       } catch (err) {
         console.error('Errore durante la rimozione:', err);
-        this.showToast('Errore durante la rimozione del brano.', 'error');
+        this.showToast(`Errore durante la rimozione del brano: ${err?.message || ''}`, 'error');
         btn.disabled = false;
       }
     });
@@ -287,11 +304,20 @@ export default class HomeView {
             </div>
             <div class="text-truncate fw-semibold mt-1">${item.name}</div>
             <small>${(item.songs || []).length} brani</small>
-            <button class="btn btn-sm btn-danger playlist-trash-btn" data-playlist-id="${item.id || ''}" title="Elimina playlist">🗑</button>
+            <button onclick="event.stopPropagation()" class="btn btn-sm btn-danger playlist-trash-btn" data-playlist-id="${item.id || ''}" title="Elimina playlist">🗑</button>
           `;
             card.addEventListener("click", (e) => {
-              // if click is on trash button, don't open modal
-              if (e.target.closest('.playlist-trash-btn')) return;
+              // Safely detect clicks on interactive controls (trash button, audio, buttons)
+              try {
+                const isInteractive = (e.target && typeof e.target.closest === 'function')
+                  && Boolean(e.target.closest('.playlist-trash-btn') || e.target.closest('button') || e.target.closest('audio') || e.target.closest('a'));
+                if (isInteractive) return;
+              } catch (err) {
+                // If something goes wrong detecting the target, avoid opening the modal
+                console.warn('HomeView: error detecting click target on playlist card', err);
+                return;
+              }
+
               this.showSongsModal(item.name, item.songs || [], item.id, false);
             });
           } else {
@@ -308,10 +334,35 @@ export default class HomeView {
                     `;
           }
           row.appendChild(card);
-          card.addEventListener("click", (e) => {
-  if (e.target.closest("audio") || e.target.closest("button")) return;
-  this.showSongsModal(item.title, [item], null, true);
-});
+          // Attach single-item modal only for song items (not for playlist cards)
+          if (type !== "playlists") {
+            card.addEventListener("click", (e) => {
+              if (e.target.closest("audio") || (e.target.closest && e.target.closest("button"))) return;
+              this.showSongsModal(item.title, [item], null, true);
+            });
+          } else {
+            // For playlist cards: attach the trash handler to the button and
+            // attach the "open playlist" handler only to specific clickable
+            // elements (artwork and title). This prevents the trash button
+            // click from ever opening the playlist.
+            const trashBtn = card.querySelector('.playlist-trash-btn');
+            if (trashBtn) {
+              console.log('HomeView: playlist trash button found for', { id: trashBtn.dataset.playlistId });
+            } else {
+              // If no trashBtn was found (unexpected), log for debugging
+              console.warn('HomeView: expected .playlist-trash-btn not found for playlist card', { itemId: item.id });
+            }
+
+            // Attach open handlers on artwork and title only
+            const art = card.querySelector('.song-artwork-wrapper');
+            const titleEl = card.querySelector('.text-truncate');
+            const openHandler = (e) => {
+              try { if (e.target.closest && e.target.closest('.playlist-trash-btn')) return; } catch (err) { return; }
+              this.showSongsModal(item.name, item.songs || [], item.id, false);
+            };
+            if (art) art.addEventListener('click', openHandler);
+            if (titleEl) titleEl.addEventListener('click', openHandler);
+          }
 
         });
 
@@ -336,33 +387,101 @@ export default class HomeView {
 
     this.results.appendChild(container);
 
-    // delegated handler for playlist deletion (trash on playlist cards)
-    container.addEventListener('click', async (ev) => {
-      const btn = ev.target.closest('.playlist-trash-btn');
-      if (!btn) return;
-      ev.stopPropagation();
-      const playlistId = btn.dataset.playlistId;
-      if (!playlistId) return;
-
-      const confirmed = window.confirm('Sei sicuro di voler eliminare questa playlist? Questa operazione non è reversibile.');
-      if (!confirmed) return;
-
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) { this.showToast('Devi effettuare il login per eliminare playlist.', 'warning'); return; }
-
-      btn.disabled = true;
+    // Debug capture: log clicks that target playlist cards or trash buttons
+    // (temporary, helps trace which handler fires first)
+    document.addEventListener('click', (e) => {
       try {
-        const plRef = doc(db, 'users', user.uid, 'playlists', playlistId);
-        await deleteDoc(plRef);
-        this.showToast('Playlist eliminata.', 'info');
-        const card = btn.closest('.playlist-card');
-        if (card) card.remove();
-      } catch (err) {
-        console.error('Errore eliminazione playlist:', err);
-        this.showToast('Errore durante l\'eliminazione della playlist.', 'error');
-        btn.disabled = false;
-      }
+        const trash = e.target.closest && e.target.closest('.playlist-trash-btn');
+        const card = e.target.closest && e.target.closest('.playlist-card');
+        if (trash) {
+          console.debug('DEBUG CLICK: clicked playlist-trash-btn', { target: e.target, trash, card });
+        } else if (card) {
+          console.debug('DEBUG CLICK: clicked inside playlist-card', { target: e.target, card });
+        }
+      } catch (err) { /* ignore */ }
+    }, true); // capture phase
+
+    // Capture-phase delegated handler: handle playlist deletion before any
+    // other handlers (prevents card opening). Runs in capture phase.
+    container.addEventListener('click', async (e) => {
+      try {
+        const btn = e.target.closest && e.target.closest('.playlist-trash-btn');
+        if (!btn) return;
+        // prevent other handlers from running
+        try { e.stopImmediatePropagation?.(); } catch (err) { /* ignore */ }
+        try { e.stopPropagation?.(); } catch (err) { /* ignore */ }
+        try { e.preventDefault?.(); } catch (err) { /* ignore */ }
+
+        const playlistId = btn.dataset.playlistId;
+        console.log('HomeView (capture): playlist trash clicked', { playlistId });
+        if (!playlistId) {
+          this.showToast('ID playlist mancante. Impossibile eliminare.', 'error');
+          return;
+        }
+
+        const confirmed = await this.showConfirmModal('Sei sicuro di voler eliminare questa playlist? Questa operazione non è reversibile.');
+        if (!confirmed) return;
+
+        const auth = getAuth();
+        const user = auth.currentUser;
+        if (!user) { this.showToast('Devi effettuare il login per eliminare playlist.', 'warning'); return; }
+
+        btn.disabled = true;
+        try {
+          const plRef = doc(db, 'users', user.uid, 'playlists', playlistId);
+          await deleteDoc(plRef);
+          this.showToast('Playlist eliminata.', 'info');
+          const card = btn.closest('.playlist-card');
+          if (card) card.remove();
+        } catch (err) {
+          console.error('Errore eliminazione playlist (capture handler):', err);
+          this.showToast('Errore durante l\'eliminazione della playlist.', 'error');
+          btn.disabled = false;
+        }
+      } catch (err) { /* ignore */ }
+    }, true);
+
+    // NOTE: per-card trash handlers are attached directly when creating each playlist card
+    // to ensure clicks on the trash button don't accidentally bubble and open the playlist.
+  }
+
+  // Small confirm modal that returns a Promise<boolean>
+  showConfirmModal(message) {
+    return new Promise((resolve) => {
+      const modal = document.createElement('div');
+      modal.className = 'playlist-modal';
+
+      const content = document.createElement('div');
+      content.className = 'playlist-modal-content card p-3';
+      Object.assign(content.style, {
+        maxWidth: '420px',
+        width: '100%',
+        borderRadius: '12px',
+        textAlign: 'center'
+      });
+
+      content.innerHTML = `
+        <h5 class="mb-3">Conferma eliminazione</h5>
+        <p class="text-muted small">${message}</p>
+        <div class="d-flex justify-content-end gap-2 mt-3">
+          <button id="confirmCancel" class="btn btn-secondary">Annulla</button>
+          <button id="confirmOk" class="btn btn-danger">Elimina</button>
+        </div>
+      `;
+
+      modal.appendChild(content);
+      document.body.appendChild(modal);
+
+      const btnOk = content.querySelector('#confirmOk');
+      const btnCancel = content.querySelector('#confirmCancel');
+
+      const cleanup = (val) => { modal.remove(); resolve(val); };
+
+      btnCancel.addEventListener('click', () => cleanup(false));
+      modal.addEventListener('click', (e) => { if (e.target === modal) cleanup(false); });
+      btnOk.addEventListener('click', () => cleanup(true));
+      // focus the cancel to avoid accidental deletes
+      btnCancel.focus();
     });
   }
 
@@ -435,6 +554,10 @@ export default class HomeView {
           <div class="text-truncate fw-semibold mt-1">${item.name}</div>
           <small>${(item.songs || []).length} brani</small>
         `;
+        // add trash button to allow deleting playlist from this view as well
+        const trashHtml = `<button onclick="event.stopPropagation()" class="btn btn-sm btn-danger playlist-trash-btn" data-playlist-id="${item.id || ''}" title="Elimina playlist">🗑</button>`;
+        card.insertAdjacentHTML('beforeend', trashHtml);
+
         card.addEventListener("click", () => {
           this.showSongsModal(item.name, item.songs || [], item.id, false);
         });
@@ -463,6 +586,43 @@ export default class HomeView {
   container.appendChild(section);
   this.results.innerHTML = ""; // pulisci prima
   this.results.appendChild(container);
+
+  // Capture-phase delegated handler for playlist deletion in the single-section view
+  container.addEventListener('click', async (e) => {
+    try {
+      const btn = e.target.closest && e.target.closest('.playlist-trash-btn');
+      if (!btn) return;
+      try { e.stopImmediatePropagation?.(); } catch (err) { /* ignore */ }
+      try { e.stopPropagation(); } catch (err) { /* ignore */ }
+      try { e.preventDefault(); } catch (err) { /* ignore */ }
+
+      const playlistId = btn.dataset.playlistId;
+      if (!playlistId) {
+        this.showToast('ID playlist mancante. Impossibile eliminare.', 'error');
+        return;
+      }
+
+      const confirmed = await this.showConfirmModal('Sei sicuro di voler eliminare questa playlist? Questa operazione non è reversibile.');
+      if (!confirmed) return;
+
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) { this.showToast('Devi effettuare il login per eliminare playlist.', 'warning'); return; }
+
+      btn.disabled = true;
+      try {
+        const plRef = doc(db, 'users', user.uid, 'playlists', playlistId);
+        await deleteDoc(plRef);
+        this.showToast('Playlist eliminata.', 'info');
+        const card = btn.closest('.playlist-card');
+        if (card) card.remove();
+      } catch (err) {
+        console.error('Errore eliminazione playlist (single-section handler):', err);
+        this.showToast('Errore durante l\'eliminazione della playlist.', 'error');
+        btn.disabled = false;
+      }
+    } catch (err) { /* ignore */ }
+  }, true);
 
   requestAnimationFrame(() => {
     const home = document.querySelector(".spotify-home");
