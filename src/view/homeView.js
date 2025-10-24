@@ -420,6 +420,8 @@ export default class HomeView {
           card.className = type === "playlists" ? "playlist-card" : "song-card";
 
           if (type === "playlists") {
+            // expose playlist id on the card so capture-phase handlers can locate it
+            card.dataset.playlistId = item.id || '';
             card.innerHTML = `
             <div class="song-artwork-wrapper">
               <div class="song-artwork" style="background-image:url('${item.songs?.[0]?.artwork || "assets/img/avatar-placeholder.svg"}');"></div>
@@ -504,7 +506,42 @@ export default class HomeView {
     };
 
     // Render playlists, favorites e consigliati
-    container.appendChild(createRow(playlists, "playlists"));
+    // For playlists we attach a capture-phase click handler (like favorites)
+    // so clicks on the playlists "folder" open the full playlists view instead
+    // of letting card-level handlers run (prevents click fall-through after modal close).
+    const playSection = createRow(playlists, "playlists");
+    // Clicking the playlists area from home should open the playlist that was clicked.
+    // If the click is on a specific playlist card, open that playlist; otherwise
+    // fall back to opening the first playlist (if present).
+    playSection.addEventListener('click', (e) => {
+      try {
+        if (window.__suppressClicks || window.__modalOpen) return;
+        if (e.target.closest && e.target.closest('button, a, audio')) return;
+        try { e.stopImmediatePropagation?.(); } catch (err) { /* ignore */ }
+        try { e.stopPropagation(); } catch (err) { /* ignore */ }
+
+        // If clicked on a specific playlist card, open that playlist
+        const card = e.target && typeof e.target.closest === 'function' ? e.target.closest('.playlist-card') : null;
+        if (card) {
+          // ignore clicks explicitly on the trash button
+          if (e.target.closest && e.target.closest('.playlist-trash-btn')) return;
+          const pid = card.dataset.playlistId;
+          if (pid) {
+            const pl = (playlists || []).find(p => String(p.id) === String(pid));
+            if (pl) {
+              try { this.showSongsModal(pl.name || 'Playlist', pl.songs || [], pl.id, false); } catch (err) { console.error('Errore apertura playlist cliccata', err); }
+              return;
+            }
+          }
+        }
+
+        // fallback: open first playlist if any
+        if (!playlists || playlists.length === 0) return;
+        const first = playlists[0];
+        try { this.showSongsModal(first.name || 'Playlist', first.songs || [], first.id, false); } catch (err) { console.error('Errore apertura prima playlist', err); }
+      } catch (err) { /* ignore */ }
+    }, { capture: true });
+    container.appendChild(playSection);
     // make favorites section clickable to open a modal with all favorites
     const favSection = createRow(favorites, "favorites");
     // Prefer to intercept the click in capture phase so we open the
@@ -712,7 +749,7 @@ export default class HomeView {
       const card = document.createElement("div");
       card.className = type === "playlists" ? "playlist-card" : "song-card";
 
-      if (type === "playlists") {
+        if (type === "playlists") {
         card.innerHTML = `
           <div class="song-artwork-wrapper">
             <div class="song-artwork" style="background-image:url('${
@@ -722,7 +759,9 @@ export default class HomeView {
           <div class="text-truncate fw-semibold mt-1">${item.name}</div>
           <small>${(item.songs || []).length} brani</small>
         `;
-        // add trash button to allow deleting playlist from this view as well
+  // expose playlist id on the card so capture-phase handlers can locate it
+  card.dataset.playlistId = item.id || '';
+  // add trash button to allow deleting playlist from this view as well
         const trashHtml = `<button onclick="event.stopPropagation()" class="btn btn-sm btn-danger playlist-trash-btn" data-playlist-id="${item.id || ''}" title="Elimina playlist">🗑</button>`;
         card.insertAdjacentHTML('beforeend', trashHtml);
 
