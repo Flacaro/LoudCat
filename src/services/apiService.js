@@ -35,7 +35,7 @@ function jsonpFetch(url, timeout = 10000) {
   });
 }
 
-// **NEW**: Unified fetch with automatic JSONP fallback
+// Funzione di fetch con fallback a JSONP
 async function fetchWithFallback(endpoint, context = 'API request') {
   let data;
   try {
@@ -52,14 +52,14 @@ async function fetchWithFallback(endpoint, context = 'API request') {
   return data;
 }
 
-// **NEW**: Build iTunes search URL
+// funzione per costruire l'URL di ricerca iTunes
 function buildItunesSearchUrl(query, entity, attribute = null, limit = 12) {
   let params = `term=${encodeURIComponent(query)}&entity=${entity}&limit=${limit}`;
   if (attribute) params += `&attribute=${attribute}`;
   return `https://itunes.apple.com/search?${params}`;
 }
 
-// **NEW**: Build iTunes lookup URL
+// funzione per costruire l'URL di lookup iTunes
 function buildItunesLookupUrl(id, entity = null) {
   let params = `id=${id}`;
   if (entity) params += `&entity=${entity}`;
@@ -92,7 +92,7 @@ export async function fetchSongs(query, type = "artist") {
 export async function fetchAlbums(query) {
   const endpoint = buildItunesSearchUrl(query, 'album');
   const data = await fetchWithFallback(endpoint, 'fetchAlbums');
-  
+  // Mappiamo i risultati per restituire solo le informazioni rilevanti
   return data.results.map((item) => ({
     collectionId: item.collectionId,
     title: item.collectionName,
@@ -124,7 +124,7 @@ export async function fetchTracksByAlbum(albumId) {
 export async function fetchArtists(query) {
   const endpoint = buildItunesSearchUrl(query, 'musicArtist');
   const data = await fetchWithFallback(endpoint, 'fetchArtists');
-  
+  //non usiamo album e track qui, solo info base artista
   return data.results.map((item) => ({
     name: item.artistName,
     artistId: item.artistId,
@@ -139,6 +139,7 @@ export async function fetchAlbumById(albumId) {
   
   if (!data.results || !data.results.length) throw new Error("Album non trovato");
   
+  // Il primo risultato è l'album, gli altri sono le tracce
   const albumInfo = data.results[0];
   return {
     collectionId: albumInfo.collectionId,
@@ -153,7 +154,7 @@ export async function fetchAlbumById(albumId) {
 // Funzione per ottenere raccomandazioni basate sui generi preferiti dell'utente
 export async function getRecommendedFromItunes(userGenres, userSongs) {
   const recommended = [];
-
+// Cicliamo sui generi preferiti dell'utente
   for (const genre of userGenres) {
     const results = await fetchSongs(genre, "track");
     results.forEach(song => {
@@ -173,7 +174,6 @@ export async function getRecommendedFromItunes(userGenres, userSongs) {
 export async function searchAlbumByTitleAndArtist(albumTitle, artistName) {
   const query = `${albumTitle} ${artistName}`;
   const endpoint = buildItunesSearchUrl(query, 'album', null, 1);
-
   try {
     const data = await fetchWithFallback(endpoint, 'searchAlbumByTitleAndArtist');
     
