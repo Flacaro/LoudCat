@@ -9,8 +9,9 @@ export default class HomeView {
     this.welcomeMessage = document.getElementById("welcome-message");
     this._songClickHandler = null;
     this.playlistController = new PlaylistController(this);
-    this._clickSuppressTimer = null;
-    // Global capture click guard: if suppression is active, swallow clicks before they reach other handlers
+  this._clickSuppressTimer = null;
+  // Guardia globale in fase di capture sui click: se la soppressione è attiva,
+  // assorbe i click prima che raggiungano altri handler
     try {
       document.addEventListener('click', (e) => {
         try {
@@ -27,10 +28,9 @@ export default class HomeView {
     } catch (err) { /* ignore */ }
   }
 
-  // Insert a transparent full-screen blocker to absorb any clicks for a short time
+  // Inserisce un blocco trasparente a schermo intero per assorbire i click per breve tempo
   _addClickBlocker(ms = 350) {
     try {
-      // avoid duplicates
       if (document.getElementById('__click_blocker')) return;
       const blk = document.createElement('div');
       blk.id = '__click_blocker';
@@ -46,8 +46,8 @@ export default class HomeView {
     } catch (e) { /* ignore */ }
   }
 
-  // Temporarily disable pointer events on the main results area so underlying
-  // cards cannot receive clicks while a modal is closing.
+  // Disabilita temporaneamente gli eventi pointer nell'area dei risultati in modo
+  // che le card sottostanti non possano ricevere click mentre una modal si chiude.
   _disableResultsPointerEvents(ms = 350) {
     try {
       const el = this.results || document.getElementById('results-container') || document.getElementById('home-container');
@@ -58,7 +58,7 @@ export default class HomeView {
     } catch (e) { /* ignore */ }
   }
 
-  // Suppress accidental click handlers on underlying UI for a short time
+  // Sopprime temporaneamente i click accidentali sull'interfaccia sottostante
   suppressClicks(ms = 300) {
     try {
       window.__suppressClicks = true;
@@ -153,7 +153,7 @@ export default class HomeView {
 
     modal.appendChild(content);
     document.body.appendChild(modal);
-    // mark there is an open modal so other handlers can early-return
+  // segna che c'è una modal aperta in modo che altri handler possano ritornare subito
     try { window.__modalOpen = true; } catch (e) { /* ignore */ }
     // ensure modal.remove clears the flag after a short delay to avoid race
     try {
@@ -164,7 +164,7 @@ export default class HomeView {
       };
     } catch (e) { /* ignore */ }
 
-    // Chiudi modale — attach handlers in capture phase to stop earlier handlers
+  // Chiudi modale — attacca gli handler in fase di capture per intercettare prima altri handler
     const closeBtn = content.querySelector(".btn-close");
     if (closeBtn) {
       const closeHandler = (e) => {
@@ -185,7 +185,7 @@ export default class HomeView {
       closeBtn.addEventListener('click', closeHandler, { capture: true });
     }
 
-    // overlay click: also attach in capture phase
+  // Clic sull'overlay: anche questo handler è in fase di capture
     modal.addEventListener("click", (e) => {
       if (e.target === modal) {
         try { e.stopImmediatePropagation?.(); } catch (err) { /* ignore */ }
@@ -201,7 +201,7 @@ export default class HomeView {
       }
     }, { capture: true });
     
-    // Delegated handler for per-song trash buttons inside the modal
+  // Handler delegato per i pulsanti 'trash' per ogni brano dentro la modal
     modal.addEventListener('click', async (e) => {
       const btn = e.target.closest('.trash-btn');
       if (!btn) return;
@@ -213,7 +213,7 @@ export default class HomeView {
       const user = auth.currentUser;
       if (!user) { this.showToast('Devi effettuare il login per rimuovere elementi.', 'warning'); return; }
 
-      // Debug: log context to help trace failures when invoked from Home
+      // Debug usato per registrare il contesto, aiutare a tracciare errori quando chiamato da Home
       try {
         console.debug('HomeView: delete click', { playlistId, songId, userId: user?.uid, time: Date.now(), path: (e.composedPath && e.composedPath()) || (e.path || []) });
       } catch (e) { /* ignore logging errors */ }
@@ -239,14 +239,14 @@ export default class HomeView {
           if (data && Array.isArray(data.songs)) {
             const updated = data.songs.filter(s => s.id !== songId);
             await updateDoc(plRef, { songs: updated });
-            // keep the modal's in-memory songs list in sync so reopening/closing
-            // doesn't show the deleted item again
+            // mantiene sincronizzata la lista di brani in memoria della modal così
+            // riaprendo/chiudendo non viene mostrato l'elemento cancellato
             try {
               const idx = (songs || []).findIndex(s => s.id === songId);
               if (idx !== -1) songs.splice(idx, 1);
               try { console.debug('HomeView: modal songs array updated', { playlistId, songId, songsLength: (songs || []).length, time: Date.now() }); } catch (err) { /* ignore */ }
             } catch (e) { /* ignore */ }
-            // notify other components if they want to refresh (optional)
+            // notifica altri componenti che potrebbero voler aggiornare la vista 
             try { window.dispatchEvent(new CustomEvent('playlist:updated', { detail: { playlistId } })); } catch (e) { /* ignore */ }
             this.showToast('Brano rimosso dalla playlist.', 'info');
           } else {
@@ -264,7 +264,7 @@ export default class HomeView {
           this.showToast('Brano rimosso.', 'info');
         }
 
-        // remove the visual card safely: find the closest .card then its column wrapper
+  // rimuovi in modo sicuro la card dalla UI: trova la .card più vicina e poi il suo wrapper di colonna
         const cardEl = btn.closest('.card');
         let col = null;
         if (cardEl) col = cardEl.closest('[class*="col-"]');
@@ -280,7 +280,7 @@ export default class HomeView {
       }
     });
 
-    // Gestione audio
+  // Gestione audio (comportamento e overflow durante la riproduzione)
     const originalOverflow = content.style.overflowY;
     const audios = content.querySelectorAll(".song-preview");
 
@@ -301,7 +301,7 @@ export default class HomeView {
       );
     });
 
-    // Gestione click sulle card
+  // Gestione click sulle card (riproduzione o apertura dettaglio)
     content.querySelectorAll(".song-card").forEach((card) => {
       card.addEventListener("click", (e) => {
         if (e.target.closest("audio") || e.target.closest("button")) return;
@@ -458,26 +458,23 @@ export default class HomeView {
                     `;
           }
           row.appendChild(card);
-          // Attach single-item modal only for song items (not for playlist cards)
+          // Attacca gli handler di apertura modale
           if (type !== "playlists") {
             card.addEventListener("click", (e) => {
               if (e.target.closest("audio") || e.target.closest("button")) return;
               this.showSongsModal(item.title, [item], null, true);
             });
           } else {
-            // For playlist cards: attach the trash handler to the button and
-            // attach the "open playlist" handler only to specific clickable
-            // elements (artwork and title). This prevents the trash button
-            // click from ever opening the playlist.
+            // Log per debug: verifica che il pulsante di eliminazione sia presente
             const trashBtn = card.querySelector('.playlist-trash-btn');
             if (trashBtn) {
               console.log('HomeView: playlist trash button found for', { id: trashBtn.dataset.playlistId });
             } else {
-              // If no trashBtn was found (unexpected), log for debugging
+             
               console.warn('HomeView: expected .playlist-trash-btn not found for playlist card', { itemId: item.id });
             }
 
-            // Attach open handlers on artwork and title only
+            // Aggiungi handler di apertura modale su artwork e titolo (escluso il pulsante di eliminazione)
             const art = card.querySelector('.song-artwork-wrapper');
             const titleEl = card.querySelector('.text-truncate');
             const openHandler = (e) => {
@@ -505,18 +502,17 @@ export default class HomeView {
       return section;
     };
 
-    // Render playlists, favorites e consigliati
-    // For playlists we attach a capture-phase click handler (like favorites)
-    // so clicks on the playlists "folder" open the full playlists view instead
-    // of letting card-level handlers run (prevents click fall-through after modal close).
+  // Render playlists, favorites e consigliati
+  // Per le playlists attacchiamo un handler in fase di capture (come per i preferiti)
+  // in modo che i click sull'area delle playlist aprano la vista completa delle playlist
+  // invece di permettere agli handler delle singole card di eseguirsi
     const playSection = createRow(playlists, "playlists");
-    // Clicking the playlists area from home should open the playlist that was clicked.
-    // If the click is on a specific playlist card, open that playlist; otherwise
-    // fall back to opening the first playlist (if present).
+  // Cliccando sull'area playlist dalla home deve aprirsi la playlist cliccata.
+ 
     playSection.addEventListener('click', (e) => {
       try {
         if (window.__suppressClicks || window.__modalOpen) return;
-        // allow interactive elements and the create-card to work
+  // permette agli elementi interattivi e alla card 'Crea' di funzionare
         if (e.target.closest && e.target.closest('button, a, audio')) return;
         // If user clicked the "Crea playlist" card, forward to controller
         const createCard = e.target && typeof e.target.closest === 'function' ? e.target.closest('.create-card') : null;
@@ -527,7 +523,7 @@ export default class HomeView {
         try { e.stopImmediatePropagation?.(); } catch (err) { /* ignore */ }
         try { e.stopPropagation(); } catch (err) { /* ignore */ }
 
-        // If clicked on a specific playlist card, open that playlist
+  // Se è stato cliccato una specifica card playlist, apri quella playlist
         const card = e.target && typeof e.target.closest === 'function' ? e.target.closest('.playlist-card') : null;
         if (card) {
           // ignore clicks explicitly on the trash button
@@ -542,7 +538,7 @@ export default class HomeView {
           }
         }
 
-        // fallback: open first playlist if any
+  // fallback: apri la prima playlist se esiste
         if (!playlists || playlists.length === 0) return;
         const first = playlists[0];
         try { this.showSongsModal(first.name || 'Playlist', first.songs || [], first.id, false); } catch (err) { console.error('Errore apertura prima playlist', err); }
@@ -551,9 +547,9 @@ export default class HomeView {
     container.appendChild(playSection);
     // make favorites section clickable to open a modal with all favorites
     const favSection = createRow(favorites, "favorites");
-    // Prefer to intercept the click in capture phase so we open the
-    // full favorites modal instead of letting card-level handlers open
-    // single-item modals. We stop propagation so card handlers don't run.
+  // Intercettiamo il click in fase di capture così apriamo la modal completa dei preferiti
+  // invece di permettere agli handler di livello card di aprire modal per singoli elementi.
+  // Stoppiamo la propagazione per evitare che gli handler delle card vengano eseguiti.
     favSection.addEventListener('click', (e) => {
       try {
         // ignore if suppression or another modal is open
@@ -571,8 +567,8 @@ export default class HomeView {
 
     this.results.appendChild(container);
 
-    // Debug capture: temporary listener to trace pointer events that may fall
-    // through when modals close. Logs fav/playlist/open targets and suppression.
+  // Listener di debug (capture): traccia temporaneamente gli eventi pointer che potrebbero
+  // passare attraverso quando le modal si chiudono. Registra target di preferiti/playlist/aperture e flag di soppressione.
     document.addEventListener('pointerdown', (e) => {
       try {
         const isFavBtn = e.target.closest && e.target.closest('.fav-btn');
@@ -596,8 +592,8 @@ export default class HomeView {
       } catch (err) { /* ignore */ }
     }, { capture: true }); // capture phase
 
-    // Capture-phase delegated handler: handle playlist deletion before any
-    // other handlers (prevents card opening). Runs in capture phase.
+  // Handler delegato in fase di capture: gestisce l'eliminazione di playlist prima
+  // di altri handler (previene l'apertura accidentale della card). Esegue in capture.
     container.addEventListener('click', async (e) => {
       try {
         const btn = e.target.closest && e.target.closest('.playlist-trash-btn');
@@ -636,11 +632,12 @@ export default class HomeView {
       } catch (err) { /* ignore */ }
     }, true);
 
-    // NOTE: per-card trash handlers are attached directly when creating each playlist card
-    // to ensure clicks on the trash button don't accidentally bubble and open the playlist.
+    // NOTA: i singoli handler 'trash' per ogni card sono attaccati direttamente alla creazione
+    // di ciascuna playlist per assicurare che il click sul pulsante di eliminazione non si propaghi
+    // e apra accidentalmente la playlist.
   }
 
-  // Small confirm modal that returns a Promise<boolean>
+  // Piccola modal di conferma che restituisce una Promise<boolean>
   showConfirmModal(message) {
     return new Promise((resolve) => {
       const modal = document.createElement('div');
@@ -692,7 +689,7 @@ export default class HomeView {
         try { e.preventDefault(); } catch (err) { /* ignore */ }
         cleanup(true);
       });
-      // focus the cancel to avoid accidental deletes
+      // posiziona il focus sul pulsante Annulla per evitare cancellazioni accidentali
       btnCancel.focus();
     });
   }
@@ -745,7 +742,7 @@ export default class HomeView {
     });
     row.appendChild(addCard);
   }
-
+  // 🔹 Aggiungi le card degli elementi o il placeholder se vuoto
   if (!items || items.length === 0) {
     const empty = document.createElement("div");
     empty.className = "text-muted placeholder-card";
@@ -766,7 +763,7 @@ export default class HomeView {
           <div class="text-truncate fw-semibold mt-1">${item.name}</div>
           <small>${(item.songs || []).length} brani</small>
         `;
-  // expose playlist id on the card so capture-phase handlers can locate it
+  // esponi l'id della playlist sulla card in modo che gli handler in fase di capture la possano individuare
   card.dataset.playlistId = item.id || '';
   // add trash button to allow deleting playlist from this view as well
         const trashHtml = `<button onclick="event.stopPropagation()" class="btn btn-sm btn-danger playlist-trash-btn" data-playlist-id="${item.id || ''}" title="Elimina playlist">🗑</button>`;
@@ -790,7 +787,7 @@ export default class HomeView {
               : `<div class="text-muted small">Preview non disponibile</div>`
           }
         `;
-        // add a trash button for favorites in the single-section view
+        // aggiungi il pulsante di rimozione dai preferiti
         const favTrash = `<div class="d-flex justify-content-center mt-2"><button onclick="event.stopPropagation()" class="btn btn-sm btn-danger fav-trash-btn" data-song-id="${item.id || ''}" title="Rimuovi dai preferiti">🗑</button></div>`;
         card.insertAdjacentHTML('beforeend', favTrash);
       }
@@ -804,7 +801,7 @@ export default class HomeView {
   this.results.innerHTML = ""; // pulisci prima
   this.results.appendChild(container);
 
-  // Capture-phase delegated handler for playlist deletion in the single-section view
+  
   container.addEventListener('click', async (e) => {
     try {
       const btn = e.target.closest && e.target.closest('.playlist-trash-btn');
@@ -841,7 +838,7 @@ export default class HomeView {
     } catch (err) { /* ignore */ }
   }, true);
 
-  // Capture-phase delegated handler for favorites deletion in the single-section view
+  // Handler delegato in fase di capture: gestisce la rimozione dai preferiti
   container.addEventListener('click', async (e) => {
     try {
       const btn = e.target.closest && e.target.closest('.fav-trash-btn');
@@ -877,7 +874,7 @@ export default class HomeView {
       }
     } catch (err) { /* ignore */ }
   }, true);
-
+  // fine handler rimozione preferiti
   requestAnimationFrame(() => {
     const home = document.querySelector(".spotify-home");
     if (home && !home.classList.contains("loaded")) home.classList.add("loaded");

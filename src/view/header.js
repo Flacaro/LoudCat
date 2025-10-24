@@ -1,4 +1,5 @@
-// view.js
+// header.js
+// Helpers UI per l'header e la gestione del profilo utente.
 export function getEmail() {
  return document.getElementById("email").value;
 }
@@ -8,7 +9,6 @@ export function getPassword() {
 export function getUsername() {
  return document.getElementById("username").value;
 }
-// photo upload removed: API no longer exposes a file getter. If needed, reintroduce a specific helper here.
 
 export function bindHomeClick(handler) {
   const btn = document.getElementById("homeBtn");
@@ -80,7 +80,7 @@ export function initProfileModal() {
   const navButtons = modal ? modal.querySelectorAll("[data-tab]") : [];
 
   async function openModal() {
-    // populate email from currentUser and prefer Firestore fields if available
+    // popola email dal currentUser e sceglie i campi salvati su Firestore se disponibili
     const user = auth.currentUser;
     const emailEl = document.getElementById("profileEmail");
     const nameEl = document.getElementById("profileName");
@@ -90,7 +90,7 @@ export function initProfileModal() {
     let usernameText = user && user.displayName ? user.displayName : null;
     let photoURL = user && user.photoURL ? user.photoURL : null;
 
-    // try to load Firestore doc (may contain username/photoURL saved during registration)
+    // prova a leggere il documento Firestore 
     try {
       if (user) {
         const data = await loadUserData(user.uid);
@@ -103,23 +103,23 @@ export function initProfileModal() {
       console.warn("Impossibile leggere i dati utente da Firestore:", err);
     }
 
-    // Remove photo resolution logic: always use placeholder in profile
+    // Rimuove la logica di risoluzione foto: usa sempre il placeholder nel profilo
     if (emailEl) emailEl.textContent = `Email: ${emailText}`;
     if (nameEl) nameEl.textContent = `Username: ${usernameText ? usernameText : "-"}`;
     if (avatarEl) avatarEl.src = "assets/img/avatar-placeholder.svg";
     if (modal) {
-      // ensure overlay class is present and visible
+      // assicura che la classe overlay sia presente e visibile
       modal.classList.add('modal-overlay');
       const panel = modal.querySelector('.modal-panel');
       if (panel) panel.classList.add('profile-panel--light');
-      // override any inline hiding and ensure modal displays
+      // sovrascrive eventuali nascondimenti inline e mostra la modal
       modal.style.display = 'flex';
     }
-    // focus first nav button if available
+    // posiziona il focus sul primo tab della modal, se disponibile
     const firstNav = modal.querySelector("[data-tab]");
     firstNav?.focus();
 
-    // load shared songs lists
+    // carica le liste di canzoni condivise
     try {
       await loadSharedLists(user);
     } catch (sharesErr) {
@@ -138,12 +138,12 @@ export function initProfileModal() {
   profileBtn?.addEventListener("click", openModal);
   closeBtn?.addEventListener("click", closeModal);
 
-  // close on Escape
+  // chiudi la modal premendo Escape
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeModal();
   });
 
-  // Switch tab panels
+  // Gestione cambio pannelli nella modal del profilo
   navButtons.forEach((btn) => {
     btn.addEventListener("click", (e) => {
       const tab = btn.getAttribute("data-tab");
@@ -151,7 +151,7 @@ export function initProfileModal() {
     });
   });
 
-  // Save settings (password and/or username)
+  // Salva impostazioni (password e/o username)
   const saveBtn = document.getElementById("saveSettingsBtn");
   const feedback = document.getElementById("settingsFeedback");
   saveBtn?.addEventListener("click", async () => {
@@ -175,7 +175,7 @@ export function initProfileModal() {
       return;
     }
 
-    // If user wants to change password, validate fields
+    // Se l'utente vuole cambiare la password, valida i campi
     if (wantsPasswordChange) {
       if (!current || !nw || !confirm) {
         feedback.textContent = "Compila tutti i campi della password.";
@@ -197,14 +197,14 @@ export function initProfileModal() {
 
       const user = auth.currentUser;
 
-      // If password change requested, require reauthentication
+      // Se è richiesta la modifica della password, richiede la ri-autenticazione
       if (wantsPasswordChange) {
         const credential = EmailAuthProvider.credential(user.email, current);
         await reauthenticateWithCredential(user, credential);
         await updatePassword(user, nw);
       }
 
-      // If username change requested, update displayName and Firestore (no reauth required for updateProfile in most cases)
+      // Se è richiesta la modifica dello username, aggiorna displayName e Firestore (di solito non serve ri-autenticazione per updateProfile)
       if (wantsUsernameChange) {
         await updateProfile(user, { displayName: newUsername });
         try {
@@ -215,7 +215,7 @@ export function initProfileModal() {
       }
 
       feedback.textContent = "Impostazioni aggiornate con successo.";
-      // clear inputs
+      // pulisci i campi input dopo l'aggiornamento
       document.getElementById("currentPassword").value = "";
       document.getElementById("newPassword").value = "";
       document.getElementById("confirmPassword").value = "";
@@ -239,7 +239,7 @@ export function initProfileModal() {
     }
   });
 
-  // Reset buttons (favorites, playlists, friends/shares)
+  // Pulsanti di reset (preferiti, playlist, amici/condivisioni)
   const resetFavBtn = document.getElementById('resetFavBtn');
   const resetPlaylistsBtn = document.getElementById('resetPlaylistsBtn');
   const resetFriendsBtn = document.getElementById('resetFriendsBtn');
@@ -285,7 +285,7 @@ export function initProfileModal() {
     try {
       const uid = auth.currentUser.uid;
       const myEmail = (auth.currentUser.email || '').trim().toLowerCase();
-      // Delete shares where I am the sender
+      // elimina le condivisioni dove sono mittente o destinatario (by email)
       const sharesCol = collection(db, 'shares');
       const qFrom = query(sharesCol, where('fromUid', '==', uid));
       const qTo = query(sharesCol, where('toEmail', '==', myEmail));
@@ -294,14 +294,14 @@ export function initProfileModal() {
       const delTo = snapTo.docs.map(d => deleteDoc(doc(db, 'shares', d.id)));
       await Promise.all([...delFrom, ...delTo]);
 
-      // Also try removing entries in users/{uid}/shared if present
+      // Prova anche a rimuovere voci in users/{uid}/shared se presenti
       try {
         const userSharedCol = collection(db, 'users', uid, 'shared');
         const userSharedSnap = await getDocs(userSharedCol);
         const delUserShared = userSharedSnap.docs.map(d => deleteDoc(doc(db, 'users', uid, 'shared', d.id)));
         await Promise.all(delUserShared);
       } catch (innerErr) {
-        console.debug('Nessuna subcollection shared da rimuovere o errore misc:', innerErr);
+        console.debug('Nessuna subcollection shared da rimuovere o errore:', innerErr);
       }
 
       feedback.textContent = 'Condivisioni eliminate.';
@@ -319,16 +319,16 @@ export function switchPanel(name) {
     p.style.display = p.getAttribute("data-panel") === name ? "block" : "none";
   });
 
-  // If switching to friends panel and list is empty, show themed placeholder
+  // Se si passa al pannello "amici" e la lista è vuota, mostra un placeholder a tema
   if (name === "friends") {
     const list = document.getElementById("friendsList");
     if (list) {
-      // remove any existing placeholder
+      // rimuove eventuale placeholder esistente
       const existing = document.getElementById("friends-empty-placeholder");
       if (existing) existing.remove();
 
       if (!list.children || list.children.length === 0) {
-        const li = document.createElement("li");
+        const li = document.createElement('li');
         li.id = "friends-empty-placeholder";
         li.className = "friends-empty list-group-item border-0";
         li.textContent = "Non hai ancora condiviso nulla";
@@ -338,7 +338,7 @@ export function switchPanel(name) {
   }
 }
 
-// --- Shared songs helpers ---
+// --- Helper per canzoni condivise ---
 async function loadSharedLists(user) {
   const byMeList = document.getElementById("sharedByMeList");
   const withMeList = document.getElementById("sharedWithMeList");
@@ -350,15 +350,14 @@ async function loadSharedLists(user) {
     return;
   }
 
-  // clear existing
+  // pulisci eventuali contenuti esistenti
   if (byMeList) byMeList.innerHTML = "";
   if (withMeList) withMeList.innerHTML = "";
 
   try {
-    // shares from me
+    // condivisioni inviate da me
     const sharesCol = collection(db, 'shares');
-    // Query shares from this user. We avoid server-side ordering that requires a composite index
-    // and instead sort client-side by createdAt (ISO string) to show newest first.
+    // Query per le condivisioni di questo utente.
     const qFrom = query(sharesCol, where('fromUid', '==', user.uid));
     const snapFrom = await getDocs(qFrom);
     let sharesFromArr = [];
@@ -374,7 +373,7 @@ async function loadSharedLists(user) {
       if (byMeList) byMeList.innerHTML = "<li class='list-group-item text-muted'>Non hai condiviso canzoni.</li>";
     }
 
-    // shares to me (by email)
+    // condivisioni ricevute per email (inviate a me)
     const myEmail = (user.email || "").trim().toLowerCase();
     const qTo = query(sharesCol, where('toEmail', '==', myEmail));
     const snapTo = await getDocs(qTo);
@@ -391,7 +390,7 @@ async function loadSharedLists(user) {
       if (withMeList) withMeList.innerHTML = "<li class='list-group-item text-muted'>Nessuna canzone condivisa con te.</li>";
     }
 
-    // build friends list from shares (emails of recipients and senders)
+    // costruisci la friends list a partire dalle condivisioni (email di mittenti/destinatari)
     try {
       const map = new Map();
       const myEmail = (user.email || "").trim().toLowerCase();
@@ -414,12 +413,12 @@ async function loadSharedLists(user) {
         map.set(from, entry);
       });
 
-      // render
+      // renderizza la lista amici
       if (friendsList) friendsList.innerHTML = "";
       if (map.size === 0) {
         if (friendsList) friendsList.innerHTML = "<li class='list-group-item text-muted'>Non hai ancora amici.</li>";
       } else {
-        // sort by last interaction
+        // ordina per ultima interazione
         const arr = Array.from(map.values()).sort((a,b) => b.last - a.last);
         arr.forEach(entry => {
           const li = document.createElement('li');
@@ -455,7 +454,7 @@ function appendSharedListItem(container, shareData, id, isFromMe) {
     </div>
   `;
   container.appendChild(li);
-  // attach click handler for play
+  // aggancia il click per riprodurre l'anteprima condivisa
   const btn = li.querySelector('.play-shared');
   btn.addEventListener('click', () => {
     handlePlayShared(container, shareData);
@@ -463,7 +462,7 @@ function appendSharedListItem(container, shareData, id, isFromMe) {
 }
 
 function handlePlayShared(container, shareData) {
-  // remove any existing preview in container
+  // rimuove eventuali anteprime già presenti nel container
   const existing = container.querySelector('.shared-preview');
   if (existing) existing.remove();
   const previewUrl = shareData?.song?.preview;
@@ -487,7 +486,7 @@ function escapeHtml(str) {
   });
 }
 
-// Helper used by controllers to hide the profile modal if it's open
+// Helper usato dai controller per nascondere la modal del profilo se è aperta
 export function hideProfileModal() {
   const m = document.getElementById('profileModal');
   if (m) {
