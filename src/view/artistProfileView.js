@@ -8,8 +8,18 @@ export default class ArtistProfileView {
   renderLoading() {
     this.results.innerHTML = `
       <div class="artist-profile-loading">
-        <div class="loading-spinner">⏳</div>
-        <p>Caricamento profilo artista...</p>
+        <div class="loading-logo">
+          <img src="assets/logo/LoudCatLogo.PNG" alt="LoudCat" class="logo-spin" />
+        </div>
+        <div class="loading-content">
+          <h3>Caricamento profilo artista</h3>
+          <p>Un momento, stiamo recuperando i dati...</p>
+          <div class="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -129,8 +139,18 @@ export default class ArtistProfileView {
             </h5>
             ${albumsLoading ? `
               <div class="albums-loading">
-                <div class="loading-spinner">⏳</div>
-                <p>Collegamento con iTunes in corso...</p>
+                <div class="loading-logo-small">
+                  <img src="assets/logo/LoudCatLogo.PNG" alt="LoudCat" class="logo-pulse" />
+                </div>
+                <div class="loading-content">
+                  <h4>Collegamento con iTunes</h4>
+                  <p>Stiamo cercando gli album su iTunes...</p>
+                  <div class="loading-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
               </div>
             ` : artist.albums?.length ? `
               <div class="albums-grid">
@@ -171,7 +191,12 @@ export default class ArtistProfileView {
   }
 
   renderError(msg = "❌ Errore nel caricamento del profilo artista.") {
-    this.results.innerHTML = `<p>${msg}</p>`;
+    this.results.innerHTML = `
+      <div class="error-state">
+        <div class="error-icon">⚠️</div>
+        <p>${msg}</p>
+      </div>
+    `;
   }
 
   bindBack(handler) {
