@@ -14,13 +14,14 @@ export default class MusicView {
     this.playlistBtn = document.getElementById('sidebar-playlist-btn');
         this.artistBtn = document.getElementById('sidebar-artist-btn');
         this.albumBtn = document.getElementById('sidebar-album-btn');
-    // store the last results object passed to renderResults
+    // conserva l'ultimo oggetto dei risultati passato a renderResults
     this._lastRenderedResults = null;
     // wire playlist create button via playlistView
+    // collega il pulsante di creazione playlist tramite PlaylistView
     this.playlistView.bindCreatePlaylist((name) => {
       if (this.createPlaylistHandler) this.createPlaylistHandler(name);
     });
-    // delegated click handling for action buttons
+    // gestione delegata dei click per i pulsanti di azione
     this.results.addEventListener('click', (e) => {
   const fav = e.target.closest('.fav-btn');
   const pbtn = e.target.closest('.playlist-btn');
@@ -68,14 +69,14 @@ export default class MusicView {
       }
     };
 
-    // If caller passed an element, read the dataset.song first then fall
-    // back to individual attributes.
+  // Se il chiamante fornisce un elemento viene letto prima dataset.song e poi
+  // ricorri agli attributi individuali.
     if (input instanceof HTMLElement) {
       const raw = input.dataset.song;
       let parsed = tryParse(raw) || tryParse(decodeURIComponent(raw || "")) || tryParse(decodeURIComponent(decodeURIComponent(raw || "")));
       if (parsed) return parsed;
 
-      // Fallback: build object from individual data attributes (they are encoded when set)
+  // Fallback: costruisci l'oggetto dagli attributi data individuali (sono codificati quando impostati)
       const build = (k) => {
         const v = input.dataset[k];
         try { return v ? decodeURIComponent(v) : undefined; } catch (e) { return v; }
@@ -91,7 +92,7 @@ export default class MusicView {
       return fallback;
     }
 
-    // Otherwise input is a raw string: try parsing several decode strategies
+  // Se invece l'input è una stringa grezza: prova a decodificarla e parsarla con varie strategie
     const raw = input;
     let parsed = tryParse(raw);
     if (parsed) return parsed;
@@ -123,7 +124,7 @@ export default class MusicView {
     .join("");
   this.results.insertAdjacentHTML("beforeend", html);
 }
-// Render artist results with deduplication
+  // Mostra i risultati degli artisti evitando duplicati
 renderArtists(artists) {
   const resultsContainer = document.getElementById("results-container");
   if (!resultsContainer) return;
@@ -224,7 +225,7 @@ bindArtistClick(handler) {
 
   this.results.insertAdjacentHTML("beforeend", html);
   
-  // Add audio control behavior to prevent card click when interacting with audio
+  // Aggiunge comportamento agli elementi audio per evitare che il click sull'audio attivi il click sulla card
   this.results.querySelectorAll('.song-preview').forEach(audio => {
     ['click', 'pointerdown', 'mousedown'].forEach(ev => 
       audio.addEventListener(ev, (e) => e.stopPropagation())
@@ -338,7 +339,7 @@ bindArtistClick(handler) {
   });
 }
 
-  // helper used by controllers to obtain the last-rendered results (if any)
+  // helper usato dai controller per ottenere l'ultimo set di risultati renderizzati (se presente)
   getRenderedResults() {
     return this._lastRenderedResults;
   }
@@ -354,8 +355,8 @@ renderTracks(tracks, albumId) {
 }
 
 bindCreatePlaylist(handler) {
-    // use PlaylistView binder
-    this.createPlaylistHandler = handler;
+  // usa il binder di PlaylistView
+  this.createPlaylistHandler = handler;
 }
 
 bindAddToPlaylist(handler) {

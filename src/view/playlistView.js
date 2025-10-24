@@ -4,21 +4,22 @@ export default class PlaylistView {
   bindCreatePlaylist(handler) {
     const btn = document.getElementById('createPlaylistBtn');
     btn?.addEventListener('click', async () => {
-      // Keep prompt for now (lightweight). Handler receives the new playlist name.
+      //  L'handler riceve il nome della nuova playlist.
       const name = prompt('Inserisci il nome della nuova playlist:');
       if (name && handler) handler(name.trim());
     });
   }
 
-  // showModal supports selecting an existing playlist or creating a new one.
-  // onSelect is called with (playlistId, playlistName). If a new playlist is created,
-  // playlistId will be '__new__' and playlistName the provided name.
+  // showModal supporta la selezione di una playlist esistente o la creazione di una nuova.
+  // onSelect viene chiamato con (playlistId, playlistName). Se viene creata una nuova
+  // playlist, playlistId sarà '__new__' e playlistName conterrà il nome fornito.
   showModal(song, playlists = [], onSelect) {
     if (this.modal) this.modal.remove();
 
   this.modal = document.createElement('div');
   this.modal.id = 'playlist-modal';
   // use the overlay class defined in CSS so the modal is centered
+  // usa la classe overlay definita nel CSS così la modal è centrata
   this.modal.className = 'playlist-modal';
 
     this.modal.innerHTML = `
@@ -70,7 +71,7 @@ export default class PlaylistView {
       this.modal.remove();
     });
 
-    // close when clicking outside
+    // chiudi cliccando all'esterno
     this.modal.addEventListener('click', (e) => { if (e.target === this.modal) this.modal.remove(); });
   }
 

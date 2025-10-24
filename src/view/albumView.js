@@ -1,9 +1,13 @@
+// AlbumView: gestisce la visualizzazione della pagina dettaglio album,
+// inclusi header, tracklist e sezione recensioni.
+
 export default class AlbumView {
   constructor(containerId = "results-container") {
     this.container = document.getElementById(containerId);
     if (!this.container) throw new Error(`#${containerId} not found`);
   }
 
+  // Mostra uno stato di caricamento mentre si recuperano i dettagli dell'album
   renderLoading() {
     this.container.innerHTML = `
       <div class="album-view-loading">
@@ -24,6 +28,8 @@ export default class AlbumView {
   }
 
   renderAlbum(album) {
+    // Renderizza la pagina dettaglio per un singolo album.
+    // Riceve un oggetto 'album' con campi: title, artist, coverImage, releaseDate, tracks (array)
     const html = `
       <div class="album-view-container">
         <button id="back-btn" class="btn btn-secondary mb-4">
@@ -105,18 +111,20 @@ export default class AlbumView {
       </div>
     `;
     this.container.innerHTML = html;
-
+    // Collega i comportamenti interattivi: stelle valutazione, invio recensione e caricamento recensioni
     this._bindStars(album.id);
     this._bindSubmitReview(album.id);
     this._loadExistingReviews(album.id);
   }
 
   bindBack(handler) {
+    // Collega il pulsante 'Torna ai risultati' al controller
     const btn = document.getElementById("back-btn");
     if (btn) btn.addEventListener("click", handler);
   }
 
   _bindStars(albumId) {
+    // Gestisce l'interazione della rating UI (hover/click sulle stelle)
     const stars = this.container.querySelectorAll(".star");
     let selectedRating = 0;
 
@@ -145,6 +153,7 @@ export default class AlbumView {
   }
 
   _bindSubmitReview(albumId) {
+    // Gestisce l'invio della recensione: convalida, salvataggio in localStorage e aggiornamento UI
     const btn = this.container.querySelector("#submit-review");
     const textArea = this.container.querySelector("#review-text");
 
@@ -180,6 +189,8 @@ export default class AlbumView {
   }
 
   _loadExistingReviews(albumId) {
+    // Carica le recensioni salvate in localStorage e aggiorna la sezione recensioni.
+   
     const reviews = JSON.parse(localStorage.getItem("albumReviews") || "[]");
     const albumReviews = reviews.filter(r => r.albumId === albumId);
     const displayDiv = this.container.querySelector("#user-review-list");
