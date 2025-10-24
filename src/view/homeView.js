@@ -378,77 +378,72 @@ export default class HomeView {
   }
 
   renderOnlySection(type, items = []) {
-    if (!this.results) return;
-    this.results.innerHTML = "";
+  const homeContainer = document.getElementById("home-container");
+  const resultsSection = document.getElementById("results-section");
+  if (homeContainer) homeContainer.style.display = "block";
+  if (resultsSection) resultsSection.style.display = "none";
 
-    const container = document.createElement("div");
-    container.className = "spotify-home";
+  if (!this.results) return;
+  this.results.innerHTML = "";
 
-    const section = document.createElement("div");
-    section.className = "home-section";
+  const container = document.createElement("div");
+  container.className = "spotify-home";
 
-    const titleMap = {
-      playlists: "Le tue playlist",
-      favorites: "I tuoi preferiti",
-    };
+  const section = document.createElement("div");
+  section.className = "home-section";
 
-    section.innerHTML = `<h5>${titleMap[type] || "Sezione"}</h5>`;
+  const titleMap = {
+    playlists: "Le tue playlist",
+    favorites: "I tuoi preferiti",
+  };
 
-    const row = document.createElement("div");
+  section.innerHTML = `<h5>${titleMap[type] || "Sezione"}</h5>`;
 
-    if (type === "favorites" || type === "playlists") {
-      row.className = "cards-row grid-layout"; 
-    } else {
-      row.className = "cards-row";
-    }
+  const row = document.createElement("div");
+  row.className = (type === "favorites" || type === "playlists") 
+    ? "cards-row grid-layout" 
+    : "cards-row";
 
+  // 🔹 Se è la sezione playlist → aggiungi la card "Crea playlist"
+  if (type === "playlists") {
+    const addCard = document.createElement("div");
+    addCard.className = "playlist-card create-card";
+    addCard.innerHTML = `<div class="fw-semibold mt-2">Crea playlist</div>`;
+    addCard.addEventListener("click", () => {
+      this.playlistController?.handleCreatePlaylist();
+    });
+    row.appendChild(addCard);
+  }
 
-    // 🔹 Se è la sezione playlist → aggiungi la card "Crea playlist"
-    if (type === "playlists") {
-      const addCard = document.createElement("div");
-      addCard.className = "playlist-card create-card";
-      addCard.innerHTML = `
-      <div class="fw-semibold mt-2">Crea playlist</div>
-    `;
-      addCard.addEventListener("click", () => {
-        if (this.playlistController)
-          this.playlistController.handleCreatePlaylist();
-      });
-      row.appendChild(addCard);
-    }
+  if (!items || items.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "text-muted placeholder-card";
+    empty.textContent = "Nessun elemento da mostrare";
+    row.appendChild(empty);
+  } else {
+    items.forEach((item) => {
+      const card = document.createElement("div");
+      card.className = type === "playlists" ? "playlist-card" : "song-card";
 
-    // 🔹 Se non ci sono elementi
-    if (!items || items.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "text-muted placeholder-card";
-      empty.textContent = "Nessun elemento da mostrare";
-      row.appendChild(empty);
-    } else {
-      items.forEach((item) => {
-        const card = document.createElement("div");
-        card.className = type === "playlists" ? "playlist-card" : "song-card";
-
-        if (type === "playlists") {
-          card.innerHTML = `
+      if (type === "playlists") {
+        card.innerHTML = `
           <div class="song-artwork-wrapper">
-            <div class="song-artwork"
-              style="background-image:url('${
-                item.songs?.[0]?.artwork || "assets/img/avatar-placeholder.svg"
-              }');"></div>
+            <div class="song-artwork" style="background-image:url('${
+              item.songs?.[0]?.artwork || "assets/img/avatar-placeholder.svg"
+            }');"></div>
           </div>
           <div class="text-truncate fw-semibold mt-1">${item.name}</div>
           <small>${(item.songs || []).length} brani</small>
         `;
-          card.addEventListener("click", () => {
-            this.showSongsModal(item.name, item.songs || [], item.id, false);
-          });
-        } else if (type === "favorites") {
-          card.innerHTML = `
+        card.addEventListener("click", () => {
+          this.showSongsModal(item.name, item.songs || [], item.id, false);
+        });
+      } else if (type === "favorites") {
+        card.innerHTML = `
           <div class="song-artwork-wrapper">
-            <div class="song-artwork"
-              style="background-image:url('${
-                item.artwork || "assets/img/avatar-placeholder.svg"
-              }'); border-radius:50%;"></div>
+            <div class="song-artwork" style="background-image:url('${
+              item.artwork || "assets/img/avatar-placeholder.svg"
+            }'); border-radius:50%;"></div>
           </div>
           <div class="text-truncate fw-semibold mt-1">${item.title}</div>
           <small>${item.artist || ""}</small>
@@ -456,28 +451,25 @@ export default class HomeView {
             item.preview
               ? `<audio class="song-preview" controls preload="none" src="${item.preview}"></audio>`
               : `<div class="text-muted small">Preview non disponibile</div>`
-            }
+          }
         `;
-        }
+      }
 
-        row.appendChild(card);
-      });
-    }
-
-    section.appendChild(row);
-    container.appendChild(section);
-    this.results.appendChild(container);
-
-    // Forza reflow e stile coerente (come in home)
-    requestAnimationFrame(() => {
-      const home = document.querySelector(".spotify-home");
-      if (home && !home.classList.contains("loaded")) home.classList.add("loaded");
-      this.results.offsetHeight;
-      window.dispatchEvent(new Event("resize"));
+      row.appendChild(card);
     });
   }
 
+  section.appendChild(row);
+  container.appendChild(section);
+  this.results.innerHTML = ""; // pulisci prima
+  this.results.appendChild(container);
 
+  requestAnimationFrame(() => {
+    const home = document.querySelector(".spotify-home");
+    if (home && !home.classList.contains("loaded")) home.classList.add("loaded");
+    window.dispatchEvent(new Event("resize"));
+  });
+}
 
 
 

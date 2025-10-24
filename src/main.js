@@ -38,13 +38,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   on("sidebar-playlist-btn", "click", async () => {
     const playlists = await controller.playlistController.getPlaylists() || [];
+    const homeContainer = document.getElementById("home-container");
+    const resultsSection = document.getElementById("results-section");
+    if (homeContainer) homeContainer.style.display = "block";
+    if (resultsSection) resultsSection.style.display = "none";
     controller.homeView.renderOnlySection("playlists", playlists);
   });
 
   on("sidebar-favorites-btn", "click", async () => {
-  const favorites = await controller.favoriteController.getFavorites() || [];
-  controller.homeView.renderOnlySection("favorites", favorites);
-});
+    const favorites = await controller.favoriteController.getFavorites() || [];
+    const homeContainer = document.getElementById("home-container");
+    const resultsSection = document.getElementById("results-section");
+    if (homeContainer) homeContainer.style.display = "block";
+    if (resultsSection) resultsSection.style.display = "none";
+
+    controller.homeView.renderOnlySection("favorites", favorites);
+  });
 
 
   initFirebaseAuth(controller);
