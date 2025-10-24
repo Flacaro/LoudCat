@@ -3,7 +3,6 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-aut
 import { doc, getDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { db } from "../firebase.js";
 
-
 export default class HomeView {
   constructor() {
     this.results = document.getElementById("home-container");
@@ -460,7 +459,7 @@ export default class HomeView {
           // Attach single-item modal only for song items (not for playlist cards)
           if (type !== "playlists") {
             card.addEventListener("click", (e) => {
-              if (e.target.closest("audio") || (e.target.closest && e.target.closest("button"))) return;
+              if (e.target.closest("audio") || e.target.closest("button")) return;
               this.showSongsModal(item.title, [item], null, true);
             });
           } else {
@@ -838,8 +837,6 @@ export default class HomeView {
     if (home && !home.classList.contains("loaded")) home.classList.add("loaded");
     window.dispatchEvent(new Event("resize"));
   });
-}
-
-
-
+}   
+  
 }

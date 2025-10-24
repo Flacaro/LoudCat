@@ -1,4 +1,3 @@
-
 // authController.js
 import { register, login, logout, onUserChanged, saveUserData, loadUserData } from "../model/modelAuth.js";
 import { getEmail, getPassword, getUsername, showUserUI, showLoginUI, renderData } from "../view/header.js";
@@ -19,13 +18,16 @@ onUserChanged(async (user) => {
     showUserUI(user.email);
     console.log("Utente autenticato:", user.email);
 
-    // Carica preferiti e playlist
-    if (controller && controller.userController) {
+    // Clear welcome view when user logs in
+    if (controller.welcomeView) {
+      controller.welcomeView.clear();
+    }
+
+    if (controller.userController) {
       const { favorites, playlists } = await controller.userController.loadUserCollections(user.uid);
       controller.userController.renderUserCollections({ favorites, playlists }, controller.view);
     }
 
-    // Mostra home container
     if (homeContainer) homeContainer.style.display = "block";
     if (resultsContainer) resultsContainer.style.display = "none";
 
@@ -33,15 +35,13 @@ onUserChanged(async (user) => {
     showLoginUI();
     console.log("Nessun utente autenticato");
 
-    // ✅ Pulizia home: rimuovi i box
     if (homeContainer) {
-      homeContainer.innerHTML = ""; // svuota tutto
-      homeContainer.style.display = "none"; // nascondi container
+      homeContainer.innerHTML = "";
+      homeContainer.style.display = "none";
     }
     if (resultsContainer) resultsContainer.style.display = "none";
 
-    // Eventuale reset dello stato interno dei controller
-    if (controller && controller.homeView) {
+    if (controller.homeView) {
       controller.homeView.results.innerHTML = "";
     }
   }

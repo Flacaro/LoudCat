@@ -1,22 +1,24 @@
+import MusicService from "../services/musicService.js";
 import SearchController from "./searchController.js";
 import FavoriteController from "./favoriteController.js";
 import PlaylistController from "./playlistController.js";
 import ShareController from "./shareController.js";
 import AlbumController from "./albumController.js";
-import UserController from "./userController.js";
 import ArtistProfileController from "./artistProfileController.js";
+import UserController from "./userController.js";
 import HomeView from "../view/homeView.js";
-import { hideProfileModal } from "../view/header.js";
+import WelcomeView from "../view/welcomeView.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { collection, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { db } from "../firebase.js";
-import { getRecommendedFromItunes } from "../services/apiService.js"
+import { hideProfileModal } from "../view/header.js";
 
 export default class MusicController {
   constructor(model, view) {
     this.model = model;
     this.view = view;
     this.homeView = new HomeView();
+    this.welcomeView = new WelcomeView();
     this.isHomeLoaded = false;
     this.isUserLoggedIn = false;
 
@@ -26,7 +28,6 @@ export default class MusicController {
     this.favoriteController = new FavoriteController(view);
     this.playlistController = new PlaylistController(view);
     this.shareController = new ShareController(view);
-    // Provide the shared view and model so AlbumController can restore results
     this.albumController = new AlbumController(view, model);
     this.artistProfileController = new ArtistProfileController();
     this._unsubFav = null;
@@ -165,84 +166,71 @@ export default class MusicController {
   }
 
   async loadHome() {
-  const auth = getAuth();
-  const user = auth.currentUser;
+    const auth = getAuth();
+    const user = auth.currentUser;
 
-  const resultsSection = document.getElementById("results-section");
-  const homeContainer = document.getElementById("home-container");
-  const resultsContainers = document.querySelectorAll('#results-container');
+    const resultsSection = document.getElementById("results-section");
+    const homeContainer = document.getElementById("home-container");
+    const resultsContainers = document.querySelectorAll('#results-container');
 
-  // Mostra home, nascondi risultati
-  if (homeContainer) homeContainer.style.display = 'block';
-  if (resultsSection) resultsSection.style.display = 'none';
+    if (homeContainer) homeContainer.style.display = 'block';
+    if (resultsSection) resultsSection.style.display = 'none';
 
-  // Nascondi eventuale profile modal
-  try { hideProfileModal(); } catch (e) { console.log("errore hideProfileModal"); }
+    try { hideProfileModal(); } catch (e) { console.log("errore hideProfileModal"); }
 
-  // Pulisci eventuali vecchi risultati
-  resultsContainers.forEach(c => { if (c) c.innerHTML = ''; });
+    resultsContainers.forEach(c => { if (c) c.innerHTML = ''; });
 
-  console.log("=== LOAD HOME START ===");
+    console.log("=== LOAD HOME START ===");
 
-  let favorites = [];
-  let playlists = [];
-  let recommended = [];
+    let favorites = [];
+    let playlists = [];
+    let recommended = [];
 
-  if (user) {
-    this.homeView.showWelcomeMessage(user.displayName || 'Utente');
+    if (user) {
+      // Clear welcome view if present
+      this.welcomeView.clear();
+      
+      this.homeView.showWelcomeMessage(user.displayName || 'Utente');
 
-    // Recupera collezioni utente
-    [favorites, playlists] = await Promise.all([
-      this.favoriteController.getFavorites(),
-      this.playlistController.getPlaylists()
-    ]);
+      [favorites, playlists] = await Promise.all([
+        this.favoriteController.getFavorites(),
+        this.playlistController.getPlaylists()
+      ]);
 
-    // Consigli basati su ultima ricerca, se esiste
-    if (this.searchController.lastResults?.songs?.length > 0) {
-      recommended = this.searchController.lastResults.songs.slice(0, 10);
-    } else {
-      recommended = await this.getRandomSongs(10);
-    }
-
-  } else {
-    this.homeView.showWelcomeMessage('Visitatore');
-
-    // 🔹 Prova a caricare ultima ricerca pubblica da Firestore
-    try {
-      const ref = doc(db, "searches", "latest");
-      const snap = await getDoc(ref);
-      if (snap.exists() && snap.data()?.results?.songs?.length) {
-        recommended = snap.data().results.songs.slice(0, 10);
+      if (this.searchController.lastResults?.songs?.length > 0) {
+        recommended = this.searchController.lastResults.songs.slice(0, 10);
       } else {
-        // 🔹 Se non c’è nessuna ricerca salvata, carica canzoni casuali
         recommended = await this.getRandomSongs(10);
       }
-    } catch (err) {
-      console.warn("Errore caricamento ultima ricerca pubblica:", err);
-      recommended = await this.getRandomSongs(10);
+
+    } else {
+      // Show welcome page for non-logged users
+      this.welcomeView.render();
+      
+      // Exit early - welcome view is already rendered
+      console.log("=== LOAD HOME END (guest) ===");
+      return;
     }
+
+    recommended = recommended.map(s => ({
+      id: s.id || null,
+      title: s.title || "Titolo sconosciuto",
+      artist: s.artist || "Artista sconosciuto",
+      artwork: s.artwork || "assets/img/avatar-placeholder.svg"
+    }));
+
+    console.log("🎵 Recommended:", recommended);
+    console.log("❤️ Favorites:", favorites);
+    console.log("📀 Playlists:", playlists);
+
+    this.homeView.renderSpotifyHome(favorites, playlists, recommended);
+
+    requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+
+    console.log("=== LOAD HOME END ===");
+
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
   }
-
-  // Normalizza
-  recommended = recommended.map(s => ({
-    id: s.id || null,
-    title: s.title || "Titolo sconosciuto",
-    artist: s.artist || "Artista sconosciuto",
-    artwork: s.artwork || "assets/img/avatar-placeholder.svg"
-  }));
-
-  console.log("🎵 Recommended:", recommended);
-  console.log("❤️ Favorites:", favorites);
-  console.log("📀 Playlists:", playlists);
-
-  // Render finale
-  this.homeView.renderSpotifyHome(favorites, playlists, recommended);
-
-  requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
-  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
-}
-
-
 
   async getRecommendedSongs() {
     const lastResults = this.searchController?.lastResults;
