@@ -209,18 +209,27 @@ bindArtistClick(handler) {
         <h4>${s.title}</h4>
         <p>${s.artist}</p>
         ${s.album ? `<p>${s.album}</p>` : ""}
-        ${s.preview ? `<audio controls src="${s.preview}"></audio>` : "<p>Preview non disponibile</p>"}
-  <button class="btn btn-outline-warning fav-btn" 
-    data-song='${encoded}' data-song-id='${songObj.id}' data-song-title='${encodeURIComponent(songObj.title || '')}' data-song-artist='${encodeURIComponent(songObj.artist || '')}' data-song-album='${encodeURIComponent(songObj.album || '')}' data-song-artwork='${encodeURIComponent(songObj.artwork || '')}' data-song-preview='${encodeURIComponent(songObj.preview || '')}'>⭐ Aggiungi ai preferiti</button>
-  <button class="btn btn-outline-primary playlist-btn" 
-    data-song='${encoded}' data-song-id='${songObj.id}' data-song-title='${encodeURIComponent(songObj.title || '')}' data-song-artist='${encodeURIComponent(songObj.artist || '')}' data-song-album='${encodeURIComponent(songObj.album || '')}' data-song-artwork='${encodeURIComponent(songObj.artwork || '')}' data-song-preview='${encodeURIComponent(songObj.preview || '')}'>+ Aggiungi alla playlist</button>
-  <button class="btn btn-outline-success share-btn" 
-    data-song='${encoded}' data-song-id='${songObj.id}' data-song-title='${encodeURIComponent(songObj.title || '')}' data-song-artist='${encodeURIComponent(songObj.artist || '')}' data-song-album='${encodeURIComponent(songObj.album || '')}' data-song-artwork='${encodeURIComponent(songObj.artwork || '')}' data-song-preview='${encodeURIComponent(songObj.preview || '')}'>↗ Condividi</button>
+        ${s.preview 
+          ? `<audio class="song-preview" controls preload="none" src="${s.preview}"></audio>` 
+          : `<div class="text-muted small">Preview non disponibile</div>`}
+        <button class="btn btn-outline-warning fav-btn" 
+          data-song='${encoded}' data-song-id='${songObj.id}' data-song-title='${encodeURIComponent(songObj.title || '')}' data-song-artist='${encodeURIComponent(songObj.artist || '')}' data-song-album='${encodeURIComponent(songObj.album || '')}' data-song-artwork='${encodeURIComponent(songObj.artwork || '')}' data-song-preview='${encodeURIComponent(songObj.preview || '')}'>⭐ Aggiungi ai preferiti</button>
+        <button class="btn btn-outline-primary playlist-btn" 
+          data-song='${encoded}' data-song-id='${songObj.id}' data-song-title='${encodeURIComponent(songObj.title || '')}' data-song-artist='${encodeURIComponent(songObj.artist || '')}' data-song-album='${encodeURIComponent(songObj.album || '')}' data-song-artwork='${encodeURIComponent(songObj.artwork || '')}' data-song-preview='${encodeURIComponent(songObj.preview || '')}'>+ Aggiungi alla playlist</button>
+        <button class="btn btn-outline-success share-btn" 
+          data-song='${encoded}' data-song-id='${songObj.id}' data-song-title='${encodeURIComponent(songObj.title || '')}' data-song-artist='${encodeURIComponent(songObj.artist || '')}' data-song-album='${encodeURIComponent(songObj.album || '')}' data-song-artwork='${encodeURIComponent(songObj.artwork || '')}' data-song-preview='${encodeURIComponent(songObj.preview || '')}'>↗ Condividi</button>
       </div>
     `;
   }).join("");
 
   this.results.insertAdjacentHTML("beforeend", html);
+  
+  // Add audio control behavior to prevent card click when interacting with audio
+  this.results.querySelectorAll('.song-preview').forEach(audio => {
+    ['click', 'pointerdown', 'mousedown'].forEach(ev => 
+      audio.addEventListener(ev, (e) => e.stopPropagation())
+    );
+  });
 }
 
   renderSongsnoAuth(songs){
@@ -240,16 +249,25 @@ bindArtistClick(handler) {
         <h4>${s.title}</h4>
         <p>${s.artist}</p>
         ${s.album ? `<p>${s.album}</p>` : ""}
-        ${s.preview ? `<audio controls src="${s.preview}"></audio>` : "<p>Preview non disponibile</p>"}
-        <p class="login-warning" style="color: #dc3545; font-weight: bold; margin-top: 10px;">
+        ${s.preview 
+          ? `<audio class="song-preview" controls preload="none" src="${s.preview}"></audio>` 
+          : `<div class="text-muted small">Preview non disponibile</div>`}
+        <p class="login-warning">
           Devi accedere per poter usare queste funzioni!
         </p>
       </div>
-      `;
-    }).join("");
+    `;
+  }).join("");
 
-    this.results.insertAdjacentHTML("beforeend", html);
-  }
+  this.results.insertAdjacentHTML("beforeend", html);
+  
+  // Add audio control behavior
+  this.results.querySelectorAll('.song-preview').forEach(audio => {
+    ['click', 'pointerdown', 'mousedown'].forEach(ev => 
+      audio.addEventListener(ev, (e) => e.stopPropagation())
+    );
+  });
+}
 
 
   bindFavoriteToggle(handler) {
