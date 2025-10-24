@@ -1,3 +1,4 @@
+//userController.js
 import { doc, getDoc, collection, getDocs, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { db } from "../firebase.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -5,12 +6,15 @@ import { showToast } from "../view/toastView.js";
 
 export default class UserController {
 
+  //restituisce l'utente attualmente loggato tramite Firebase Auth.
   getCurrentUser() {
     const auth = getAuth();
     return auth.currentUser;
   }
 
-  async loadUserCollections(userId) {
+  //carica le collezioni dell'utente (preferiti e playlist) dal database Firestore
+  async loadUserCollections(userId) { 
+    //se userId non è definito, restituisce array vuoti.
     if (!userId) return { favorites: [], playlists: [] };
 
     const favCol = collection(db, "users", userId, "favorites");
@@ -19,20 +23,21 @@ export default class UserController {
 
     const playlistsSnap = await getDocs(collection(db, "users", userId, "playlists"));
     const playlists = playlistsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-
+    //ritorna un oggetto { favorites, playlists } con array di brani e playlist
     return { favorites, playlists };
   }
 
+  //genera e mostra nella pagina le collezioni dell'utente
   renderUserCollections({ favorites, playlists }) {
   const container = document.getElementById("home-container");
   container.innerHTML = "";
 
-  // --- Preferiti ---
+  // preferiti
   const favBox = document.createElement("div");
   favBox.className = "card user-box mb-3 favorites-section";
   favBox.style.cursor = "pointer";
 
-  // Prendiamo le prime 3 copertine dei preferiti
+  //prende le prime 3 copertine dei preferiti
   const favPreview = favorites.slice(0, 3).map(song => `
     <img src="${song.artwork || 'assets/img/avatar-placeholder.svg'}" alt="${song.title}" class="preview-artwork">
   `).join("");
@@ -43,15 +48,16 @@ export default class UserController {
     <p>${favorites.length} brani</p>
   `;
   container.appendChild(favBox);
+  //collega il click sulle card all'apertura della modale dei brani
   favBox.addEventListener("click", () => this.showSongsModal("I tuoi preferiti", favorites, null, true));
 
-  // --- Playlist ---
+  //playlist
   playlists.forEach(pl => {
     const plBox = document.createElement("div");
     plBox.className = "card user-box mb-3 playlist-box";
     plBox.style.cursor = "pointer";
 
-    // Anteprima delle prime 3 canzoni della playlist
+    //anteprima delle prime 3 canzoni della playlist
     const plPreview = pl.songs.slice(0, 3).map(song => `
       <img src="${song.artwork || 'assets/img/avatar-placeholder.svg'}" alt="${song.title}" class="preview-artwork">
     `).join("");
@@ -66,7 +72,6 @@ export default class UserController {
   plBox.addEventListener("click", () => this.showSongsModal(pl.name, pl.songs, pl.id, false));
   });
 
-  // Messaggi se non ci sono dati
   if (!favorites.length) {
     const msg = document.createElement("p");
     msg.textContent = "Nessun preferito";
@@ -79,8 +84,10 @@ export default class UserController {
   }
 }
 
+  //mostra una modale con la lista di brani specificata
   showSongsModal(title, songs, playlistId = null, isFavorites = false) {
   const modal = document.createElement("div");
+  //permette di rimuovere brani dai preferiti o dalle playlist
   modal.className = "playlist-modal"; 
   modal.innerHTML = `
     <div class="playlist-modal-content">
@@ -106,15 +113,14 @@ export default class UserController {
   `;
 
   document.body.appendChild(modal);
-
-  // Chiudi modale
+  //gestisce la chiusura della modale cliccando sullo sfondo o sul bottone di chiusura.
   modal.querySelector(".btn-close").addEventListener("click", () => modal.remove());
   modal.addEventListener("click", (e) => {
   if (e.target === modal || e.target.classList.contains("btn-close")) {
     modal.remove();
   }
 });
-  // Delegate trash button clicks
+  //trash button
   modal.addEventListener('click', async (e) => {
     const btn = e.target.closest('.trash-btn');
     if (!btn) return;
@@ -126,17 +132,16 @@ export default class UserController {
       return;
     }
 
-    // disable button to avoid double clicks
     btn.disabled = true;
 
     try {
       if (isFavorites) {
-        // favorites are stored as documents under users/{uid}/favorites/{songId}
+        //salva i preferiti in users/{uid}/favorites/{songId} come documenti
         const favRef = doc(db, 'users', user.uid, 'favorites', songId);
         await deleteDoc(favRef);
         showToast('Brano rimosso dai preferiti.');
       } else if (playlistId) {
-        // remove song from playlist songs array
+        //rimuove la canzone dalla playlist
         const plRef = doc(db, 'users', user.uid, 'playlists', playlistId);
         const snap = await getDoc(plRef);
         const data = snap.exists() ? snap.data() : null;
@@ -148,13 +153,13 @@ export default class UserController {
           showToast('Playlist non trovata o formato inatteso.');
         }
       } else {
-        // generic: try to remove from favorites as fallback
+        //prova a rimuovere il brano dai preferiti
         const favRef = doc(db, 'users', user.uid, 'favorites', songId);
         await deleteDoc(favRef);
         showToast('Brano rimosso.');
       }
 
-      // remove card from modal UI
+      //rimuove la card dal modale UI
       const cardCol = btn.closest('.col-md-4');
       if (cardCol) cardCol.remove();
     } catch (err) {
