@@ -64,11 +64,16 @@ export default class SearchController {
         }
         if (Array.isArray(results.artists)) {
           safeResults.artists = results.artists.map(ar => ({
+            artistId: ar.artistId || (ar.name ? ar.name.toLowerCase().replace(/\s+/g, '-') : null),
             name: ar.name || null,
+            canonicalName: ar.name || null,
             artwork: ar.artwork || null,
             genre: ar.genre || null
           }));
+
         }
+
+
       }
 
       // ✅ Only write to Firestore if user is logged in
@@ -85,34 +90,34 @@ export default class SearchController {
   }
 
   async loadLatestSearch() {
-  // 🔹 Se l’utente è loggato, non renderizzare le card
-  if (this.controller?.isUserLoggedIn) return;
+    // 🔹 Se l’utente è loggato, non renderizzare le card
+    if (this.controller?.isUserLoggedIn) return;
 
-  const ref = doc(db, "searches", "latest");
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return;
-  const data = snap.data();
-  if (!data?.results) return;
-  // save loaded results so controllers can access them
-  this.lastResults = data.results;
-  this.view.renderResults(data.results, this.controller?.isUserLoggedIn);
+    const ref = doc(db, "searches", "latest");
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return;
+    const data = snap.data();
+    if (!data?.results) return;
+    // save loaded results so controllers can access them
+    this.lastResults = data.results;
+    this.view.renderResults(data.results, this.controller?.isUserLoggedIn);
 
-  try {
-    const rc = this.view.results;
-    if (rc) rc.closest('section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  } catch (e) {
-    console.warn('Impossibile scrollare ai risultati caricati', e);
-  }
+    try {
+      const rc = this.view.results;
+      if (rc) rc.closest('section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) {
+      console.warn('Impossibile scrollare ai risultati caricati', e);
+    }
 
-  if (this.controller?.playlistController) {
-    const songs = Array.isArray(data.results.songs) ? data.results.songs : [];
-    await this._markPlaylistState(songs);
+    if (this.controller?.playlistController) {
+      const songs = Array.isArray(data.results.songs) ? data.results.songs : [];
+      await this._markPlaylistState(songs);
+    }
+    if (this.controller?.favoriteController) {
+      const songs = Array.isArray(data.results.songs) ? data.results.songs : [];
+      await this._markFavoriteState(songs);
+    }
   }
-  if (this.controller?.favoriteController) {
-    const songs = Array.isArray(data.results.songs) ? data.results.songs : [];
-    await this._markFavoriteState(songs);
-  }
-}
 
   // check user's playlists and toggle the playlist button UI for results
   async _markPlaylistState(songs) {

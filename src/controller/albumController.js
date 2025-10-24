@@ -2,48 +2,55 @@
 import AlbumView from "../view/albumView.js";
 import AlbumViewService from "../services/albumViewService.js";
 
+//controller che si occupa della gestione della logica di visualizzazione degli album
 export default class AlbumViewController {
-  // Accept parentView (the shared MusicView) and model so we can
-  // re-render the previous results using the main view.
   constructor(parentView = null, model = null) {
-    this.parentView = parentView; // MusicView instance used to render results
+    this.parentView = parentView;
     this.model = model;
     this.view = new AlbumView();
     this.service = new AlbumViewService();
-    // store the last results shown so the controller can render them on "back"
-    // must be an object compatible with MusicView.renderResults, e.g. { albums: [...] }
+    // Memorizza gli ultimi risultati mostrati, così da poterli ripristinare al “back”
     this.lastResults = null;
   }
 
+  //mostra i dettagli di un album
+  //backHandler -Funzione opzionale da eseguire quando l’utente preme “indietro”.
   async showAlbum(albumId, backHandler) {
     this.view.renderLoading();
     try {
+      //recupera i dettagli dell'album
       const album = await this.service.getAlbumDetails(albumId);
       this.view.renderAlbum(album);
-      // If no backHandler was provided, create a default one that
-      // re-renders the previously stored results (if any).
+      //ripristina i risultati precedenti memorizzati in lastResults
       const handler = typeof backHandler === "function"
         ? backHandler
         : () => {
-            console.debug('AlbumViewController.backHandler invoked, lastResults:', this.lastResults);
-            const toRestore = this.lastResults || (this.parentView && this.parentView.getRenderedResults && this.parentView.getRenderedResults());
-            if (toRestore) {
-              if (this.parentView && typeof this.parentView.renderResults === 'function') {
-                console.debug('Restoring results via parentView.renderResults');
-                this.parentView.renderResults(toRestore);
-              } else if (this.view && typeof this.view.renderResults === 'function') {
-                console.debug('Restoring results via album view renderResults fallback');
-                this.view.renderResults(toRestore);
-              } else {
-                console.debug('No renderResults available, clearing container');
-                this.view.container.innerHTML = "<p>Nessun risultato precedente</p>";
-              }
-            } else {
-              console.debug('No lastResults to restore');
+          console.debug('AlbumViewController.backHandler invoked, lastResults:', this.lastResults);
+          // Recupera i risultati precedenti (lastResults o quelli nel parentView)
+          const toRestore = this.lastResults || (this.parentView && this.parentView.getRenderedResults && this.parentView.getRenderedResults());
+          if (toRestore) {
+            // Se la vista principale ha un metodo renderResults, lo usa per ripristinare i dati
+            if (this.parentView && typeof this.parentView.renderResults === 'function') {
+              console.debug('Restoring results via parentView.renderResults');
+              this.parentView.renderResults(toRestore);
+            }
+            // In alternativa, prova a usare un metodo di fallback nella view stessa
+            else if (this.view && typeof this.view.renderResults === 'function') {
+              console.debug('Restoring results via album view renderResults fallback');
+              this.view.renderResults(toRestore);
+            }
+            // Se nessuna delle due viste è disponibile, mostra un messaggio vuoto
+            else {
+              console.debug('No renderResults available, clearing container');
               this.view.container.innerHTML = "<p>Nessun risultato precedente</p>";
             }
-          };
+          } else {
+            console.debug('No lastResults to restore');
+            this.view.container.innerHTML = "<p>Nessun risultato precedente</p>";
+          }
+        };
 
+      //collega l'handler del pulsante "indietro" alla vista
       this.view.bindBack(handler);
     } catch (err) {
       console.error("Errore nel caricamento album:", err);
@@ -51,24 +58,27 @@ export default class AlbumViewController {
     }
   }
 
-   // Accept optional `previousResults` (array) so the caller can provide
-   // the list currently shown; this avoids relying on view internals.
-   handleAlbumClick(albumId, previousResults = null, isUserLoggedIn = false) {
-    // Store both previous results and user login state
+  //gestisce il click su un album
+  handleAlbumClick(albumId, previousResults = null, isUserLoggedIn = false) {
     if (Array.isArray(previousResults)) {
       this.lastResults = { albums: previousResults };
     } else if (previousResults && typeof previousResults === 'object') {
       this.lastResults = previousResults;
     }
     
-    // Store login state for use in back handler
+    //salva lo stato di login dell’utente per riutilizzarlo
     this._isUserLoggedIn = isUserLoggedIn;
 
-    // Create back handler that passes login state
+    //definisce il comportamento del pulsante “indietro”
     const backHandler = () => {
       console.debug('AlbumViewController.backHandler invoked, lastResults:', this.lastResults);
-      const toRestore = this.lastResults || (this.parentView && this.parentView.getRenderedResults && this.parentView.getRenderedResults());
+
+      // Recupera i risultati precedenti (da lastResults o dalla vista principale)
+      const toRestore = this.lastResults ||
+        (this.parentView && this.parentView.getRenderedResults && this.parentView.getRenderedResults());
+
       if (toRestore) {
+        //ripristina i risultati tramite la vista principale
         if (this.parentView && typeof this.parentView.renderResults === 'function') {
           console.debug('Restoring results via parentView.renderResults with isUserLoggedIn:', this._isUserLoggedIn);
           this.parentView.renderResults(toRestore, this._isUserLoggedIn);
@@ -82,6 +92,7 @@ export default class AlbumViewController {
       }
     };
 
+    // mostra i dettagli dell’album e passa l’handler per il “back”
     this.showAlbum(albumId, backHandler);
-   }
+  }
 }
