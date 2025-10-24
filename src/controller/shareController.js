@@ -1,73 +1,55 @@
-import { doc, setDoc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+//shareController.js
+import { doc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { db } from "../firebase.js";
 
-// Small helper: show a centered modal to capture an email string. Returns the entered string or null on cancel.
+//mostra un modale per chiedere un’email e 
+//restituisce una Promise che risolve con l’email inserita o `null` se annullato
 function promptForEmail(message) {
   return new Promise((resolve) => {
-    // Create backdrop
+    //crea l’overlay di sfondo
     const backdrop = document.createElement('div');
-    backdrop.className = 'lc-modal-backdrop';
-    backdrop.style.position = 'fixed';
-    backdrop.style.inset = '0';
-    backdrop.style.background = 'rgba(0,0,0,0.45)';
-    backdrop.style.display = 'flex';
-    backdrop.style.alignItems = 'center';
-    backdrop.style.justifyContent = 'center';
-    backdrop.style.zIndex = '1200';
+    backdrop.className = 'email-modal-backdrop';
 
-    // Create modal container
+    //crea il contenitore del modale
     const modal = document.createElement('div');
-    modal.className = 'lc-modal';
-    modal.style.minWidth = '320px';
-    modal.style.maxWidth = '90%';
-    modal.style.background = '#fff';
-    modal.style.borderRadius = '8px';
-    modal.style.boxShadow = '0 8px 24px rgba(0,0,0,0.2)';
-    modal.style.padding = '18px';
-    modal.style.boxSizing = 'border-box';
-    modal.style.fontFamily = 'inherit';
+    modal.className = 'email-modal';
 
+    //titolo
     const title = document.createElement('div');
+    title.className = 'email-modal-title';
     title.textContent = message || 'Inserisci email';
-    title.style.marginBottom = '10px';
-    title.style.fontWeight = '600';
 
+    //campo input
     const input = document.createElement('input');
     input.type = 'email';
     input.placeholder = 'es. nome@esempio.com';
-    input.style.width = '100%';
-    input.style.padding = '8px 10px';
-    input.style.fontSize = '14px';
-    input.style.marginBottom = '12px';
-    input.style.border = '1px solid #ccc';
-    input.style.borderRadius = '4px';
+    input.className = 'email-modal-input';
 
+    //pulsanti
     const btnRow = document.createElement('div');
-    btnRow.style.display = 'flex';
-    btnRow.style.justifyContent = 'flex-end';
-    btnRow.style.gap = '8px';
+    btnRow.className = 'email-modal-buttons';
 
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
     cancelBtn.textContent = 'Annulla';
-    cancelBtn.className = 'btn btn-outline-secondary';
+    cancelBtn.className = 'email-modal-btn cancel';
 
     const okBtn = document.createElement('button');
     okBtn.type = 'button';
     okBtn.textContent = 'Condividi';
-    okBtn.className = 'btn btn-primary';
+    okBtn.className = 'email-modal-btn confirm';
 
+    //assembla struttura
     btnRow.appendChild(cancelBtn);
     btnRow.appendChild(okBtn);
-
     modal.appendChild(title);
     modal.appendChild(input);
     modal.appendChild(btnRow);
     backdrop.appendChild(modal);
     document.body.appendChild(backdrop);
 
-    // Focus and handlers
+    //gestione focus e interazioni
     input.focus();
 
     function cleanup() {
@@ -75,19 +57,19 @@ function promptForEmail(message) {
       cancelBtn.removeEventListener('click', onCancel);
       backdrop.removeEventListener('click', onBackdropClick);
       document.removeEventListener('keydown', onKey);
-      if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
+      backdrop.remove();
     }
 
     function onOk(e) {
       e.stopPropagation();
-      const v = input.value ? input.value.trim() : '';
-      if (!v || !/\S+@\S+\.\S+/.test(v)) {
+      const value = input.value.trim();
+      if (!value || !/\S+@\S+\.\S+/.test(value)) {
+        input.classList.add('invalid');
         input.focus();
-        input.style.borderColor = 'crimson';
         return;
       }
       cleanup();
-      resolve(v);
+      resolve(value);
     }
 
     function onCancel(e) {
@@ -115,65 +97,96 @@ function promptForEmail(message) {
   });
 }
 
+
+//controller per la condivisione di una canzone tra utenti.
 export default class ShareController {
+  //condivide una canzone con un altro utente identificato dalla sua email
   async handleShare(song) {
     const auth = getAuth();
     const user = auth.currentUser;
-    if (!user) { alert('Devi effettuare il login per condividere una canzone.'); return; }
-    // Show a centered modal to request recipient email instead of using prompt()
+
+    //se non loggato, blocca
+    if (!user) {
+      alert('Devi effettuare il login per condividere una canzone.');
+      return;
+    }
+
+    //chiede via modale l’email del destinatario
     const recipientEmail = await promptForEmail('Inserisci l\'email del destinatario con cui condividere:');
     if (!recipientEmail) return;
+
     const emailTrim = recipientEmail.trim().toLowerCase();
-    if (!/\S+@\S+\.\S+/.test(emailTrim)) { alert('Email non valida.'); return; }
+    if (!/\S+@\S+\.\S+/.test(emailTrim)) {
+      alert('Email non valida.');
+      return;
+    }
 
     try {
-      // Ensure recipient exists in users collection (users are stored by uid with an 'email' field)
+      //cerca il destinatario nella collection "users" tramite campo email
       const usersCol = collection(db, 'users');
       const q = query(usersCol, where('email', '==', emailTrim));
       let snap;
+
       try {
         snap = await getDocs(q);
       } catch (qErr) {
         console.error('Errore durante la ricerca dell\'utente destinatario (getDocs users):', qErr);
-        // If the error is permission-related, show a clearer message
+
+        //messaggio specifico se l’errore è di permessi Firestore
         if (qErr && (qErr.code === 'permission-denied' || /permission/i.test(qErr.message || ''))) {
           alert('Impossibile cercare utenti: permessi insufficienti per leggere la collection users.\nVerifica le regole di Firestore.');
           return;
         }
-        // Other errors: rethrow to outer catch
         throw qErr;
       }
 
+      //se nessun utente trovato
       if (snap.empty) {
         alert('Nessun utente trovato con questa email. Impossibile condividere.');
         return;
       }
 
-      // Use the first matched user (email should be unique)
+      //usa il primo utente trovato (email deve essere unica)
       const recipientDoc = snap.docs[0];
       const recipientUid = recipientDoc.id;
 
-      // Create global share record
+      //crea un record globale di condivisione in "shares"
       const shareRef = doc(db, 'shares', `${Date.now()}_${Math.random().toString(36).slice(2,8)}`);
       try {
-        await setDoc(shareRef, { fromUid: user.uid, fromEmail: user.email, toEmail: emailTrim, toUid: recipientUid, song, createdAt: new Date().toISOString() });
+        await setDoc(shareRef, {
+          fromUid: user.uid,
+          fromEmail: user.email,
+          toEmail: emailTrim,
+          toUid: recipientUid,
+          song,
+          createdAt: new Date().toISOString()
+        });
       } catch (writeErr) {
-        // Clear, actionable error messaging for permission issues (common when Firestore rules changed)
         console.error('Errore scrittura share:', writeErr);
+
+        //messaggio più chiaro se mancano permessi
         if (writeErr && (writeErr.code === 'permission-denied' || /permission/i.test(writeErr.message || ''))) {
           alert('Impossibile creare la condivisione: permessi insufficienti.\nVerifica le regole di Firestore o implementa una Cloud Function server-side per scrivere la condivisione.');
           return;
         }
-        // rethrow to be handled by outer catch
         throw writeErr;
       }
 
-      // Also add an entry under recipient's users/{uid}/shared for quick access
+      //aggiunge anche un record nella sottocollezione del destinatario per accesso rapido
       try {
-        const recipientSharedRef = doc(db, 'users', recipientUid, 'shared', `${Date.now()}_${Math.random().toString(36).slice(2,8)}`);
-        await setDoc(recipientSharedRef, { from: user.email, song, createdAt: new Date().toISOString() });
+        const recipientSharedRef = doc(
+          db,
+          'users',
+          recipientUid,
+          'shared',
+          `${Date.now()}_${Math.random().toString(36).slice(2,8)}`
+        );
+        await setDoc(recipientSharedRef, {
+          from: user.email,
+          song,
+          createdAt: new Date().toISOString()
+        });
       } catch (innerErr) {
-        // Non-fatal: log but continue
         console.debug('Non è stato possibile scrivere nella subcollection shared del destinatario:', innerErr);
       }
 

@@ -1,22 +1,33 @@
+//searchController.js
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { db } from "../firebase.js";
 
+//controller che gestisce la ricerca musicale.
+//si occupa di inviare le query al model, visualizzare i risultati 
+//e aggiornare la UI in base allo stato dell’utente (login, preferiti, playlist)
 export default class SearchController {
   constructor(model, view) {
     this.model = model;
-    this.view = view;
-    // store last results object { songs, albums, artists }
+    this.view = view; 
     this.lastResults = null;
   }
 
+  //esegue la ricerca musicale e aggiorna la vista con i risultati e salva l’ultima ricerca su Firestore se l’utente è loggato
   async handleSearch(query) {
     try {
+      //mostra lo stato di caricamento
       this.view.renderLoading();
+
+      //esegue la ricerca tramite il model
       const results = await this.model.search(query);
-      // keep a reference so other controllers can reuse the recently rendered data
+
+      //memorizza gli ultimi risultati per riutilizzarli
       this.lastResults = results;
+
+      //mostra i risultati nella UI, passando se l’utente è loggato o meno
       this.view.renderResults(results, this.controller?.isUserLoggedIn);
 
+      //prova a fare lo scroll automatico ai risultati
       try {
         const rc = this.view.results;
         if (rc) rc.closest('section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -24,22 +35,22 @@ export default class SearchController {
         console.warn('Impossibile scrollare ai risultati', e);
       }
 
-
-      // If attached to MusicController, update playlist-button state based on user's playlists
+      //se collegato al MusicController, sincronizza lo stato playlist dei brani
       if (this.controller?.playlistController) {
-        // mark songs that are already present in user's playlists
         const songs = Array.isArray(results.songs) ? results.songs : [];
         await this._markPlaylistState(songs);
       }
 
-      // mark favorite state for rendered songs
+      //segna i brani già presenti tra i preferiti
       if (this.controller?.favoriteController) {
         const songs = Array.isArray(results.songs) ? results.songs : [];
         await this._markFavoriteState(songs);
       }
 
+      //prepara un riferimento Firestore dove salvare l’ultima ricerca
       const ref = doc(db, "searches", "latest");
-      // Serialize results to plain objects because Firestore rejects custom class instances
+
+      //converte i risultati in oggetti semplici per compatibilità Firestore
       const safeResults = {};
       if (results) {
         if (Array.isArray(results.songs)) {
@@ -70,38 +81,42 @@ export default class SearchController {
             artwork: ar.artwork || null,
             genre: ar.genre || null
           }));
-
         }
-
-
       }
 
-      // ✅ Only write to Firestore if user is logged in
+      //salva su Firestore solo se l’utente è autenticato
       if (this.controller?.isUserLoggedIn) {
         await setDoc(ref, { query, results: safeResults, updatedAt: new Date().toISOString() });
         console.log("Ricerca salvata su Firestore");
       }
 
-      console.log("Ricerca salvata su Firestore");
+      console.log("Ricerca completata con successo");
+
     } catch (err) {
-      console.error(err);
+      console.error("Errore durante la ricerca:", err);
       this.view.renderError();
     }
   }
 
+  //carica e mostra l’ultima ricerca salvata su Firestore solo per utenti non loggati
   async loadLatestSearch() {
-    // 🔹 Se l’utente è loggato, non renderizzare le card
+    //non mostrare nulla se l’utente è loggato
     if (this.controller?.isUserLoggedIn) return;
 
     const ref = doc(db, "searches", "latest");
     const snap = await getDoc(ref);
     if (!snap.exists()) return;
+
     const data = snap.data();
     if (!data?.results) return;
-    // save loaded results so controllers can access them
+
+    //salva internamente i risultati caricati
     this.lastResults = data.results;
+
+    //mostra i risultati caricati nella vista
     this.view.renderResults(data.results, this.controller?.isUserLoggedIn);
 
+    //scroll automatico alla sezione dei risultati
     try {
       const rc = this.view.results;
       if (rc) rc.closest('section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -109,6 +124,7 @@ export default class SearchController {
       console.warn('Impossibile scrollare ai risultati caricati', e);
     }
 
+    //aggiorna lo stato dei pulsanti (playlist e preferiti)
     if (this.controller?.playlistController) {
       const songs = Array.isArray(data.results.songs) ? data.results.songs : [];
       await this._markPlaylistState(songs);
@@ -119,12 +135,14 @@ export default class SearchController {
     }
   }
 
-  // check user's playlists and toggle the playlist button UI for results
+  //segna nella UI i brani che appartengono già ad almeno una playlist dell’utente
   async _markPlaylistState(songs) {
     if (!Array.isArray(songs) || songs.length === 0) return;
+
     try {
       const playlists = await this.controller.playlistController.getPlaylists();
-      // build a map songId -> firstPlaylistId containing it
+
+      //crea una mappa canzone → id della prima playlist in cui si trova
       const map = new Map();
       for (const pl of playlists) {
         (pl.songs || []).forEach(s => {
@@ -133,6 +151,7 @@ export default class SearchController {
         });
       }
 
+      //aggiorna lo stato dei pulsanti nella vista
       songs.forEach(s => {
         const sid = s.id || (s.title ? s.title.replace(/\s+/g, '-').toLowerCase() : null);
         const plId = sid ? map.get(sid) : null;
@@ -140,25 +159,25 @@ export default class SearchController {
         this.view.updatePlaylistButton(sid, plId || null, isAdded);
       });
     } catch (err) {
-      console.error('Error while marking playlist state:', err);
+      console.error('Errore durante il controllo stato playlist:', err);
     }
   }
 
+  //segna nella UI i brani che sono già nei preferiti dell’utente
   async _markFavoriteState(songs) {
     if (!Array.isArray(songs) || songs.length === 0) return;
+
     try {
       const favs = await this.controller.favoriteController.getFavorites();
       const favSet = new Set(favs.map(f => f.id));
+
       songs.forEach(s => {
         const sid = s.id || (s.title ? s.title.replace(/\s+/g, '-').toLowerCase() : null);
         const isFav = sid ? favSet.has(sid) : false;
         this.view.updateFavoriteState(sid, isFav);
       });
     } catch (err) {
-      console.error('Error while marking favorite state:', err);
+      console.error('Errore durante il controllo stato preferiti:', err);
     }
   }
-
-
-
 }
