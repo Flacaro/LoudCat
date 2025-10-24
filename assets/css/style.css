@@ -125,6 +125,18 @@ header h5 {
   transition: var(--transition);
 }
 
+/* Search Input Placeholder - Brighter */
+#search-input::placeholder {
+  color: rgba(255, 255, 255, 0.7); /* Brighter placeholder text */
+  opacity: 1;
+}
+
+/* Firefox compatibility */
+#search-input::-moz-placeholder {
+  color: rgba(255, 255, 255, 0.7);
+  opacity: 1;
+}
+
 #search-input:focus {
   outline: none;
   border-color: var(--primary);
@@ -1761,11 +1773,6 @@ button:disabled {
   color: var(--text-secondary);
 }
 
-.artist-profile-note small {
-  font-size: 0.875rem;
-  line-height: 1.5;
-}
-
 /* Responsive album view */
 @media (max-width: 768px) {
   .album-header-section {
@@ -1955,5 +1962,20 @@ button:disabled {
   box-shadow: none;
   border-left-color: transparent;
   background: var(--surface-light);
+}
+
+/* Search Results Section Title - Brighter */
+#results-section h3,
+#results-section h2,
+.results-title {
+  color: var(--text-primary); /* Use the brightest text variable */
+}
+
+/* If "Risultati di ricerca" has a specific class or ID, target it directly */
+/* For example, if it's in a header: */
+#results-section > h2,
+#results-section > h3 {
+  color: #ffffff; /* Pure white for maximum brightness */
+  font-weight: 600;
 }
 
