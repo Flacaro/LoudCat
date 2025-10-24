@@ -4,6 +4,7 @@ import MusicView from "./view/musicView.js";
 import MusicController from "./controller/musicController.js";
 import { initFirebaseAuth } from "./controller/authController.js";
 import { initProfileModal } from "./view/header.js";
+import { playCustomAudio } from "./utils/audioEffects.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const service = new MusicService();
@@ -24,6 +25,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Listener pulsante "🏠 Home" (uso del helper)
   on("homeBtn", "click", async () => {
+    // Riproduci effetto sonoro
+    playCustomAudio();
+    
     await controller.loadHome();
 
     try {
