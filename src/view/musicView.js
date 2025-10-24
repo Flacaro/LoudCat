@@ -146,8 +146,10 @@ renderArtists(artists) {
         <div class="card artist-card" 
           data-artist-id="${artist.artistId}" 
           data-artist-name="${displayName}">
-          <div class="artist-tag">Artista</div>
+          <div class="artist-tag">🎸 Artista</div>
+          <div class="artist-icon">🎤</div>
           <h3>${displayName}</h3>
+          <p class="artist-subtitle">Clicca per esplorare</p>
         </div>
       `;
     })

@@ -15,21 +15,35 @@ export default class ArtistProfileView {
     const html = `
       <div class="artist-profile">
         <button id="backBtn" class="btn btn-secondary mb-3">← Torna ai risultati</button>
-        <div class="card p-3 shadow-sm">
+        <div class="card p-4 shadow-lg">
           <h2>${artist.name}</h2>
-          <p>🌍 Paese: ${artist.country}</p>
-          <p>🎭 Tipo: ${artist.type}</p>
-          ${artist.disambiguation ? `<p><em>${artist.disambiguation}</em></p>` : ""}
+          
+          <div class="artist-info-badges mb-4">
+            ${artist.country ? `<span class="artist-info-badge"><span class="emoji">🌍</span> ${artist.country}</span>` : ''}
+            ${artist.type ? `<span class="artist-info-badge"><span class="emoji">🎭</span> ${artist.type}</span>` : ''}
+          </div>
+          
+          ${artist.disambiguation ? `<p class="mb-3"><em>${artist.disambiguation}</em></p>` : ""}
+          
           ${artist.links?.length ? `
-            <h5>🔗 Link ufficiali:</h5>
-            <ul>
-              ${artist.links.map(url => `<li><a href="${url}" target="_blank">${url}</a></li>`).join("")}
+            <h5>🔗 Link ufficiali</h5>
+            <ul class="links-list">
+              ${artist.links.map(url => {
+                const domain = new URL(url).hostname.replace('www.', '');
+                return `<li><a href="${url}" target="_blank" rel="noopener noreferrer">${domain} ↗</a></li>`;
+              }).join("")}
             </ul>` : ""}
+          
           ${artist.albums?.length ? `
-            <h5 class="mt-3">💿 Pubblicazioni:</h5>
-            <ul>
-              ${artist.albums.map(r => `<li>${r.title} (${r.type})</li>`).join("")}
-            </ul>` : "<p>Nessuna pubblicazione trovata.</p>"}
+            <h5>💿 Pubblicazioni</h5>
+            <ul class="albums-list">
+              ${artist.albums.map(r => `
+                <li class="album-release">
+                  <span>${r.title}</span>
+                  <span class="release-type">${r.type}</span>
+                </li>
+              `).join("")}
+            </ul>` : '<p class="empty-state">Nessuna pubblicazione trovata.</p>'}
         </div>
       </div>
     `;
