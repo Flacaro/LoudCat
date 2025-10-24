@@ -2,13 +2,15 @@
 import { fetchAlbumById, fetchTracksByAlbum } from "./apiService.js";
 
 export default class AlbumViewService {
+  // Recupera i dettagli di un album, inclusi le tracce
   async getAlbumDetails(albumId) {
     try {
       const [albumInfo, tracks] = await Promise.all([
+        //usa le funzioni di apiService per ottenere i dati
         fetchAlbumById(albumId),
         fetchTracksByAlbum(albumId),
       ]);
-
+      //restituisce un oggetto Album con i dettagli e le tracce
       return {
         id: albumInfo.collectionId,
         title: albumInfo.title || albumInfo.collectionName,
@@ -19,7 +21,7 @@ export default class AlbumViewService {
         tracks,
       };
     } catch (err) {
-      // add context to the error so controllers can show better messages
+      //gestione errori
       throw new Error(`Errore nel caricamento dei dettagli album: ${err.message}`);
     }
   }
