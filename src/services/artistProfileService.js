@@ -1,3 +1,5 @@
+import { searchAlbumByTitleAndArtist } from "./apiService.js";
+
 // src/services/artistProfileService.js
 export default class ArtistProfileService {
   constructor() {
@@ -75,14 +77,49 @@ export default class ArtistProfileService {
     return this._mapArtistData(data, artwork);
   }
 
+  // NEW: Match MusicBrainz albums with iTunes
+  async enrichAlbumsWithItunesIds(albums, artistName) {
+    console.log(`Matching ${albums.length} albums with iTunes for artist: ${artistName}`);
+    
+    // Process albums in batches to avoid overwhelming the API
+    const enrichedAlbums = [];
+    
+    for (const album of albums.slice(0, 20)) { // Limit to first 20 albums
+      try {
+        const itunesMatch = await searchAlbumByTitleAndArtist(album.title, artistName);
+        
+        enrichedAlbums.push({
+          ...album,
+          collectionId: itunesMatch?.collectionId || null,
+          isClickable: !!itunesMatch?.collectionId
+        });
+        
+        // Small delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 200));
+      } catch (err) {
+        console.warn(`Failed to match album "${album.title}":`, err);
+        enrichedAlbums.push({
+          ...album,
+          collectionId: null,
+          isClickable: false
+        });
+      }
+    }
+    
+    console.log(`Matched ${enrichedAlbums.filter(a => a.isClickable).length}/${enrichedAlbums.length} albums with iTunes`);
+    return enrichedAlbums;
+  }
+
   // Normalize the data
   _mapArtistData(raw, artwork = "") {
     const releases = (raw["release-groups"] || []).map((rg) => ({
       id: rg.id,
       title: rg.title,
       type: rg["primary-type"] || "Album",
+      date: rg["first-release-date"] || "—",
       cover: artwork || "assets/img/avatar-placeholder.svg",
-      releaseDate: "—",
+      collectionId: null, // Will be enriched later
+      isClickable: false
     }));
 
     return {

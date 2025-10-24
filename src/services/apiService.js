@@ -202,3 +202,36 @@ export async function getRecommendedFromItunes(userGenres, userSongs) {
   return recommended.slice(0, 10);
 }
 
+export async function searchAlbumByTitleAndArtist(albumTitle, artistName) {
+  // Search for album by combining title and artist name
+  const query = `${albumTitle} ${artistName}`;
+  const params = `term=${encodeURIComponent(query)}&entity=album&limit=1`;
+  const endpoint = `https://itunes.apple.com/search?${params}`;
+  
+  let data;
+  try {
+    const res = await fetch(endpoint);
+    if (!res.ok) throw new Error(`Errore nella richiesta API: ${res.status} ${res.statusText} (${endpoint})`);
+    data = await res.json();
+  } catch (err) {
+    try {
+      data = await jsonpFetch(endpoint);
+    } catch (jsonpErr) {
+      console.warn(`searchAlbumByTitleAndArtist failed for ${endpoint}: ${err.message}; jsonp: ${jsonpErr.message}`);
+      return null; // Return null instead of throwing - album might not be on iTunes
+    }
+  }
+  
+  // Return the first matching album's collectionId or null
+  if (data.results && data.results.length > 0) {
+    return {
+      collectionId: data.results[0].collectionId,
+      title: data.results[0].collectionName,
+      artist: data.results[0].artistName,
+      artwork: data.results[0].artworkUrl100
+    };
+  }
+  
+  return null;
+}
+

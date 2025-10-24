@@ -9,8 +9,6 @@ export default class ArtistProfileController {
     this._onBack = this._onBack.bind(this);
   }
 
-  // Show artist info by name
-  // accept optional backHandler as first arg (provided by MusicController)
   async showArtistProfile(backHandler, artistName) {
     try {
       if (!artistName) throw new Error("Nessun artista specificato");
@@ -23,8 +21,18 @@ export default class ArtistProfileController {
       // Step 2: Get full artist details by MBID
       const artist = await this.service.getArtistProfile(searched.id);
 
+      // Step 3: Enrich albums with iTunes collectionIds for clickability
+      if (artist.albums && artist.albums.length > 0) {
+        this.view.renderPartialProfile(artist, true); // Show profile with loading indicator for albums
+        
+        artist.albums = await this.service.enrichAlbumsWithItunesIds(
+          artist.albums,
+          artist.name
+        );
+      }
+
+      // Step 4: Render complete profile with enriched albums
       this.view.renderArtistProfile(artist);
-      // prefer provided backHandler, else fallback to internal _onBack
       this.view.bindBack(typeof backHandler === 'function' ? backHandler : this._onBack);
     } catch (err) {
       console.error("Error loading artist profile:", err);
