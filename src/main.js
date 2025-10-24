@@ -67,4 +67,21 @@ document.addEventListener("DOMContentLoaded", () => {
     mobileMenu.classList.toggle("d-none");
   });
 
+  // Mostra welcome view al caricamento iniziale se l'utente non è autenticato
+  // Usa un piccolo delay per permettere a Firebase Auth di inizializzarsi
+  setTimeout(async () => {
+    try {
+      const { getAuth } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+      const auth = getAuth();
+      
+      if (!auth.currentUser && controller.welcomeView) {
+        const homeContainer = document.getElementById("home-container");
+        if (homeContainer) homeContainer.style.display = "block";
+        controller.welcomeView.render();
+      }
+    } catch (err) {
+      console.warn("Impossibile verificare lo stato di autenticazione iniziale:", err);
+    }
+  }, 500);
+
 });

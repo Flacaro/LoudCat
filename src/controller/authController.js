@@ -11,15 +11,15 @@ export function initFirebaseAuth(controller) {
     return;
   }
 
-  //Listener per i cambiamenti dello stato dell’utente (login/logout)
+  //Listener per i cambiamenti dello stato dell'utente (login/logout)
   //`onUserChanged` è una funzione del modello che osserva Firebase Authentication, chiamato 
-  //ogni volta che l’utente si logga o si disconnette
+  //ogni volta che l'utente si logga o si disconnette
   onUserChanged(async (user) => {
     const homeContainer = document.getElementById("home-container");
     const resultsContainer = document.getElementById("results-section");
 
     if (user) {
-      //se l’utente è autenticato, mostra l’interfaccia personalizzata
+      //se l'utente è autenticato, mostra l'interfaccia personalizzata
       showUserUI(user.email);
       console.log("Utente autenticato:", user.email);
 
@@ -28,7 +28,7 @@ export function initFirebaseAuth(controller) {
         controller.welcomeView.clear();
       }
 
-      //carica le collezioni personali dell’utente (preferiti, playlist, ecc.)
+      //carica le collezioni personali dell'utente (preferiti, playlist, ecc.)
       if (controller.userController) {
         const { favorites, playlists } = await controller.userController.loadUserCollections(user.uid);
         controller.userController.renderUserCollections({ favorites, playlists }, controller.view);
@@ -39,20 +39,27 @@ export function initFirebaseAuth(controller) {
       if (resultsContainer) resultsContainer.style.display = "none";
 
     } else {
-      //se l’utente è disconnesso, mostra la schermata di login
+      //se l'utente è disconnesso, mostra la schermata di login
       showLoginUI();
       console.log("Nessun utente autenticato");
 
-      //nasconde la home e svuota i contenuti
-      if (homeContainer) {
-        homeContainer.innerHTML = "";
-        homeContainer.style.display = "none";
-      }
-      if (resultsContainer) resultsContainer.style.display = "none";
-
-      //svuota eventuali risultati della home view
-      if (controller.homeView) {
+      //svuota eventuali risultati della home view personale
+      if (controller.homeView && controller.homeView.results) {
         controller.homeView.results.innerHTML = "";
+      }
+
+      //mostra il container home e nasconde risultati
+      if (homeContainer) {
+        homeContainer.innerHTML = ""; // Pulisce completamente il contenitore
+        homeContainer.style.display = "block";
+      }
+      if (resultsContainer) {
+        resultsContainer.style.display = "none";
+      }
+
+      //renderizza la welcome view per utenti non autenticati
+      if (controller.welcomeView) {
+        controller.welcomeView.render();
       }
     }
   });
@@ -81,7 +88,7 @@ export function initFirebaseAuth(controller) {
     }
   }
 
-  //selezione degli elementi dell’interfaccia per il modulo di login/registrazione
+  //selezione degli elementi dell'interfaccia per il modulo di login/registrazione
   const registerBtnEl = document.getElementById("registerBtn");
   const loginBtnEl = document.getElementById("loginBtn");
   const authSection = document.getElementById("auth");
@@ -106,7 +113,7 @@ export function initFirebaseAuth(controller) {
     if (confirmLoginBtn) confirmLoginBtn.style.display = "inline-block";
   });
 
-  //nasconde la sezione di autenticazione (quando si preme “Annulla”)
+  //nasconde la sezione di autenticazione (quando si preme "Annulla")
   cancelAuthBtn?.addEventListener("click", () => {
     if (authSection) authSection.style.display = "none";
   });
@@ -127,11 +134,11 @@ export function initFirebaseAuth(controller) {
       //disabilita il bottone per evitare registrazioni multiple
       confirmRegisterBtn.disabled = true;
 
-      //registra l’utente su Firebase
+      //registra l'utente su Firebase
       const cred = await register(email, pass);
       const user = cred.user;
 
-      //aggiorna il profilo Firebase dell’utente
+      //aggiorna il profilo Firebase dell'utente
       try {
         const { updateProfile } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
         await updateProfile(user, { displayName: username || null });
@@ -180,7 +187,7 @@ export function initFirebaseAuth(controller) {
       if (!email || !pass) { alert("Inserisci email e password."); return; }
       if (!isValidEmail(email)) { alert("Formato email non valido."); return; }
 
-      //esegue l’accesso
+      //esegue l'accesso
       await login(email, pass);
       console.log("Login eseguito per:", email);
 
@@ -198,8 +205,8 @@ export function initFirebaseAuth(controller) {
     await logout();
   });
 
-  //carica i dati salvati dell’utente (da Firestore)
-  //mostra le informazioni salvate nel pannello dell’utente.
+  //carica i dati salvati dell'utente (da Firestore)
+  //mostra le informazioni salvate nel pannello dell'utente.
   document.getElementById("loadBtn").addEventListener("click", async () => {
     const user = (await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"))
       .getAuth()
