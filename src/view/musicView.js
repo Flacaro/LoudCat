@@ -289,10 +289,14 @@ bindArtistClick(handler) {
     this._lastRenderedResults = { songs, albums, artists };
 
     if(Array.isArray(artists) && artists.length) this.renderArtists(artists);
-    if(Array.isArray(songs) && songs.length && userLogged) this.renderSongs(songs);
-    else this.renderSongsnoAuth(songs);
+    if(Array.isArray(songs) && songs.length) {
+      if(userLogged) {
+        this.renderSongs(songs);
+      } else {
+        this.renderSongsnoAuth(songs);
+      }
+    }
     if(Array.isArray(albums) && albums.length) this.renderAlbums(albums);
-    
 
     try {
       this.results.closest('section')?.scrollIntoView({ behavior: 'smooth', block: 'start'});
