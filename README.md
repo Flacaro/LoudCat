@@ -1,6 +1,7 @@
 # LoudCat
 
-**LoudCat** è un'applicazione web client-side per esplorare, organizzare e condividere musica. Utilizza l'API di iTunes per la ricerca di brani, album e artisti, e Firebase per l'autenticazione e la gestione dei dati utente.
+**LoudCat** è un'applicazione web client-side per esplorare, organizzare e condividere musica. Utilizza l'API di iTunes per la ricerca di brani, album e artisti, e Firebase per l'autenticazione e la gestione dei dati utente
+(e il gatto è effettivamente rumoroso).
 
 ---
 
