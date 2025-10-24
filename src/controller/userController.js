@@ -86,9 +86,12 @@ export default class UserController {
 
   //mostra una modale con la lista di brani specificata
   showSongsModal(title, songs, playlistId = null, isFavorites = false) {
+  // evita di aprire più modal sovrapposte
+  try { if (window.__modalOpen) return; } catch (e) { /* ignore */ }
   const modal = document.createElement("div");
   //permette di rimuovere brani dai preferiti o dalle playlist
   modal.className = "playlist-modal"; 
+  try { window.__modalOpen = true; } catch (e) { /* ignore */ }
   modal.innerHTML = `
     <div class="playlist-modal-content">
       <div class="d-flex justify-content-between align-items-center mb-3">
@@ -113,6 +116,14 @@ export default class UserController {
   `;
 
   document.body.appendChild(modal);
+  // assicura che la variabile globale venga resettata quando la modal viene rimossa
+  try {
+    const origRemove = modal.remove.bind(modal);
+    modal.remove = () => {
+      try { origRemove(); } catch (e) { /* ignore */ }
+      try { setTimeout(() => { window.__modalOpen = false; }, 350); } catch (e) { /* ignore */ }
+    };
+  } catch (e) { /* ignore */ }
   //gestisce la chiusura della modale cliccando sullo sfondo o sul bottone di chiusura.
   modal.querySelector(".btn-close").addEventListener("click", () => modal.remove());
   modal.addEventListener("click", (e) => {

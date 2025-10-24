@@ -329,6 +329,7 @@ export default class HomeView {
   }
 
   showCreatePlaylistModal(onConfirm) {
+    try { if (window.__modalOpen) return; } catch (e) { /* ignore */ }
     const modal = document.createElement("div");
     modal.className = "playlist-modal";
 
@@ -342,8 +343,11 @@ export default class HomeView {
     });
 
     content.innerHTML = `
-    <h5 class="mb-3">Crea nuova playlist</h5>
-    <input id="playlistNameInput" class="form-control mb-3" type="text" placeholder="Nome playlist" />
+    <div class="d-flex justify-content-between align-items-start mb-2">
+      <h5 class="mb-0">Crea nuova playlist</h5>
+      <button class="btn-close" aria-label="Close"></button>
+    </div>
+    <input class="playlist-name-input form-control mb-3" type="text" placeholder="Nome playlist" />
     <div class="d-flex justify-content-end gap-2">
       <button id="cancelBtn" class="btn btn-secondary">Annulla</button>
       <button id="createBtn" class="btn btn-primary">Crea</button>
@@ -353,7 +357,7 @@ export default class HomeView {
     modal.appendChild(content);
     document.body.appendChild(modal);
 
-    const input = content.querySelector("#playlistNameInput");
+  const input = content.querySelector(".playlist-name-input");
     const btnCreate = content.querySelector("#createBtn");
     const btnCancel = content.querySelector("#cancelBtn");
 
@@ -364,6 +368,22 @@ export default class HomeView {
       if (e.target === modal) closeModal();
     });
 
+    // Pulsante di chiusura in alto a destra 
+    const closeBtn = content.querySelector('.btn-close');
+    if (closeBtn) {
+      const closeHandler = (e) => {
+        try { e.stopImmediatePropagation?.(); } catch (err) { /* ignore */ }
+        try { e.stopPropagation(); } catch (err) { /* ignore */ }
+        try { e.preventDefault(); } catch (err) { /* ignore */ }
+        try { this.suppressClicks(350); } catch (err) { /* ignore */ }
+        try { this._addClickBlocker(350); } catch (err) { /* ignore */ }
+        try { this._disableResultsPointerEvents(350); } catch (err) { /* ignore */ }
+        modal.remove();
+      };
+      closeBtn.addEventListener('pointerdown', closeHandler, { capture: true });
+      closeBtn.addEventListener('click', closeHandler, { capture: true });
+    }
+
     btnCreate.addEventListener("click", () => {
       const name = input.value.trim();
       closeModal();
@@ -371,6 +391,14 @@ export default class HomeView {
     });
 
     input.focus();
+    try { window.__modalOpen = true; } catch (e) { /* ignore */ }
+    try {
+      const origRemove = modal.remove.bind(modal);
+      modal.remove = () => {
+        try { origRemove(); } catch (e) { /* ignore */ }
+        try { setTimeout(() => { window.__modalOpen = false; }, 350); } catch (e) { /* ignore */ }
+      };
+    } catch (e) { /* ignore */ }
   }
 
 
@@ -420,7 +448,7 @@ export default class HomeView {
           card.className = type === "playlists" ? "playlist-card" : "song-card";
 
           if (type === "playlists") {
-            // expose playlist id on the card so capture-phase handlers can locate it
+           
             card.dataset.playlistId = item.id || '';
             card.innerHTML = `
             <div class="song-artwork-wrapper">
@@ -430,20 +458,10 @@ export default class HomeView {
             <small>${(item.songs || []).length} brani</small>
             <button onclick="event.stopPropagation()" class="btn btn-sm btn-danger playlist-trash-btn" data-playlist-id="${item.id || ''}" title="Elimina playlist">🗑</button>
           `;
-            card.addEventListener("click", (e) => {
-              // Safely detect clicks on interactive controls (trash button, audio, buttons)
-              try {
-                const isInteractive = (e.target && typeof e.target.closest === 'function')
-                  && Boolean(e.target.closest('.playlist-trash-btn') || e.target.closest('button') || e.target.closest('audio') || e.target.closest('a'));
-                if (isInteractive) return;
-              } catch (err) {
-                // If something goes wrong detecting the target, avoid opening the modal
-                console.warn('HomeView: error detecting click target on playlist card', err);
-                return;
-              }
-
-              this.showSongsModal(item.name, item.songs || [], item.id, false);
-            });
+            // Nota: non attacchiamo un handler diretto sulla card delle playlist qui
+            // perché esiste un handler in fase di capture (`playSection.addEventListener`) che
+            // gestisce l'apertura della modal per le playlist. Aggiungere entrambi causava
+            // aperture duplicate.
           } else {
             card.innerHTML = `
                         <div class="song-artwork-wrapper">
@@ -469,6 +487,10 @@ export default class HomeView {
             // assicurati che il cursore non sembri un link e non aggiungere handler che aprono modal
             try { card.style.cursor = 'default'; } catch (err) { /* ignore */ }
             // non attacchiamo handler di apertura per i consigliati
+          } else if (type === "playlists") {
+            // Non registriamo handler aggiuntivi per le playlist qui: l'apertura
+            // viene gestita dal listener in capture su `playSection` per evitare
+            // comportamenti doppi (e per centralizzare la logica di apertura).
           } else {
             // Log per debug: verifica che il pulsante di eliminazione sia presente
             const trashBtn = card.querySelector('.playlist-trash-btn');
