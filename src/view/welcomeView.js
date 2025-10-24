@@ -3,8 +3,10 @@ export default class WelcomeView {
     this.container = document.getElementById("home-container");
   }
 
-  render() {
+  render(user = null) {
     if (!this.container) return;
+
+    const loggedIn = !!user;
 
     const html = `
       <div class="welcome-container">
@@ -13,15 +15,21 @@ export default class WelcomeView {
             <div class="loading-logo">
               <img src="assets/logo/LoudCatLogo.PNG" alt="LoudCat" class="logo-spin" />
             </div>
-            <h1 class="hero-title">Benvenuto su LoudCat</h1>
+            <h1 class="hero-title">Benvenuto su LoudCat${loggedIn && user.displayName ? ", " + (user.displayName) : ""}</h1>
             <p class="hero-subtitle">Esplora milioni di brani, crea playlist e condividi la tua musica preferita</p>
             <div class="hero-cta">
-              <button id="welcome-register-btn" class="btn btn-primary btn-lg me-2">
-                Registrati
-              </button>
-              <button id="welcome-login-btn" class="btn btn-outline-light btn-lg">
-                Accedi
-              </button>
+              ${loggedIn ? `
+                <button id="welcome-start-btn" class="btn btn-primary btn-lg">
+                  Inizia a cercare
+                </button>
+              ` : `
+                <button id="welcome-register-btn" class="btn btn-primary btn-lg me-2">
+                  Registrati
+                </button>
+                <button id="welcome-login-btn" class="btn btn-outline-light btn-lg">
+                  Accedi
+                </button>
+              `}
             </div>
           </div>
         </div>
@@ -99,10 +107,10 @@ export default class WelcomeView {
     `;
 
     this.container.innerHTML = html;
-    this._attachEventListeners();
+    this._attachEventListeners(loggedIn);
   }
 
-  _attachEventListeners() {
+  _attachEventListeners(loggedIn = false) {
     // Register buttons
     const welcomeRegBtn = document.getElementById("welcome-register-btn");
     const ctaRegBtn = document.getElementById("cta-register-btn");
@@ -123,6 +131,19 @@ export default class WelcomeView {
         const loginBtn = document.getElementById("loginBtn");
         if (loginBtn) loginBtn.click();
       });
+    }
+
+    //se l'utente è loggato, imposta il bottone di start per la ricerca
+    if (loggedIn) {
+      const startBtn = document.getElementById('welcome-start-btn');
+      if (startBtn) {
+        startBtn.addEventListener('click', () => {
+          const searchInput = document.getElementById('search-input');
+          const searchBtn = document.getElementById('search-btn');
+          if (searchInput) searchInput.focus();
+          if (searchBtn) searchBtn.click();
+        });
+      }
     }
 
     // Demo search

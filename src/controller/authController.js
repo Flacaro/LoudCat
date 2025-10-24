@@ -38,6 +38,15 @@ export function initFirebaseAuth(controller) {
       if (homeContainer) homeContainer.style.display = "block";
       if (resultsContainer) resultsContainer.style.display = "none";
 
+      // Carica la home personalizzata (assicura che i nuovi utenti vedano la welcome personalizzata)
+      try {
+        if (controller && typeof controller.loadHome === 'function') {
+          await controller.loadHome();
+        }
+      } catch (e) {
+        console.warn('Impossibile caricare la home dopo il cambio di stato utente:', e);
+      }
+
     } else {
       //se l'utente è disconnesso, mostra la schermata di login
       showLoginUI();

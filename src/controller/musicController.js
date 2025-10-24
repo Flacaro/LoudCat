@@ -53,7 +53,8 @@ export default class MusicController {
       if (user) {
         //utente loggato → carica dati personalizzati
         this.isUserLoggedIn = true;
-        await this.loadUserCollections();
+        //usa la home personalizzata
+        await this.loadHome();
         //ascolta modifiche in tempo reale
         this._subscribeRealtime(user.uid); 
       } else {
@@ -132,13 +133,33 @@ export default class MusicController {
 
       //listener per i preferiti
       this._unsubFav = onSnapshot(favCol, async () => {
-        await this.loadUserCollections();
+        try {
+          // se la sezione risultati è visibile, ricarica le collezioni utente
+          // altrimenti ricarica la home
+          const resultsSection = document.getElementById('results-section');
+          if (resultsSection && resultsSection.style.display === 'block') {
+            await this.loadUserCollections();
+          } else {
+            await this.loadHome();
+          }
+        } catch (e) {
+          console.warn('Errore processing fav snapshot:', e);
+        }
         try { await this._syncResultButtonStates(); } catch (e) { console.warn('Errore sync fav button states', e); }
       });
 
       //listener per le playlist
       this._unsubPlaylists = onSnapshot(playCol, async () => {
-        await this.loadUserCollections();
+        try {
+          const resultsSection = document.getElementById('results-section');
+          if (resultsSection && resultsSection.style.display === 'block') {
+            await this.loadUserCollections();
+          } else {
+            await this.loadHome();
+          }
+        } catch (e) {
+          console.warn('Errore processing playlists snapshot:', e);
+        }
         try { await this._syncResultButtonStates(); } catch (e) { console.warn('Errore sync playlist button states', e); }
       });
     } catch (err) {
@@ -210,15 +231,28 @@ export default class MusicController {
     let recommended = [];
 
     if (user) {
-      //se loggato → mostra messaggio di benvenuto
+      // se loggato → pulisci eventuale welcomeView
       this.welcomeView.clear();
-      this.homeView.showWelcomeMessage(user.displayName || 'Utente');
 
-      //carica preferiti e playlist in parallelo
+      // carica preferiti e playlist in parallelo
       [favorites, playlists] = await Promise.all([
         this.favoriteController.getFavorites(),
         this.playlistController.getPlaylists()
       ]);
+
+      // Se l'utente è appena registrato (nessun preferito e nessuna playlist), mostra la WelcomeView
+      if ((Array.isArray(favorites) && favorites.length === 0) && (Array.isArray(playlists) && playlists.length === 0)) {
+        try {
+          this.welcomeView.render(user);
+          console.log("=== LOAD HOME END (new user welcome) ===");
+        } catch (e) {
+          console.warn('Impossibile mostrare welcomeView per nuovo utente', e);
+        }
+        return;
+      }
+
+      // Mostra messaggio di benvenuto nella home
+      this.homeView.showWelcomeMessage(user.displayName || 'Utente');
 
       //mostra canzoni consigliate: ultime cercate o casuali
       if (this.searchController.lastResults?.songs?.length > 0) {

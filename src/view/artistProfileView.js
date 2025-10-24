@@ -24,7 +24,7 @@ export default class ArtistProfileView {
     `;
   }
 
-  // Render partial profile while albums are being enriched
+  // renderize un profilo parziale (senza album) durante il caricamento degli album
   renderPartialProfile(artist, albumsLoading = false) {
     const html = this._buildProfileHtml(artist, albumsLoading);
     this.results.innerHTML = html;
@@ -41,7 +41,7 @@ export default class ArtistProfileView {
       });
     }
 
-    // Bind click events for clickable album cards
+    // Aggiunge i listener di click alle card degli album cliccabili
     this.results.querySelectorAll('.album-card-clickable').forEach(card => {
       card.addEventListener('click', () => {
         const albumId = card.dataset.albumId;
@@ -200,7 +200,7 @@ export default class ArtistProfileView {
   }
 
   bindBack(handler) {
-    // Ensure we don't accumulate multiple listeners over time.
+    // Rimuove il vecchio listener se esiste
     if (this._boundBackHandler) {
       try { window.removeEventListener('artist:back', this._boundBackHandler); } catch(e) {}
     }
