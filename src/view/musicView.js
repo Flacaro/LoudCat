@@ -128,8 +128,6 @@ renderArtists(artists) {
   const resultsContainer = document.getElementById("results-container");
   if (!resultsContainer) return;
 
-  resultsContainer.innerHTML = "";
-
   // Deduplicate by artistId
   const uniqueArtistsMap = new Map();
   artists.forEach(artist => {
@@ -145,9 +143,10 @@ renderArtists(artists) {
       const displayName = artist.canonicalName || artist.name || "Unknown";
 
       return `
-        <div class="artist-card" 
+        <div class="card artist-card" 
           data-artist-id="${artist.artistId}" 
           data-artist-name="${displayName}">
+          <div class="artist-tag">Artista</div>
           <h3>${displayName}</h3>
         </div>
       `;
