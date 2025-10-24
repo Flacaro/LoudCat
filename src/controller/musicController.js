@@ -160,7 +160,7 @@ export default class MusicController {
     try { hideProfileModal(); } catch (e) { /* ignore */ }
   }
 
-async loadHome() {
+  async loadHome() {
   const auth = getAuth();
   const user = auth.currentUser;
 
@@ -178,108 +178,97 @@ async loadHome() {
   // Pulisci eventuali vecchi risultati
   resultsContainers.forEach(c => { if (c) c.innerHTML = ''; });
 
-  if (!user) {
-    this.homeView.showWelcomeMessage('Visitatore');
-    return;
-  }
+  console.log("=== LOAD HOME START ===");
 
-  this.homeView.showWelcomeMessage(user.displayName || 'Utente');
+  let favorites = [];
+  let playlists = [];
+  let recommended = [];
 
-  // Recupera tutte le collezioni
-  const [favorites, playlists, firebaseRecommended] = await Promise.all([
-    this.favoriteController.getFavorites(),
-    this.playlistController.getPlaylists(),
-    this.getRecommendedSongs()
-  ]);
+  if (user) {
+    this.homeView.showWelcomeMessage(user.displayName || 'Utente');
 
-  let recommended = firebaseRecommended;
+    // Recupera collezioni utente
+    [favorites, playlists] = await Promise.all([
+      this.favoriteController.getFavorites(),
+      this.playlistController.getPlaylists()
+    ]);
 
-  // Arricchisci consigli con iTunes
-  try {
-    const genres = [...new Set(recommended.map(s => s.genre).filter(Boolean))];
-    if (genres.length > 0) {
-      const itunesSongs = await getRecommendedFromItunes(genres, recommended);
-      recommended = [...recommended, ...itunesSongs].slice(0, 10);
+    // Consigli basati su ultima ricerca, se esiste
+    if (this.searchController.lastResults?.songs?.length > 0) {
+      recommended = this.searchController.lastResults.songs.slice(0, 10);
+    } else {
+      recommended = await this.getRandomSongs(10);
     }
-  } catch (err) {
-    console.warn("Errore nel fetch consigli iTunes", err);
+
+  } else {
+    this.homeView.showWelcomeMessage('Visitatore');
+
+    // 🔹 Prova a caricare ultima ricerca pubblica da Firestore
+    try {
+      const ref = doc(db, "searches", "latest");
+      const snap = await getDoc(ref);
+      if (snap.exists() && snap.data()?.results?.songs?.length) {
+        recommended = snap.data().results.songs.slice(0, 10);
+      } else {
+        // 🔹 Se non c’è nessuna ricerca salvata, carica canzoni casuali
+        recommended = await this.getRandomSongs(10);
+      }
+    } catch (err) {
+      console.warn("Errore caricamento ultima ricerca pubblica:", err);
+      recommended = await this.getRandomSongs(10);
+    }
   }
 
-  // Normalizza dati per la view
+  // Normalizza
   recommended = recommended.map(s => ({
     id: s.id || null,
     title: s.title || "Titolo sconosciuto",
     artist: s.artist || "Artista sconosciuto",
-    artwork: s.artwork || "assets/img/avatar-placeholder.svg",
-    genre: s.primaryGenreName || s.genre || ""
+    artwork: s.artwork || "assets/img/avatar-placeholder.svg"
   }));
 
-  // Render finale, una sola volta
+  console.log("🎵 Recommended:", recommended);
+  console.log("❤️ Favorites:", favorites);
+  console.log("📀 Playlists:", playlists);
+
+  // Render finale
   this.homeView.renderSpotifyHome(favorites, playlists, recommended);
 
   requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
-  // Scroll in alto
   try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
 }
 
 
 
-
   async getRecommendedSongs() {
-    const auth = getAuth();
-    const user = auth.currentUser;
-    if (!user) return [];
+    const lastResults = this.searchController?.lastResults;
+    if (!lastResults?.songs?.length) return [];
 
-    try {
-      const favorites = await this.favoriteController.getFavorites() || [];
-      const playlists = await this.playlistController.getPlaylists() || [];
+    // Prendi direttamente le prime 10 canzoni
+    return lastResults.songs.slice(0, 10);
+  }
+  
 
-      // Unisci tutte le canzoni dell'utente
-      let userSongs = [...favorites];
-      playlists.forEach(pl => {
-        if (pl.songs) userSongs = userSongs.concat(pl.songs);
-      });
+  async getRandomSongs(limit = 10) {
+  try {
+    const allSongsSnap = await getDocs(collection(db, "songs"));
+    const allSongs = allSongsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-      if (userSongs.length === 0) return [];
-
-      // Conta i generi più ascoltati
-      const genreCount = {};
-      userSongs.forEach(song => {
-        if (song.genre) {
-          genreCount[song.genre] = (genreCount[song.genre] || 0) + 1;
-        }
-      });
-
-      const favoriteGenres = Object.keys(genreCount).sort((a, b) => genreCount[b] - genreCount[a]);
-      if (favoriteGenres.length === 0) return [];
-
-      // Recupera tutte le canzoni globali
-      const allSongsSnap = await getDocs(collection(db, "songs"));
-
-      const recommended = [];
-
-      allSongsSnap.docs.forEach(doc => {
-        const song = { id: doc.id, ...doc.data() };
-
-        // Aggiungi solo se è dello stesso genere e non presente tra le canzoni dell'utente
-        if (favoriteGenres.includes(song.genre) && !userSongs.some(s => s.id === song.id)) {
-          recommended.push(song);
-        }
-      });
-
-      // Ordina in base ai generi più ascoltati
-      recommended.sort((a, b) => {
-        return (genreCount[b.genre] || 0) - (genreCount[a.genre] || 0);
-      });
-
-      // Limita a 10 consigli
-      return recommended.slice(0, 10);
-
-    } catch (err) {
-      console.error("Errore nel calcolo dei consigliati:", err);
+    if (allSongs.length === 0) {
+      console.warn("⚠️ Nessuna canzone trovata in Firestore");
       return [];
     }
+
+    // Mischia e limita
+    const shuffled = allSongs.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, limit);
+  } catch (err) {
+    console.error("Errore nel caricamento delle canzoni casuali:", err);
+    return [];
   }
+}
+
+
 
 
 
