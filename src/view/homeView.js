@@ -516,7 +516,14 @@ export default class HomeView {
     playSection.addEventListener('click', (e) => {
       try {
         if (window.__suppressClicks || window.__modalOpen) return;
+        // allow interactive elements and the create-card to work
         if (e.target.closest && e.target.closest('button, a, audio')) return;
+        // If user clicked the "Crea playlist" card, forward to controller
+        const createCard = e.target && typeof e.target.closest === 'function' ? e.target.closest('.create-card') : null;
+        if (createCard) {
+          try { this.playlistController?.handleCreatePlaylist(); } catch (err) { console.error('Errore creazione playlist', err); }
+          return;
+        }
         try { e.stopImmediatePropagation?.(); } catch (err) { /* ignore */ }
         try { e.stopPropagation(); } catch (err) { /* ignore */ }
 
