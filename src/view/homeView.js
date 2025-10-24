@@ -458,12 +458,17 @@ export default class HomeView {
                     `;
           }
           row.appendChild(card);
-          // Attacca gli handler di apertura modale
-          if (type !== "playlists") {
+          // Attacca gli handler di apertura modale solo per i preferiti.
+          // Le card "recommended" non devono essere cliccabili (non aprono la modal).
+          if (type === "favorites") {
             card.addEventListener("click", (e) => {
               if (e.target.closest("audio") || e.target.closest("button")) return;
               this.showSongsModal(item.title, [item], null, true);
             });
+          } else if (type === "recommended") {
+            // assicurati che il cursore non sembri un link e non aggiungere handler che aprono modal
+            try { card.style.cursor = 'default'; } catch (err) { /* ignore */ }
+            // non attacchiamo handler di apertura per i consigliati
           } else {
             // Log per debug: verifica che il pulsante di eliminazione sia presente
             const trashBtn = card.querySelector('.playlist-trash-btn');
