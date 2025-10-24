@@ -24,6 +24,9 @@ export default class FavoriteController {
 
 
   async handleFavoriteToggle(song) {
+    try {
+      console.debug('FavoriteController.handleFavoriteToggle called', { song }, (new Error()).stack);
+    } catch (e) { /* ignore logging errors */ }
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) {

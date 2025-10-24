@@ -303,6 +303,12 @@ header .btn-outline-primary:hover {
   pointer-events: none;
 }
 
+/* Ensure any decorative/overlay link inside cards doesn't capture pointer events
+   (some cards render an .overlay-link element; make it transparent to pointer events) */
+.overlay-link {
+  pointer-events: none;
+}
+
 .cards-row .song-card:hover::before,
 .cards-row .playlist-card:hover::before {
   opacity: 1;

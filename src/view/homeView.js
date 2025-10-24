@@ -10,6 +10,62 @@ export default class HomeView {
     this.welcomeMessage = document.getElementById("welcome-message");
     this._songClickHandler = null;
     this.playlistController = new PlaylistController(this);
+    this._clickSuppressTimer = null;
+    // Global capture click guard: if suppression is active, swallow clicks before they reach other handlers
+    try {
+      document.addEventListener('click', (e) => {
+        try {
+          const blocker = document.getElementById('__click_blocker');
+          if (window.__suppressClicks || blocker) {
+            try { e.stopImmediatePropagation?.(); } catch (err) {}
+            try { e.stopPropagation(); } catch (err) {}
+            try { e.preventDefault(); } catch (err) {}
+            try { console.debug('GLOBAL: suppressed click due to modal close', { target: e.target && e.target.tagName, suppressFlag: !!window.__suppressClicks, blocker: !!blocker }); } catch (err) {}
+            return;
+          }
+        } catch (err) { /* ignore */ }
+      }, { capture: true });
+    } catch (err) { /* ignore */ }
+  }
+
+  // Insert a transparent full-screen blocker to absorb any clicks for a short time
+  _addClickBlocker(ms = 350) {
+    try {
+      // avoid duplicates
+      if (document.getElementById('__click_blocker')) return;
+      const blk = document.createElement('div');
+      blk.id = '__click_blocker';
+      Object.assign(blk.style, {
+        position: 'fixed',
+        inset: '0',
+        zIndex: '1999',
+        background: 'transparent',
+        pointerEvents: 'auto'
+      });
+      document.body.appendChild(blk);
+      setTimeout(() => { try { blk.remove(); } catch (e) { /* ignore */ } }, ms);
+    } catch (e) { /* ignore */ }
+  }
+
+  // Temporarily disable pointer events on the main results area so underlying
+  // cards cannot receive clicks while a modal is closing.
+  _disableResultsPointerEvents(ms = 350) {
+    try {
+      const el = this.results || document.getElementById('results-container') || document.getElementById('home-container');
+      if (!el) return;
+      const prev = el.style.pointerEvents;
+      el.style.pointerEvents = 'none';
+      setTimeout(() => { try { el.style.pointerEvents = prev || ''; } catch (e) { /* ignore */ } }, ms);
+    } catch (e) { /* ignore */ }
+  }
+
+  // Suppress accidental click handlers on underlying UI for a short time
+  suppressClicks(ms = 300) {
+    try {
+      window.__suppressClicks = true;
+      if (this._clickSuppressTimer) clearTimeout(this._clickSuppressTimer);
+      this._clickSuppressTimer = setTimeout(() => { window.__suppressClicks = false; this._clickSuppressTimer = null; }, ms);
+    } catch (e) { /* ignore */ }
   }
 
 
@@ -98,17 +154,61 @@ export default class HomeView {
 
     modal.appendChild(content);
     document.body.appendChild(modal);
+    // mark there is an open modal so other handlers can early-return
+    try { window.__modalOpen = true; } catch (e) { /* ignore */ }
+    // ensure modal.remove clears the flag after a short delay to avoid race
+    try {
+      const origRemove = modal.remove.bind(modal);
+      modal.remove = () => {
+        try { origRemove(); } catch (e) { /* ignore */ }
+        try { setTimeout(() => { window.__modalOpen = false; }, 350); } catch (e) { /* ignore */ }
+      };
+    } catch (e) { /* ignore */ }
 
-    // Chiudi modale
-    content.querySelector(".btn-close")?.addEventListener("click", () => modal.remove());
+    // Chiudi modale — attach handlers in capture phase to stop earlier handlers
+    const closeBtn = content.querySelector(".btn-close");
+    if (closeBtn) {
+      const closeHandler = (e) => {
+        try { e.stopImmediatePropagation?.(); } catch (err) { /* ignore */ }
+        try { e.stopPropagation(); } catch (err) { /* ignore */ }
+        try { e.preventDefault(); } catch (err) { /* ignore */ }
+        if (isFavorites) {
+          try { console.debug('HomeView: closing favorites modal via close button', { playlistId, isFavorites, eventPhase: e.eventPhase, type: e.type, target: e.target && e.target.tagName }); } catch (err) { /* ignore */ }
+          try { console.debug('HomeView: closeHandler composedPath', { path: (e.composedPath && e.composedPath()) || (e.path || []), time: Date.now() }); } catch (err) { /* ignore */ }
+        }
+        try { this.suppressClicks(350); } catch (err) { /* ignore */ }
+        try { this._addClickBlocker(350); } catch (err) { /* ignore */ }
+        try { this._disableResultsPointerEvents(350); } catch (err) { /* ignore */ }
+        modal.remove();
+      };
+      // capture=true so we intercept before document-level capture handlers
+      closeBtn.addEventListener('pointerdown', closeHandler, { capture: true });
+      closeBtn.addEventListener('click', closeHandler, { capture: true });
+    }
+
+    // overlay click: also attach in capture phase
     modal.addEventListener("click", (e) => {
-      if (e.target === modal) modal.remove();
-    });
+      if (e.target === modal) {
+        try { e.stopImmediatePropagation?.(); } catch (err) { /* ignore */ }
+        try { e.stopPropagation(); } catch (err) { /* ignore */ }
+        try { e.preventDefault(); } catch (err) { /* ignore */ }
+        if (isFavorites) {
+          try { console.debug('HomeView: closing favorites modal via overlay click', { playlistId, isFavorites, eventPhase: e.eventPhase, type: e.type, target: e.target && e.target.tagName }); } catch (err) { /* ignore */ }
+        }
+        try { this.suppressClicks(350); } catch (err) { /* ignore */ }
+        try { this._addClickBlocker(350); } catch (err) { /* ignore */ }
+        try { this._disableResultsPointerEvents(350); } catch (err) { /* ignore */ }
+        modal.remove();
+      }
+    }, { capture: true });
     
     // Delegated handler for per-song trash buttons inside the modal
     modal.addEventListener('click', async (e) => {
       const btn = e.target.closest('.trash-btn');
       if (!btn) return;
+      try { e.stopImmediatePropagation?.(); } catch (err) { /* ignore */ }
+      try { e.stopPropagation(); } catch (err) { /* ignore */ }
+      try { e.preventDefault(); } catch (err) { /* ignore */ }
       const songId = btn.dataset.songId;
       const auth = getAuth();
       const user = auth.currentUser;
@@ -116,7 +216,7 @@ export default class HomeView {
 
       // Debug: log context to help trace failures when invoked from Home
       try {
-        console.debug('HomeView: delete click', { playlistId, songId, userId: user?.uid });
+        console.debug('HomeView: delete click', { playlistId, songId, userId: user?.uid, time: Date.now(), path: (e.composedPath && e.composedPath()) || (e.path || []) });
       } catch (e) { /* ignore logging errors */ }
 
       btn.disabled = true;
@@ -140,6 +240,15 @@ export default class HomeView {
           if (data && Array.isArray(data.songs)) {
             const updated = data.songs.filter(s => s.id !== songId);
             await updateDoc(plRef, { songs: updated });
+            // keep the modal's in-memory songs list in sync so reopening/closing
+            // doesn't show the deleted item again
+            try {
+              const idx = (songs || []).findIndex(s => s.id === songId);
+              if (idx !== -1) songs.splice(idx, 1);
+              try { console.debug('HomeView: modal songs array updated', { playlistId, songId, songsLength: (songs || []).length, time: Date.now() }); } catch (err) { /* ignore */ }
+            } catch (e) { /* ignore */ }
+            // notify other components if they want to refresh (optional)
+            try { window.dispatchEvent(new CustomEvent('playlist:updated', { detail: { playlistId } })); } catch (e) { /* ignore */ }
             this.showToast('Brano rimosso dalla playlist.', 'info');
           } else {
             this.showToast('Playlist non trovata o formato inatteso.', 'warning');
@@ -147,6 +256,12 @@ export default class HomeView {
         } else {
           const favRef = doc(db, 'users', user.uid, 'favorites', songId);
           await deleteDoc(favRef);
+          // remove from the local array so the modal state is consistent
+          try {
+            const idx = (songs || []).findIndex(s => s.id === songId);
+            if (idx !== -1) songs.splice(idx, 1);
+            window.dispatchEvent(new CustomEvent('favorites:updated', { detail: {} }));
+          } catch (e) { /* ignore */ }
           this.showToast('Brano rimosso.', 'info');
         }
 
@@ -155,7 +270,10 @@ export default class HomeView {
         let col = null;
         if (cardEl) col = cardEl.closest('[class*="col-"]');
         if (!col) col = btn.closest('.col-12, .col-md-4, .col-sm-6, .col-lg-3');
-        if (col) col.remove();
+        if (col) {
+          try { console.debug('HomeView: removing card element from DOM for song', { songId, time: Date.now() }); } catch (err) { /* ignore */ }
+          col.remove();
+        }
       } catch (err) {
         console.error('Errore durante la rimozione:', err);
         this.showToast(`Errore durante la rimozione del brano: ${err?.message || ''}`, 'error');
@@ -188,6 +306,9 @@ export default class HomeView {
     content.querySelectorAll(".song-card").forEach((card) => {
       card.addEventListener("click", (e) => {
         if (e.target.closest("audio") || e.target.closest("button")) return;
+        try { e.stopImmediatePropagation?.(); } catch (err) { /* ignore */ }
+        try { e.stopPropagation(); } catch (err) { /* ignore */ }
+        try { e.preventDefault(); } catch (err) { /* ignore */ }
         const index = Number(card.dataset.index);
         const song = songs[index];
         if (!song) return;
@@ -198,6 +319,8 @@ export default class HomeView {
           } catch (err) {
             console.error("songClick handler error", err);
           }
+          try { this.suppressClicks(350); } catch (err) { /* ignore */ }
+          try { console.debug('HomeView: songCard click handler firing, composedPath:', { path: (e.composedPath && e.composedPath()) || (e.path || []), time: Date.now(), suppressFlag: !!window.__suppressClicks, blocker: !!document.getElementById('__click_blocker') }); } catch (err) { /* ignore */ }
           modal.remove();
         } else if (song.id) {
           window.location.href = `#/song?id=${encodeURIComponent(song.id)}`;
@@ -357,7 +480,15 @@ export default class HomeView {
             const art = card.querySelector('.song-artwork-wrapper');
             const titleEl = card.querySelector('.text-truncate');
             const openHandler = (e) => {
-              try { if (e.target.closest && e.target.closest('.playlist-trash-btn')) return; } catch (err) { return; }
+              try {
+                const blocked = !!window.__suppressClicks || !!document.getElementById('__click_blocker') || !!window.__modalOpen;
+                if (blocked) {
+                  try { console.debug('HomeView: playlist openHandler suppressed', { itemId: item.id, blocked, time: Date.now(), path: (e.composedPath && e.composedPath()) || (e.path || []) }); } catch (err) { /* ignore */ }
+                  return;
+                }
+                if (e.target.closest && e.target.closest('.playlist-trash-btn')) return;
+              } catch (err) { return; }
+              try { console.debug('HomeView: playlist openHandler executing', { itemId: item.id, time: Date.now(), path: (e.composedPath && e.composedPath()) || (e.path || []) }); } catch (err) { /* ignore */ }
               this.showSongsModal(item.name, item.songs || [], item.id, false);
             };
             if (art) art.addEventListener('click', openHandler);
@@ -377,29 +508,50 @@ export default class HomeView {
     container.appendChild(createRow(playlists, "playlists"));
     // make favorites section clickable to open a modal with all favorites
     const favSection = createRow(favorites, "favorites");
+    // Prefer to intercept the click in capture phase so we open the
+    // full favorites modal instead of letting card-level handlers open
+    // single-item modals. We stop propagation so card handlers don't run.
     favSection.addEventListener('click', (e) => {
-      // ignore clicks on interactive controls inside the section
-      if (e.target.closest('button, a, audio')) return;
-      this.showSongsModal('I tuoi preferiti', favorites);
-    });
+      try {
+        // ignore if suppression or another modal is open
+        if (window.__suppressClicks || window.__modalOpen) return;
+        // ignore clicks on interactive elements inside the section
+        if (e.target.closest && e.target.closest('button, a, audio')) return;
+        // prevent underlying card click handlers from firing
+        try { e.stopImmediatePropagation?.(); } catch (err) { /* ignore */ }
+        try { e.stopPropagation(); } catch (err) { /* ignore */ }
+        this.showSongsModal('I tuoi preferiti', favorites);
+      } catch (err) { /* ignore */ }
+    }, { capture: true });
     container.appendChild(favSection);
     container.appendChild(createRow(recommended, "recommended")); // sempre renderizzata
 
     this.results.appendChild(container);
 
-    // Debug capture: log clicks that target playlist cards or trash buttons
-    // (temporary, helps trace which handler fires first)
-    document.addEventListener('click', (e) => {
+    // Debug capture: temporary listener to trace pointer events that may fall
+    // through when modals close. Logs fav/playlist/open targets and suppression.
+    document.addEventListener('pointerdown', (e) => {
       try {
-        const trash = e.target.closest && e.target.closest('.playlist-trash-btn');
-        const card = e.target.closest && e.target.closest('.playlist-card');
-        if (trash) {
-          console.debug('DEBUG CLICK: clicked playlist-trash-btn', { target: e.target, trash, card });
-        } else if (card) {
-          console.debug('DEBUG CLICK: clicked inside playlist-card', { target: e.target, card });
+        const isFavBtn = e.target.closest && e.target.closest('.fav-btn');
+        const isPlaylistBtn = e.target.closest && e.target.closest('.playlist-btn');
+        const isPlaylistCard = e.target.closest && e.target.closest('.playlist-card');
+        const isSongCard = e.target.closest && e.target.closest('.song-card');
+        const info = {
+          type: e.type,
+          eventPhase: e.eventPhase,
+          targetTag: e.target && e.target.tagName,
+          isFavBtn: !!isFavBtn,
+          isPlaylistBtn: !!isPlaylistBtn,
+          isPlaylistCard: !!isPlaylistCard,
+          isSongCard: !!isSongCard,
+          suppressFlag: !!window.__suppressClicks,
+          timestamp: Date.now()
+        };
+        if (isFavBtn || isPlaylistBtn || isPlaylistCard || isSongCard) {
+          try { console.debug('DEBUG POINTERDOWN:', info, { target: e.target }); } catch (err) { /* ignore */ }
         }
       } catch (err) { /* ignore */ }
-    }, true); // capture phase
+    }, { capture: true }); // capture phase
 
     // Capture-phase delegated handler: handle playlist deletion before any
     // other handlers (prevents card opening). Runs in capture phase.
@@ -477,9 +629,26 @@ export default class HomeView {
 
       const cleanup = (val) => { modal.remove(); resolve(val); };
 
-      btnCancel.addEventListener('click', () => cleanup(false));
-      modal.addEventListener('click', (e) => { if (e.target === modal) cleanup(false); });
-      btnOk.addEventListener('click', () => cleanup(true));
+      btnCancel.addEventListener('click', (e) => {
+        try { e.stopImmediatePropagation?.(); } catch (err) { /* ignore */ }
+        try { e.stopPropagation(); } catch (err) { /* ignore */ }
+        try { e.preventDefault(); } catch (err) { /* ignore */ }
+        cleanup(false);
+      });
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          try { e.stopImmediatePropagation?.(); } catch (err) { /* ignore */ }
+          try { e.stopPropagation(); } catch (err) { /* ignore */ }
+          try { e.preventDefault(); } catch (err) { /* ignore */ }
+          cleanup(false);
+        }
+      }, { capture: true });
+      btnOk.addEventListener('click', (e) => {
+        try { e.stopImmediatePropagation?.(); } catch (err) { /* ignore */ }
+        try { e.stopPropagation(); } catch (err) { /* ignore */ }
+        try { e.preventDefault(); } catch (err) { /* ignore */ }
+        cleanup(true);
+      });
       // focus the cancel to avoid accidental deletes
       btnCancel.focus();
     });
@@ -576,6 +745,9 @@ export default class HomeView {
               : `<div class="text-muted small">Preview non disponibile</div>`
           }
         `;
+        // add a trash button for favorites in the single-section view
+        const favTrash = `<div class="d-flex justify-content-center mt-2"><button onclick="event.stopPropagation()" class="btn btn-sm btn-danger fav-trash-btn" data-song-id="${item.id || ''}" title="Rimuovi dai preferiti">🗑</button></div>`;
+        card.insertAdjacentHTML('beforeend', favTrash);
       }
 
       row.appendChild(card);
@@ -619,6 +791,43 @@ export default class HomeView {
       } catch (err) {
         console.error('Errore eliminazione playlist (single-section handler):', err);
         this.showToast('Errore durante l\'eliminazione della playlist.', 'error');
+        btn.disabled = false;
+      }
+    } catch (err) { /* ignore */ }
+  }, true);
+
+  // Capture-phase delegated handler for favorites deletion in the single-section view
+  container.addEventListener('click', async (e) => {
+    try {
+      const btn = e.target.closest && e.target.closest('.fav-trash-btn');
+      if (!btn) return;
+      try { e.stopImmediatePropagation?.(); } catch (err) { /* ignore */ }
+      try { e.stopPropagation(); } catch (err) { /* ignore */ }
+      try { e.preventDefault(); } catch (err) { /* ignore */ }
+
+      const songId = btn.dataset.songId;
+      if (!songId) {
+        this.showToast('ID brano mancante. Impossibile rimuovere.', 'error');
+        return;
+      }
+
+      const confirmed = await this.showConfirmModal('Rimuovere questo brano dai preferiti?');
+      if (!confirmed) return;
+
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) { this.showToast('Devi effettuare il login per rimuovere preferiti.', 'warning'); return; }
+
+      btn.disabled = true;
+      try {
+        const favRef = doc(db, 'users', user.uid, 'favorites', songId);
+        await deleteDoc(favRef);
+        this.showToast('Brano rimosso dai preferiti.', 'info');
+        const card = btn.closest('.song-card') || btn.closest('.col-md-4');
+        if (card) card.remove();
+      } catch (err) {
+        console.error('Errore rimozione preferito (single-section handler):', err);
+        this.showToast('Errore durante la rimozione del preferito.', 'error');
         btn.disabled = false;
       }
     } catch (err) { /* ignore */ }
