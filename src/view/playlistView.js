@@ -16,15 +16,20 @@ export default class PlaylistView {
   showModal(song, playlists = [], onSelect) {
     if (this.modal) this.modal.remove();
 
-  this.modal = document.createElement('div');
-  this.modal.id = 'playlist-modal';
+    try { if (window.__modalOpen) return; } catch (e) { /* ignore */ }
+
+    this.modal = document.createElement('div');
+    this.modal.id = 'playlist-modal';
   // use the overlay class defined in CSS so the modal is centered
   // usa la classe overlay definita nel CSS così la modal è centrata
   this.modal.className = 'playlist-modal';
 
     this.modal.innerHTML = `
       <div class="playlist-modal-content">
-        <h4>Aggiungi "${song.title}" a playlist</h4>
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h4>Aggiungi "${song.title}" a playlist</h4>
+          <button class="btn-close" aria-label="Close"></button>
+        </div>
         <select id="playlist-select" class="form-control">
           ${playlists.map(pl => `<option value="${pl.id}">${pl.name}</option>`).join('')}
           <option value="__new__">➕ Crea nuova playlist</option>
@@ -38,6 +43,14 @@ export default class PlaylistView {
     `;
 
     document.body.appendChild(this.modal);
+    try { window.__modalOpen = true; } catch (e) { /* ignore */ }
+    try {
+      const origRemove = this.modal.remove.bind(this.modal);
+      this.modal.remove = () => {
+        try { origRemove(); } catch (e) { /* ignore */ }
+        try { setTimeout(() => { window.__modalOpen = false; }, 350); } catch (e) { /* ignore */ }
+      };
+    } catch (e) { /* ignore */ }
 
     const select = this.modal.querySelector('#playlist-select');
     const newInput = this.modal.querySelector('#new-playlist-name');
@@ -73,6 +86,19 @@ export default class PlaylistView {
 
     // chiudi cliccando all'esterno
     this.modal.addEventListener('click', (e) => { if (e.target === this.modal) this.modal.remove(); });
+
+    // close button 
+    const closeBtn = this.modal.querySelector('.btn-close');
+    if (closeBtn) {
+      const closeHandler = (e) => {
+        try { e.stopImmediatePropagation?.(); } catch (err) { /* ignore */ }
+        try { e.stopPropagation(); } catch (err) { /* ignore */ }
+        try { e.preventDefault(); } catch (err) { /* ignore */ }
+        this.modal.remove();
+      };
+      closeBtn.addEventListener('pointerdown', closeHandler, { capture: true });
+      closeBtn.addEventListener('click', closeHandler, { capture: true });
+    }
   }
 
   updatePlaylistButton(songId, playlistId, isAdded) {
