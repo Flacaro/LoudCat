@@ -8,10 +8,7 @@ export function getPassword() {
 export function getUsername() {
  return document.getElementById("username").value;
 }
-export function getPhotoFile() {
- // photo upload removed: keep API compatible but return null
- return null;
-}
+// photo upload removed: API no longer exposes a file getter. If needed, reintroduce a specific helper here.
 
 export function bindHomeClick(handler) {
   const btn = document.getElementById("homeBtn");
